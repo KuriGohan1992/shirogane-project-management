@@ -1,8 +1,8 @@
-# ProjectFlow - Next.js Internship Capstone Project
+# Shiro - Next.js Internship Capstone Project
 
 ## 🚀 Project Overview
 
-**ProjectFlow** is a collaborative project management tool built with Next.js 16 App Router, designed as the capstone project for a 12-week full-stack development internship program. This is currently a **mockup/prototype** with placeholder components and incomplete functionality.
+**Shiro** is a collaborative project management tool built with Next.js 16 App Router, designed as the capstone project for a 12-week full-stack development internship program. This is currently a **mockup/prototype** with placeholder components and incomplete functionality.
 
 ### 📋 What We're Building
 

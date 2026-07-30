@@ -1,6 +1,6 @@
 # Next.js Internship Capstone Project
 
-> **ProjectFlow** - A comprehensive 12-week full-stack development internship program focused on building a modern project management tool with Next.js 16, React 19, and TypeScript.
+> **Shiro** - A comprehensive 12-week full-stack development internship program focused on building a modern project management tool with Next.js 16, React 19, and TypeScript.
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.1.6-black?logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-blue?logo=react)](https://react.dev/)
@@ -30,7 +30,7 @@ nextjs-internship-capstone/
 
 ## 🎯 Project Overview
 
-**ProjectFlow** is a Kanban-style project management tool (similar to Trello/Asana) built as an internship capstone project. Each intern builds their own complete implementation from scratch, gaining hands-on experience with modern full-stack development.
+**Shiro** is a Kanban-style project management tool (similar to Trello/Asana) built as an internship capstone project. Each intern builds their own complete implementation from scratch, gaining hands-on experience with modern full-stack development.
 
 ### ✨ Key Features (Planned)
 
