@@ -1,6 +1,8 @@
+import { auth } from "@clerk/nextjs/server";
 import { Bell, Palette, Shield, User } from "lucide-react";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+	await auth.protect();
 	return (
 		<div className="space-y-6">
 			<div>

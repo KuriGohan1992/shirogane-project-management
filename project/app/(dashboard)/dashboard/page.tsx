@@ -1,6 +1,8 @@
+import { auth } from "@clerk/nextjs/server";
 import { CheckCircle, Clock, Plus, TrendingUp, Users } from "lucide-react";
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+	await auth.protect();
 	return (
 		<div className="space-y-6">
 			<div>

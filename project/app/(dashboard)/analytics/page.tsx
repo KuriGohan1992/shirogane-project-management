@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import { BarChart3, Clock, TrendingUp, Users } from "lucide-react";
 
 const metrics = [
@@ -27,7 +28,8 @@ const metrics = [
 	},
 ];
 
-export default function AnalyticsPage() {
+export default async function AnalyticsPage() {
+	await auth.protect();
 	return (
 		<div className="space-y-6">
 			<div>

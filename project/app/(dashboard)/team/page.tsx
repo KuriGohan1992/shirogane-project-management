@@ -1,6 +1,8 @@
+import { auth } from "@clerk/nextjs/server";
 import { Mail, MoreHorizontal, UserPlus } from "lucide-react";
 
-export default function TeamPage() {
+export default async function TeamPage() {
+	await auth.protect();
 	return (
 		<div className="space-y-6">
 			<div className="flex justify-between items-center">

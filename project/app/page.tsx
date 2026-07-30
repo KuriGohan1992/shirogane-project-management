@@ -1,5 +1,8 @@
+import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { ArrowRight, CheckCircle, Kanban, Users } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
+
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function HomePage() {
@@ -8,34 +11,61 @@ export default function HomePage() {
 			{/* Header */}
 			<header className="border-b border-border bg-background/80 backdrop-blur-xs">
 				<div className="container mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="flex justify-between items-center h-16">
-						<div className="text-2xl font-bold text-primary">Shiro</div>
-						<div className="flex items-center space-x-4">
+					<div className="flex h-16 items-center justify-between">
+						<Link href="/" className="flex items-center gap-1">
+							<Image
+								src="/shiro-logo.png"
+								alt=""
+								width={36}
+								height={36}
+								priority
+							/>
+
+							<span className="text-2xl font-bold text-foreground">Shiro</span>
+						</Link>
+
+						<div className="flex items-center gap-4">
+							<Show when="signed-in">
+								<Link
+									href="/dashboard"
+									className="font-medium text-foreground hover:text-primary"
+								>
+									Dashboard
+								</Link>
+
+								<Link
+									href="/projects"
+									className="font-medium text-foreground hover:text-primary"
+								>
+									Projects
+								</Link>
+							</Show>
+
 							<ThemeToggle />
-							<Link
-								href="/dashboard"
-								className="text-foreground hover:text-primary"
-							>
-								Dashboard
-							</Link>
-							<Link
-								href="/projects"
-								className="text-foreground hover:text-primary"
-							>
-								Projects
-							</Link>
-							<Link
-								href="/sign-in"
-								className="text-foreground hover:text-primary"
-							>
-								Sign In
-							</Link>
-							<Link
-								href="/sign-up"
-								className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-brand-hover"
-							>
-								Get Started
-							</Link>
+
+							<Show when="signed-out">
+								<SignInButton>
+									<button
+										type="button"
+										className="font-medium text-foreground hover:text-primary"
+									>
+										Sign In
+									</button>
+								</SignInButton>
+
+								<SignUpButton>
+									<button
+										type="button"
+										className="rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground hover:bg-brand-hover"
+									>
+										Sign Up
+									</button>
+								</SignUpButton>
+							</Show>
+
+							<Show when="signed-in">
+								<UserButton />
+							</Show>
 						</div>
 					</div>
 				</div>
@@ -94,10 +124,6 @@ export default function HomePage() {
 					<h2 className="text-3xl font-bold text-foreground mb-8">
 						🚀 Navigate the Mock Site
 					</h2>
-					<p className="text-lg text-muted-foreground mb-8">
-						All pages are accessible without authentication for development
-						purposes
-					</p>
 
 					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
 						<Link

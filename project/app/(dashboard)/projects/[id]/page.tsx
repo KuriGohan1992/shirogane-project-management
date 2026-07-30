@@ -1,3 +1,4 @@
+import { auth } from "@clerk/nextjs/server";
 import {
 	ArrowLeft,
 	Calendar,
@@ -13,6 +14,7 @@ export default async function ProjectPage({
 	params: Promise<{ id: string }>;
 }) {
 	const { id } = await params;
+	await auth.protect();
 	return (
 		<div className="space-y-6">
 			{/* Project Header */}

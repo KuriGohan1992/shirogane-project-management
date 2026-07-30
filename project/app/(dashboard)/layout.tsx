@@ -18,6 +18,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 
 import { ThemeToggle } from "@/components/theme-toggle";
+import { UserButton } from "@clerk/nextjs";
 
 const navigation = [
 	{ name: "Dashboard", href: "/dashboard", icon: Home },
@@ -140,12 +141,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
 							<ThemeToggle />
 
-							<section
-								aria-label="Current user"
-								className="flex size-8 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground"
-							>
-								U
-							</section>
+							<UserButton />
 						</div>
 					</div>
 				</header>

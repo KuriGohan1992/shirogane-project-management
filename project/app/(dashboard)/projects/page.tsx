@@ -1,6 +1,8 @@
+import { auth } from "@clerk/nextjs/server";
 import { Filter, Plus, Search } from "lucide-react";
 
-export default function ProjectsPage() {
+export default async function ProjectsPage() {
+	await auth.protect();
 	return (
 		<div className="space-y-6">
 			<div className="flex justify-between items-center">

@@ -1,6 +1,8 @@
+import { auth } from "@clerk/nextjs/server";
 import { Calendar, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 
-export default function CalendarPage() {
+export default async function CalendarPage() {
+	await auth.protect();
 	return (
 		<div className="space-y-6">
 			<div className="flex justify-between items-center">
