@@ -1,44 +1,342 @@
-// TODO: Task 3.1 - Design database schema for users, projects, lists, and tasks
-// TODO: Task 3.3 - Set up Drizzle ORM with type-safe schema definitions
+import { relations } from "drizzle-orm";
+import {
+	index,
+	integer,
+	pgEnum,
+	pgTable,
+	primaryKey,
+	text,
+	timestamp,
+	uuid,
+} from "drizzle-orm/pg-core";
 
 /*
-TODO: Implementation Notes for Interns:
+ * Enumerations
+ *
+ * PostgreSQL enums restrict a column to a predefined set of values.
+ */
 
-1. Install Drizzle ORM dependencies:
-   - drizzle-orm
-   - drizzle-kit
-   - @vercel/postgres (if using Vercel Postgres)
-   - OR pg + @types/pg (if using regular PostgreSQL)
+export const projectMemberRoleEnum = pgEnum("project_member_role", [
+	"member",
+	"viewer",
+]);
 
-2. Define schemas for:
-   - users (id, clerkId, email, name, createdAt, updatedAt)
-   - projects (id, name, description, ownerId, createdAt, updatedAt, dueDate)
-   - lists (id, name, projectId, position, createdAt, updatedAt)
-   - tasks (id, title, description, listId, assigneeId, priority, dueDate, position, createdAt, updatedAt)
-   - comments (id, content, taskId, authorId, createdAt, updatedAt)
+export const taskPriorityEnum = pgEnum("task_priority", [
+	"low",
+	"medium",
+	"high",
+	"urgent",
+]);
 
-3. Set up proper relationships between tables
-4. Add indexes for performance
-5. Configure migrations
+/*
+ * Reusable timestamp columns
+ *
+ * createdAt records when a row is first inserted.
+ * updatedAt starts with the same value, but our update operations must
+ * explicitly change it whenever the row is edited.
+ */
 
-Example structure:
-import { pgTable, text, timestamp, integer, uuid } from 'drizzle-orm/pg-core'
+const timestamps = {
+	createdAt: timestamp("created_at", {
+		withTimezone: true,
+		mode: "date",
+	})
+		.defaultNow()
+		.notNull(),
 
-export const users = pgTable('users', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  clerkId: text('clerk_id').notNull().unique(),
-  email: text('email').notNull(),
-  name: text('name').notNull(),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-})
+	updatedAt: timestamp("updated_at", {
+		withTimezone: true,
+		mode: "date",
+	})
+		.defaultNow()
+		.notNull(),
+};
 
-// ... other tables
-*/
+/*
+ * Users
+ *
+ * Clerk remains responsible for authentication, passwords, sessions,
+ * email verification, and Google login.
+ *
+ * This table stores the user information Shiro needs for its own
+ * projects, memberships, assignments, and database relationships.
+ */
 
-// Placeholder exports to prevent import errors
-export const users = "TODO: Implement users table schema";
-export const projects = "TODO: Implement projects table schema";
-export const lists = "TODO: Implement lists table schema";
-export const tasks = "TODO: Implement tasks table schema";
-export const comments = "TODO: Implement comments table schema";
+export const users = pgTable("users", {
+	id: uuid("id").defaultRandom().primaryKey(),
+
+	clerkId: text("clerk_id").notNull().unique(),
+
+	email: text("email").notNull().unique(),
+
+	name: text("name"),
+
+	imageUrl: text("image_url"),
+
+	...timestamps,
+});
+
+/*
+ * Projects
+ *
+ * Every project has exactly one owner.
+ * Other collaborators are stored in projectMembers.
+ */
+
+export const projects = pgTable(
+	"projects",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+
+		ownerId: uuid("owner_id")
+			.notNull()
+			.references(() => users.id, {
+				onDelete: "cascade",
+			}),
+
+		name: text("name").notNull(),
+
+		description: text("description"),
+
+		dueDate: timestamp("due_date", {
+			withTimezone: true,
+			mode: "date",
+		}),
+
+		...timestamps,
+	},
+	(table) => [
+		index("projects_owner_id_idx").on(table.ownerId),
+		index("projects_created_at_idx").on(table.createdAt),
+	],
+);
+
+/*
+ * Project members
+ *
+ * This is a junction table connecting users and projects.
+ *
+ * One project can have many users.
+ * One user can belong to many projects.
+ *
+ * The project owner is stored in projects.ownerId and is not duplicated
+ * here. This table is for invited collaborators.
+ */
+
+export const projectMembers = pgTable(
+	"project_members",
+	{
+		projectId: uuid("project_id")
+			.notNull()
+			.references(() => projects.id, {
+				onDelete: "cascade",
+			}),
+
+		userId: uuid("user_id")
+			.notNull()
+			.references(() => users.id, {
+				onDelete: "cascade",
+			}),
+
+		role: projectMemberRoleEnum("role").default("member").notNull(),
+
+		joinedAt: timestamp("joined_at", {
+			withTimezone: true,
+			mode: "date",
+		})
+			.defaultNow()
+			.notNull(),
+	},
+	(table) => [
+		primaryKey({
+			columns: [table.projectId, table.userId],
+		}),
+
+		index("project_members_user_id_idx").on(table.userId),
+	],
+);
+
+/*
+ * Lists
+ *
+ * These are the Kanban columns:
+ *
+ * Backlog
+ * To Do
+ * In Progress
+ * Done
+ *
+ * A list belongs to one project.
+ */
+
+export const projectLists = pgTable(
+	"lists",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+
+		projectId: uuid("project_id")
+			.notNull()
+			.references(() => projects.id, {
+				onDelete: "cascade",
+			}),
+
+		name: text("name").notNull(),
+
+		position: integer("position").notNull(),
+
+		...timestamps,
+	},
+	(table) => [
+		index("lists_project_position_idx").on(
+			table.projectId,
+			table.position,
+		),
+	],
+);
+
+/*
+ * Tasks
+ *
+ * A task belongs to a list.
+ *
+ * Its list represents its current Kanban status, so there is deliberately
+ * no separate status column.
+ */
+
+export const tasks = pgTable(
+	"tasks",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+
+		listId: uuid("list_id")
+			.notNull()
+			.references(() => projectLists.id, {
+				onDelete: "cascade",
+			}),
+
+		assigneeId: uuid("assignee_id").references(() => users.id, {
+			onDelete: "set null",
+		}),
+
+		title: text("title").notNull(),
+
+		description: text("description"),
+
+		position: integer("position").notNull(),
+
+		priority: taskPriorityEnum("priority")
+			.default("medium")
+			.notNull(),
+
+		dueDate: timestamp("due_date", {
+			withTimezone: true,
+			mode: "date",
+		}),
+
+		archivedAt: timestamp("archived_at", {
+			withTimezone: true,
+			mode: "date",
+		}),
+
+		...timestamps,
+	},
+	(table) => [
+		index("tasks_list_position_idx").on(
+			table.listId,
+			table.position,
+		),
+
+		index("tasks_assignee_id_idx").on(table.assigneeId),
+
+		index("tasks_due_date_idx").on(table.dueDate),
+	],
+);
+
+/*
+ * Drizzle relational-query definitions
+ *
+ * Foreign keys protect the actual PostgreSQL data.
+ * These relation objects teach Drizzle how tables connect when using
+ * db.query.* with nested "with" queries.
+ */
+
+export const usersRelations = relations(users, ({ many }) => ({
+	ownedProjects: many(projects),
+	projectMemberships: many(projectMembers),
+	assignedTasks: many(tasks),
+}));
+
+export const projectsRelations = relations(
+	projects,
+	({ one, many }) => ({
+		owner: one(users, {
+			fields: [projects.ownerId],
+			references: [users.id],
+		}),
+
+		members: many(projectMembers),
+
+		lists: many(projectLists),
+	}),
+);
+
+export const projectMembersRelations = relations(
+	projectMembers,
+	({ one }) => ({
+		project: one(projects, {
+			fields: [projectMembers.projectId],
+			references: [projects.id],
+		}),
+
+		user: one(users, {
+			fields: [projectMembers.userId],
+			references: [users.id],
+		}),
+	}),
+);
+
+export const projectListsRelations = relations(
+	projectLists,
+	({ one, many }) => ({
+		project: one(projects, {
+			fields: [projectLists.projectId],
+			references: [projects.id],
+		}),
+
+		tasks: many(tasks),
+	}),
+);
+
+export const tasksRelations = relations(tasks, ({ one }) => ({
+	list: one(projectLists, {
+		fields: [tasks.listId],
+		references: [projectLists.id],
+	}),
+
+	assignee: one(users, {
+		fields: [tasks.assigneeId],
+		references: [users.id],
+	}),
+}));
+
+/*
+ * Inferred TypeScript types
+ *
+ * Select types represent rows returned by PostgreSQL.
+ * Insert types represent values accepted when inserting rows.
+ */
+
+export type User = typeof users.$inferSelect;
+export type NewUser = typeof users.$inferInsert;
+
+export type Project = typeof projects.$inferSelect;
+export type NewProject = typeof projects.$inferInsert;
+
+export type ProjectMember = typeof projectMembers.$inferSelect;
+export type NewProjectMember = typeof projectMembers.$inferInsert;
+
+export type ProjectList = typeof projectLists.$inferSelect;
+export type NewProjectList = typeof projectLists.$inferInsert;
+
+export type Task = typeof tasks.$inferSelect;
+export type NewTask = typeof tasks.$inferInsert;
