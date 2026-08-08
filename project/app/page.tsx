@@ -12,7 +12,7 @@ export default function HomePage() {
 			<header className="border-b border-border bg-background/80 backdrop-blur-xs">
 				<div className="container mx-auto px-4 sm:px-6 lg:px-8">
 					<div className="flex h-16 items-center justify-between">
-						<Link href="/" className="flex items-center gap-1">
+						<Link href="/" className="flex items-center gap-0.75">
 							<Image
 								src="/shiro-logo.png"
 								alt=""

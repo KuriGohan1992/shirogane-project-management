@@ -157,7 +157,7 @@ export const projectMembers = pgTable(
 );
 
 /*
- * Lists
+ * Stages
  *
  * These are the Kanban columns:
  *
@@ -166,11 +166,11 @@ export const projectMembers = pgTable(
  * In Progress
  * Done
  *
- * A list belongs to one project.
+ * A stage belongs to one project.
  */
 
-export const projectLists = pgTable(
-	"lists",
+export const stages = pgTable(
+	"stages",
 	{
 		id: uuid("id").defaultRandom().primaryKey(),
 
@@ -187,19 +187,16 @@ export const projectLists = pgTable(
 		...timestamps,
 	},
 	(table) => [
-		index("lists_project_position_idx").on(
-			table.projectId,
-			table.position,
-		),
+		index("stages_project_position_idx").on(table.projectId, table.position),
 	],
 );
 
 /*
  * Tasks
  *
- * A task belongs to a list.
+ * A task belongs to a stage.
  *
- * Its list represents its current Kanban status, so there is deliberately
+ * Its stage represents its current Kanban status, so there is deliberately
  * no separate status column.
  */
 
@@ -208,15 +205,11 @@ export const tasks = pgTable(
 	{
 		id: uuid("id").defaultRandom().primaryKey(),
 
-		listId: uuid("list_id")
+		stageId: uuid("stage_id")
 			.notNull()
-			.references(() => projectLists.id, {
+			.references(() => stages.id, {
 				onDelete: "cascade",
 			}),
-
-		assigneeId: uuid("assignee_id").references(() => users.id, {
-			onDelete: "set null",
-		}),
 
 		title: text("title").notNull(),
 
@@ -224,9 +217,7 @@ export const tasks = pgTable(
 
 		position: integer("position").notNull(),
 
-		priority: taskPriorityEnum("priority")
-			.default("medium")
-			.notNull(),
+		priority: taskPriorityEnum("priority").default("medium").notNull(),
 
 		dueDate: timestamp("due_date", {
 			withTimezone: true,
@@ -241,14 +232,40 @@ export const tasks = pgTable(
 		...timestamps,
 	},
 	(table) => [
-		index("tasks_list_position_idx").on(
-			table.listId,
-			table.position,
-		),
-
-		index("tasks_assignee_id_idx").on(table.assigneeId),
+		index("tasks_stage_position_idx").on(table.stageId, table.position),
 
 		index("tasks_due_date_idx").on(table.dueDate),
+	],
+);
+
+export const taskAssignees = pgTable(
+	"task_assignees",
+	{
+		taskId: uuid("task_id")
+			.notNull()
+			.references(() => tasks.id, {
+				onDelete: "cascade",
+			}),
+
+		userId: uuid("user_id")
+			.notNull()
+			.references(() => users.id, {
+				onDelete: "cascade",
+			}),
+
+		assignedAt: timestamp("assigned_at", {
+			withTimezone: true,
+			mode: "date",
+		})
+			.defaultNow()
+			.notNull(),
+	},
+	(table) => [
+		primaryKey({
+			columns: [table.taskId, table.userId],
+		}),
+
+		index("task_assignees_user_id_idx").on(table.userId),
 	],
 );
 
@@ -263,58 +280,58 @@ export const tasks = pgTable(
 export const usersRelations = relations(users, ({ many }) => ({
 	ownedProjects: many(projects),
 	projectMemberships: many(projectMembers),
-	assignedTasks: many(tasks),
+	taskAssignments: many(taskAssignees),
 }));
 
-export const projectsRelations = relations(
-	projects,
-	({ one, many }) => ({
-		owner: one(users, {
-			fields: [projects.ownerId],
-			references: [users.id],
-		}),
-
-		members: many(projectMembers),
-
-		lists: many(projectLists),
-	}),
-);
-
-export const projectMembersRelations = relations(
-	projectMembers,
-	({ one }) => ({
-		project: one(projects, {
-			fields: [projectMembers.projectId],
-			references: [projects.id],
-		}),
-
-		user: one(users, {
-			fields: [projectMembers.userId],
-			references: [users.id],
-		}),
-	}),
-);
-
-export const projectListsRelations = relations(
-	projectLists,
-	({ one, many }) => ({
-		project: one(projects, {
-			fields: [projectLists.projectId],
-			references: [projects.id],
-		}),
-
-		tasks: many(tasks),
-	}),
-);
-
-export const tasksRelations = relations(tasks, ({ one }) => ({
-	list: one(projectLists, {
-		fields: [tasks.listId],
-		references: [projectLists.id],
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+	owner: one(users, {
+		fields: [projects.ownerId],
+		references: [users.id],
 	}),
 
-	assignee: one(users, {
-		fields: [tasks.assigneeId],
+	members: many(projectMembers),
+
+	stages: many(stages),
+}));
+
+export const projectMembersRelations = relations(projectMembers, ({ one }) => ({
+	project: one(projects, {
+		fields: [projectMembers.projectId],
+		references: [projects.id],
+	}),
+
+	user: one(users, {
+		fields: [projectMembers.userId],
+		references: [users.id],
+	}),
+}));
+
+export const stagesRelations = relations(stages, ({ one, many }) => ({
+	project: one(projects, {
+		fields: [stages.projectId],
+		references: [projects.id],
+	}),
+
+	tasks: many(tasks),
+}));
+
+export const tasksRelations = relations(tasks, ({ one, many }) => ({
+	stage: one(stages, {
+		fields: [tasks.stageId],
+		references: [stages.id],
+	}),
+
+	assignees: many(taskAssignees),
+}));
+
+export const taskAssigneesRelations = relations(taskAssignees, ({ one }) => ({
+	task: one(tasks, {
+		fields: [taskAssignees.taskId],
+		references: [tasks.id],
+	}),
+
+	user: one(users, {
+		fields: [taskAssignees.userId],
 		references: [users.id],
 	}),
 }));
@@ -335,8 +352,11 @@ export type NewProject = typeof projects.$inferInsert;
 export type ProjectMember = typeof projectMembers.$inferSelect;
 export type NewProjectMember = typeof projectMembers.$inferInsert;
 
-export type ProjectList = typeof projectLists.$inferSelect;
-export type NewProjectList = typeof projectLists.$inferInsert;
+export type Stage = typeof stages.$inferSelect;
+export type NewStage = typeof stages.$inferInsert;
 
 export type Task = typeof tasks.$inferSelect;
 export type NewTask = typeof tasks.$inferInsert;
+
+export type TaskAssignee = typeof taskAssignees.$inferSelect;
+export type NewTaskAssignee = typeof taskAssignees.$inferInsert;
