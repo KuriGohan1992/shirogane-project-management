@@ -1,45 +1,75 @@
-import { Calendar, MoreHorizontal, Settings, Users } from "lucide-react";
+import { ArrowLeft, CalendarDays, Clock3 } from "lucide-react";
+import Link from "next/link";
 
-export function ProjectHeader({ projectId }: { projectId: string }) {
+import { ProjectActions } from "@/components/project-actions";
+import type { Project } from "@/lib/db/schema";
+import type { EditableProject } from "@/types/project";
+
+type ProjectHeaderProps = {
+	project: Project;
+};
+
+function formatDate(date: Date) {
+	return new Intl.DateTimeFormat("en-US", {
+		month: "short",
+		day: "numeric",
+		year: "numeric",
+		timeZone: "UTC",
+	}).format(date);
+}
+
+function toEditableProject(project: Project): EditableProject {
+	return {
+		id: project.id,
+		name: project.name,
+		description: project.description ?? "",
+		dueDate: project.dueDate?.toISOString().slice(0, 10) ?? "",
+	};
+}
+
+export function ProjectHeader({ project }: ProjectHeaderProps) {
 	return (
-		<div className="bg-card rounded-lg border border-border p-6">
-			<div className="flex items-start justify-between">
-				<div className="flex-1">
-					<div className="flex items-center space-x-3 mb-2">
-						<div className="w-3 h-3 bg-primary rounded-full" />
-						<h1 className="text-2xl font-bold text-foreground">
-							Website Redesign
-						</h1>
-					</div>
+		<div className="rounded-xl border border-border bg-card p-6">
+			<div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+				<div className="flex min-w-0 gap-3">
+					<Link
+						href="/projects"
+						aria-label="Back to projects"
+						className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+					>
+						<ArrowLeft aria-hidden="true" size={20} />
+					</Link>
 
-					<p className="text-muted-foreground mb-4">
-						Complete overhaul of company website with modern design and improved
-						user experience
-					</p>
+					<div className="min-w-0">
+						<div className="flex items-center gap-3">
+							<h1 className="truncate text-2xl font-bold text-foreground sm:text-3xl">
+								{project.name}
+							</h1>
+						</div>
 
-					<div className="flex items-center space-x-6 text-sm text-muted-foreground">
-						<div className="flex items-center">
-							<Users size={16} className="mr-2" />5 members
-						</div>
-						<div className="flex items-center">
-							<Calendar size={16} className="mr-2" />
-							Due Feb 15, 2024
-						</div>
-						<div className="flex items-center">
-							<div className="w-2 h-2 bg-green-500 rounded-full mr-2" />
-							75% complete
+						<p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
+							{project.description || "No project description yet."}
+						</p>
+
+						<div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
+							<div className="flex items-center gap-2">
+								<CalendarDays aria-hidden="true" size={16} />
+								<span>
+									{project.dueDate
+										? `Due ${formatDate(project.dueDate)}`
+										: "No due date"}
+								</span>
+							</div>
+
+							<div className="flex items-center gap-2">
+								<Clock3 aria-hidden="true" size={16} />
+								<span>Updated {formatDate(project.updatedAt)}</span>
+							</div>
 						</div>
 					</div>
 				</div>
 
-				<div className="flex items-center space-x-2">
-					<button className="p-2 hover:bg-muted rounded-lg transition-colors">
-						<Settings size={20} />
-					</button>
-					<button className="p-2 hover:bg-muted rounded-lg transition-colors">
-						<MoreHorizontal size={20} />
-					</button>
-				</div>
+				<ProjectActions project={toEditableProject(project)} />
 			</div>
 		</div>
 	);

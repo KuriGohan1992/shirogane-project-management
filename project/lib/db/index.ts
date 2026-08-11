@@ -8,9 +8,7 @@ import * as schema from "./schema";
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-	throw new Error(
-		"DATABASE_URL is not defined. Add it to project/.env.local.",
-	);
+	throw new Error("DATABASE_URL is not defined. Add it to project/.env.local.");
 }
 
 const sql = neon(databaseUrl);

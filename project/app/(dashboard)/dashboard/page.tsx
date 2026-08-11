@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { CheckCircle, Clock, Plus, TrendingUp, Users } from "lucide-react"; 
+import { CheckCircle, Clock, Plus, TrendingUp, Users } from "lucide-react";
 
 export default async function DashboardPage() {
 	await auth.protect();
@@ -132,15 +132,24 @@ export default async function DashboardPage() {
 						Quick Actions
 					</h3>
 					<div className="space-y-3">
-						<button type="button" className="w-full flex items-center justify-center px-4 py-3 bg-primary text-white rounded-lg hover:bg-brand-hover transition-colors">
+						<button
+							type="button"
+							className="w-full flex items-center justify-center px-4 py-3 bg-primary text-white rounded-lg hover:bg-brand-hover transition-colors"
+						>
 							<Plus size={20} className="mr-2" />
 							Create New Project
 						</button>
-						<button type="button" className="w-full flex items-center justify-center px-4 py-3 border border-border text-foreground rounded-lg hover:bg-muted transition-colors">
+						<button
+							type="button"
+							className="w-full flex items-center justify-center px-4 py-3 border border-border text-foreground rounded-lg hover:bg-muted transition-colors"
+						>
 							<Plus size={20} className="mr-2" />
 							Add Team Member
 						</button>
-						<button type="button" className="w-full flex items-center justify-center px-4 py-3 border border-border text-foreground rounded-lg hover:bg-muted transition-colors">
+						<button
+							type="button"
+							className="w-full flex items-center justify-center px-4 py-3 border border-border text-foreground rounded-lg hover:bg-muted transition-colors"
+						>
 							<Plus size={20} className="mr-2" />
 							Create Task
 						</button>

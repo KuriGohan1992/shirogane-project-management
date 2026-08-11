@@ -1,4 +1,4 @@
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 
 import { ProjectFormFields } from "@/components/project-form-fields";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,11 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { createProject } from "@/lib/actions/projects";
-import type { ProjectActionState } from "@/types/project";
+import { updateProject } from "@/lib/actions/projects";
+import type { EditableProject, ProjectActionState } from "@/types/project";
 
-type CreateProjectModalProps = {
+type EditProjectModalProps = {
+	project: EditableProject;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 };
@@ -22,25 +23,31 @@ const initialState: ProjectActionState = {
 	success: false,
 };
 
-export function CreateProjectModal({
+export function EditProjectModal({
+	project,
 	open,
 	onOpenChange,
-}: CreateProjectModalProps) {
+}: EditProjectModalProps) {
+	const updateAction = updateProject.bind(null, project.id);
+
 	const [state, formAction, pending] = useActionState(
-		createProject,
+		updateAction,
 		initialState,
 	);
 
-	const hasFieldErrors = Object.values(state.errors ?? {}).some((fieldErrors) =>
-		Boolean(fieldErrors?.length),
-	);
+	useEffect(() => {
+		if (state.success) {
+			onOpenChange(false);
+		}
+	}, [state.success, onOpenChange]);
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="sm:max-w-lg">
 				<DialogHeader>
-					<DialogTitle>Create project</DialogTitle>
+					<DialogTitle>Edit project</DialogTitle>
 					<DialogDescription>
-						Create a workspace for your tasks, stages, and collaborators.
+						Update the project's name, description, or due date.
 					</DialogDescription>
 				</DialogHeader>
 
@@ -49,13 +56,13 @@ export function CreateProjectModal({
 						state={state}
 						pending={pending}
 						defaultValues={{
-							name: "",
-							description: "",
-							dueDate: "",
+							name: project.name,
+							description: project.description,
+							dueDate: project.dueDate,
 						}}
 					/>
 
-					{state.message && !hasFieldErrors && (
+					{state.message && !state.success && (
 						<p aria-live="polite" className="text-sm text-destructive">
 							{state.message}
 						</p>
@@ -72,7 +79,7 @@ export function CreateProjectModal({
 						</Button>
 
 						<Button type="submit" disabled={pending}>
-							{pending ? "Creating..." : "Create project"}
+							{pending ? "Saving..." : "Save changes"}
 						</Button>
 					</DialogFooter>
 				</form>

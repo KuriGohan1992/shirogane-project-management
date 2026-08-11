@@ -1,5 +1,6 @@
 "use client";
 
+import { UserButton } from "@clerk/nextjs";
 import {
 	BarChart3,
 	Bell,
@@ -16,9 +17,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useState } from "react";
-
 import { ThemeToggle } from "@/components/theme-toggle";
-import { UserButton } from "@clerk/nextjs";
 
 const navigation = [
 	{ name: "Dashboard", href: "/dashboard", icon: Home },
