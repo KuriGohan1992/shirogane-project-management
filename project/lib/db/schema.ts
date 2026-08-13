@@ -159,14 +159,12 @@ export const projectMembers = pgTable(
 /*
  * Stages
  *
- * These are the Kanban columns:
+ * User-managed Kanban columns belonging to a project.
  *
- * Backlog
- * To Do
- * In Progress
- * Done
+ * New projects currently start with:
+ * Backlog, To Do, In Progress, and Done.
  *
- * A stage belongs to one project.
+ * Users can add, rename, delete, and reorder stages.
  */
 
 export const stages = pgTable(

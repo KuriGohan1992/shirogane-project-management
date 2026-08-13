@@ -30,6 +30,5 @@ export const taskFormSchema = z.object({
 });
 
 export const taskIdSchema = uuidV4Schema;
-export const stageIdSchema = uuidV4Schema;
 
 export type TaskFormData = z.infer<typeof taskFormSchema>;

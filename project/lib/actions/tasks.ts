@@ -9,12 +9,9 @@ import {
 	deleteTaskOwnedByUser,
 	updateTaskOwnedByUser,
 } from "@/lib/db/tasks";
-import {
-	stageIdSchema,
-	taskFormSchema,
-	taskIdSchema,
-} from "@/lib/validations/task";
+import { taskFormSchema, taskIdSchema } from "@/lib/validations/task";
 import type { TaskActionState } from "@/types/task";
+import { stageIdSchema } from "../validations/stage";
 
 function parseDueDate(value: string): Date | null {
 	if (!value) {

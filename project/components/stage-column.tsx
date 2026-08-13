@@ -1,20 +1,38 @@
 import { CreateTaskButton } from "@/components/create-task-button";
+import { StageActions } from "@/components/stage-actions";
 import { TaskCard } from "@/components/task-card";
-import type { StageWithTasks } from "@/types/task";
+import type { StageWithTasks } from "@/types/stage";
 
 type StageColumnProps = {
 	stage: StageWithTasks;
+	canMoveLeft: boolean;
+	canMoveRight: boolean;
 };
 
-export function StageColumn({ stage }: StageColumnProps) {
+export function StageColumn({
+	stage,
+	canMoveLeft,
+	canMoveRight,
+}: StageColumnProps) {
 	return (
 		<section className="w-[min(20rem,85vw)] shrink-0 rounded-xl border border-border bg-muted/40">
-			<div className="flex items-center justify-between border-b border-border px-4 py-3">
-				<h3 className="font-semibold text-foreground">{stage.name}</h3>
+			<div className="flex items-center gap-2 border-b border-border px-4 py-3">
+				<h3 className="min-w-0 flex-1 truncate font-semibold text-foreground">
+					{stage.name}
+				</h3>
 
-				<span className="rounded-full bg-background px-2 py-0.5 text-xs font-medium text-muted-foreground">
+				<span className="shrink-0 rounded-full bg-background px-2 py-0.5 text-xs font-medium text-muted-foreground">
 					{stage.tasks.length}
 				</span>
+
+				<StageActions
+					stage={{
+						id: stage.id,
+						name: stage.name,
+					}}
+					canMoveLeft={canMoveLeft}
+					canMoveRight={canMoveRight}
+				/>
 			</div>
 
 			<div className="space-y-3 p-3">

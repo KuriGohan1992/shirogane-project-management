@@ -47,7 +47,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 					</p>
 				</div>
 
-				<KanbanBoard stages={project.stages} />
+				<KanbanBoard projectId={project.id} stages={project.stages} />
 			</section>
 		</div>
 	);

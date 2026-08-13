@@ -7,3 +7,7 @@ export const TASK_FIELD_LIMITS = {
 	title: 200,
 	description: 2000,
 } as const;
+
+export const STAGE_FIELD_LIMITS = {
+	name: 100,
+} as const;
