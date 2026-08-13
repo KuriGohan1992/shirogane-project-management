@@ -1,3 +1,5 @@
+import type { ProjectFormData } from "@/lib/validations/project";
+
 export type ProjectActionState = {
 	success: boolean;
 	message?: string;
@@ -8,12 +10,6 @@ export type ProjectActionState = {
 	};
 };
 
-export type ProjectFormValues = {
-	name: string;
-	description: string;
-	dueDate: string;
-};
-
-export type EditableProject = ProjectFormValues & {
+export type EditableProject = ProjectFormData & {
 	id: string;
 };

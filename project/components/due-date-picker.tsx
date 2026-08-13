@@ -1,5 +1,3 @@
-"use client";
-
 import { CalendarDays, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -12,11 +10,12 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-type ProjectDatePickerProps = {
+type DueDatePickerProps = {
 	defaultValue?: string;
 	disabled?: boolean;
 	invalid?: boolean;
 	errorId?: string;
+	onValueChange?: (value: string) => void;
 };
 
 function parseDateValue(value?: string) {
@@ -51,12 +50,13 @@ function formatDateLabel(date: Date) {
 	}).format(date);
 }
 
-export function ProjectDatePicker({
+export function DueDatePicker({
 	defaultValue,
 	disabled = false,
 	invalid = false,
 	errorId,
-}: ProjectDatePickerProps) {
+	onValueChange,
+}: DueDatePickerProps) {
 	const [date, setDate] = useState<Date | undefined>(() =>
 		parseDateValue(defaultValue),
 	);
@@ -97,6 +97,8 @@ export function ProjectDatePicker({
 						onSelect={(selectedDate) => {
 							setDate(selectedDate);
 
+							onValueChange?.(toDateValue(selectedDate));
+
 							if (selectedDate) {
 								setIsOpen(false);
 							}
@@ -111,7 +113,10 @@ export function ProjectDatePicker({
 							size="sm"
 							className="w-full"
 							disabled={!date}
-							onClick={() => setDate(undefined)}
+							onClick={() => {
+								setDate(undefined);
+								onValueChange?.("");
+							}}
 						>
 							<X aria-hidden="true" />
 							Clear date

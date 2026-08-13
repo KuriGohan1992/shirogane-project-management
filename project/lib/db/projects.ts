@@ -86,10 +86,15 @@ export async function getProjectOwnedByUser(
 	return db.query.projects.findFirst({
 		where: (project, { and, eq }) =>
 			and(eq(project.id, projectId), eq(project.ownerId, ownerId)),
-
 		with: {
 			stages: {
 				orderBy: (stage, { asc }) => [asc(stage.position)],
+				with: {
+					tasks: {
+						where: (task, { isNull }) => isNull(task.archivedAt),
+						orderBy: (task, { asc }) => [asc(task.position)],
+					},
+				},
 			},
 		},
 	});

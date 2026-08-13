@@ -1,0 +1,194 @@
+"use client";
+
+import { useState } from "react";
+import { CharacterCount } from "@/components/character-count";
+import { DueDatePicker } from "@/components/due-date-picker";
+import { FormFieldError } from "@/components/form-field-error";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { useFieldErrors } from "@/hooks/use-field-errors";
+import { TASK_FIELD_LIMITS } from "@/lib/constants/form-limits";
+import { cn } from "@/lib/utils";
+import type { TaskFormData } from "@/lib/validations/task";
+import type { TaskActionState } from "@/types/task";
+
+type TaskFormFieldsProps = {
+	state: TaskActionState;
+	defaultValues: TaskFormData;
+	pending: boolean;
+};
+
+const TASK_PRIORITY_OPTIONS = [
+	{ value: "low", label: "Low" },
+	{ value: "medium", label: "Medium" },
+	{ value: "high", label: "High" },
+	{ value: "urgent", label: "Urgent" },
+] satisfies ReadonlyArray<{
+	value: TaskFormData["priority"];
+	label: string;
+}>;
+
+type TaskField = keyof NonNullable<TaskActionState["errors"]>;
+
+export function TaskFormFields({
+	state,
+	defaultValues,
+	pending,
+}: TaskFormFieldsProps) {
+	const [titleLength, setTitleLength] = useState(defaultValues.title.length);
+
+	const [descriptionLength, setDescriptionLength] = useState(
+		defaultValues.description.length,
+	);
+	const titleErrorId = "task-title-error";
+	const descriptionErrorId = "task-description-error";
+	const priorityErrorId = "task-priority-error";
+	const dueDateErrorId = "task-due-date-error";
+
+	const { getFieldErrors, clearFieldError } = useFieldErrors<TaskField>(
+		state.errors,
+	);
+
+	const titleErrors = getFieldErrors("title");
+	const descriptionErrors = getFieldErrors("description");
+	const priorityErrors = getFieldErrors("priority");
+	const dueDateErrors = getFieldErrors("dueDate");
+
+	return (
+		<div className="space-y-5">
+			<div>
+				<div className="mb-2 flex items-center justify-between">
+					<label
+						htmlFor="task-title"
+						className="text-sm font-medium text-foreground"
+					>
+						Task title
+					</label>
+
+					<CharacterCount current={titleLength} max={TASK_FIELD_LIMITS.title} />
+				</div>
+
+				<input
+					id="task-title"
+					name="title"
+					type="text"
+					required
+					maxLength={TASK_FIELD_LIMITS.title}
+					defaultValue={defaultValues.title}
+					disabled={pending}
+					onChange={(event) => {
+						const value = event.currentTarget.value;
+
+						setTitleLength(value.length);
+
+						if (value.trim().length > 0) {
+							clearFieldError("title");
+						}
+					}}
+					aria-invalid={Boolean(titleErrors)}
+					aria-describedby={titleErrors ? titleErrorId : undefined}
+					placeholder="e.g. Build project dashboard"
+					className={cn(
+						"w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60",
+						titleErrors && "border-destructive",
+					)}
+				/>
+
+				<FormFieldError id={titleErrorId} messages={titleErrors} />
+			</div>
+
+			<div>
+				<div className="mb-2 flex items-center justify-between">
+					<label
+						htmlFor="task-description"
+						className="text-sm font-medium text-foreground"
+					>
+						Description
+					</label>
+
+					<CharacterCount
+						current={descriptionLength}
+						max={TASK_FIELD_LIMITS.description}
+					/>
+				</div>
+
+				<textarea
+					id="task-description"
+					name="description"
+					rows={4}
+					maxLength={TASK_FIELD_LIMITS.description}
+					defaultValue={defaultValues.description}
+					disabled={pending}
+					onChange={(event) => {
+						setDescriptionLength(event.currentTarget.value.length);
+
+						clearFieldError("description");
+					}}
+					aria-invalid={Boolean(descriptionErrors)}
+					aria-describedby={descriptionErrors ? descriptionErrorId : undefined}
+					placeholder="Add more details about this task..."
+					className={cn(
+						"w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60",
+						descriptionErrors && "border-destructive",
+					)}
+				/>
+
+				<FormFieldError id={descriptionErrorId} messages={descriptionErrors} />
+			</div>
+
+			<div>
+				<label
+					htmlFor="task-priority"
+					className="mb-2 block text-sm font-medium text-foreground"
+				>
+					Priority
+				</label>
+
+				<Select
+					name="priority"
+					defaultValue={defaultValues.priority}
+					disabled={pending}
+					onValueChange={() => clearFieldError("priority")}
+				>
+					<SelectTrigger
+						id="task-priority"
+						aria-invalid={Boolean(priorityErrors)}
+						aria-describedby={priorityErrors ? priorityErrorId : undefined}
+						className={cn("w-full", priorityErrors && "border-destructive")}
+					>
+						<SelectValue placeholder="Select priority" />
+					</SelectTrigger>
+
+					<SelectContent>
+						{TASK_PRIORITY_OPTIONS.map((option) => (
+							<SelectItem key={option.value} value={option.value}>
+								{option.label}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+
+				<FormFieldError id={priorityErrorId} messages={priorityErrors} />
+			</div>
+
+			<div>
+				<p className="mb-2 text-sm font-medium text-foreground">Due date</p>
+
+				<DueDatePicker
+					defaultValue={defaultValues.dueDate}
+					disabled={pending}
+					invalid={Boolean(dueDateErrors)}
+					errorId={dueDateErrorId}
+					onValueChange={() => clearFieldError("dueDate")}
+				/>
+
+				<FormFieldError id={dueDateErrorId} messages={dueDateErrors} />
+			</div>
+		</div>
+	);
+}

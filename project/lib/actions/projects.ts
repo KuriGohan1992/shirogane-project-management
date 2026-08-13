@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 
 import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import {
@@ -9,7 +10,7 @@ import {
 	deleteProjectOwnedByUser,
 	updateProjectOwnedByUser,
 } from "@/lib/db/projects";
-import { projectFormSchema } from "@/lib/validations/project";
+import { projectFormSchema, projectIdSchema } from "@/lib/validations/project";
 import type { ProjectActionState } from "@/types/project";
 
 function parseDueDate(value: string): Date | null {
@@ -33,8 +34,7 @@ export async function createProject(
 	if (!result.success) {
 		return {
 			success: false,
-			message: "Check the project details and try again.",
-			errors: result.error.flatten().fieldErrors,
+			errors: z.flattenError(result.error).fieldErrors,
 		};
 	}
 
@@ -71,6 +71,14 @@ export async function updateProject(
 	_previousState: ProjectActionState,
 	formData: FormData,
 ): Promise<ProjectActionState> {
+	const projectIdResult = projectIdSchema.safeParse(projectId);
+
+	if (!projectIdResult.success) {
+		return {
+			success: false,
+			message: "Project not found or you do not have permission to edit it.",
+		};
+	}
 	const result = projectFormSchema.safeParse({
 		name: formData.get("name"),
 		description: formData.get("description"),
@@ -80,19 +88,22 @@ export async function updateProject(
 	if (!result.success) {
 		return {
 			success: false,
-			message: "Check the project details and try again.",
-			errors: result.error.flatten().fieldErrors,
+			errors: z.flattenError(result.error).fieldErrors,
 		};
 	}
 
 	try {
 		const user = await getCurrentDatabaseUser();
 
-		const project = await updateProjectOwnedByUser(projectId, user.id, {
-			name: result.data.name,
-			description: result.data.description || null,
-			dueDate: parseDueDate(result.data.dueDate),
-		});
+		const project = await updateProjectOwnedByUser(
+			projectIdResult.data,
+			user.id,
+			{
+				name: result.data.name,
+				description: result.data.description || null,
+				dueDate: parseDueDate(result.data.dueDate),
+			},
+		);
 
 		if (!project) {
 			return {
@@ -102,7 +113,7 @@ export async function updateProject(
 		}
 
 		revalidatePath("/projects");
-		revalidatePath(`/projects/${projectId}`);
+		revalidatePath(`/projects/${projectIdResult.data}`);
 		revalidatePath("/dashboard");
 
 		return {
@@ -123,11 +134,20 @@ export async function deleteProject(
 	projectId: string,
 	_formData: FormData,
 ): Promise<void> {
-	console.log("hello");
+	const projectIdResult = projectIdSchema.safeParse(projectId);
+
+	if (!projectIdResult.success) {
+		throw new Error(
+			"Project not found or user does not have permission to delete it.",
+		);
+	}
 	try {
 		const user = await getCurrentDatabaseUser();
 
-		const deletedProjectId = await deleteProjectOwnedByUser(projectId, user.id);
+		const deletedProjectId = await deleteProjectOwnedByUser(
+			projectIdResult.data,
+			user.id,
+		);
 
 		if (!deletedProjectId) {
 			throw new Error(

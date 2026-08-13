@@ -1,116 +1,141 @@
 "use client";
 
-import { ProjectDatePicker } from "@/components/project-date-picker";
+import { useState } from "react";
+import { CharacterCount } from "@/components/character-count";
+import { DueDatePicker } from "@/components/due-date-picker";
+import { FormFieldError } from "@/components/form-field-error";
+import { useFieldErrors } from "@/hooks/use-field-errors";
+import { PROJECT_FIELD_LIMITS } from "@/lib/constants/form-limits";
 import { cn } from "@/lib/utils";
-import type { ProjectActionState, ProjectFormValues } from "@/types/project";
+import type { ProjectFormData } from "@/lib/validations/project";
+import type { ProjectActionState } from "@/types/project";
 
 type ProjectFormFieldsProps = {
 	state: ProjectActionState;
-	defaultValues: ProjectFormValues;
+	defaultValues: ProjectFormData;
 	pending: boolean;
 };
 
-type FieldErrorProps = {
-	id: string;
-	messages?: string[];
-};
-
-function FieldError({ id, messages }: FieldErrorProps) {
-	const message = messages?.[0];
-
-	if (!message) {
-		return null;
-	}
-
-	return (
-		<p id={id} className="mt-1.5 text-sm text-destructive">
-			{message}
-		</p>
-	);
-}
+type ProjectField = keyof NonNullable<ProjectActionState["errors"]>;
 
 export function ProjectFormFields({
 	state,
 	defaultValues,
 	pending,
 }: ProjectFormFieldsProps) {
+	const [nameLength, setNameLength] = useState(defaultValues.name.length);
+
+	const [descriptionLength, setDescriptionLength] = useState(
+		defaultValues.description.length,
+	);
 	const nameErrorId = "project-name-error";
 	const descriptionErrorId = "project-description-error";
 	const dueDateErrorId = "project-due-date-error";
 
+	const { getFieldErrors, clearFieldError } = useFieldErrors<ProjectField>(
+		state.errors,
+	);
+
+	const nameErrors = getFieldErrors("name");
+	const descriptionErrors = getFieldErrors("description");
+	const dueDateErrors = getFieldErrors("dueDate");
+
 	return (
 		<div className="space-y-5">
 			<div>
-				<label
-					htmlFor="project-name"
-					className="mb-2 block text-sm font-medium text-foreground"
-				>
-					Project name
-				</label>
+				<div className="mb-2 flex items-center justify-between">
+					<label
+						htmlFor="project-name"
+						className="text-sm font-medium text-foreground"
+					>
+						Project name
+					</label>
+
+					<CharacterCount
+						current={nameLength}
+						max={PROJECT_FIELD_LIMITS.name}
+					/>
+				</div>
 
 				<input
 					id="project-name"
 					name="name"
 					type="text"
 					required
-					maxLength={100}
+					maxLength={PROJECT_FIELD_LIMITS.name}
 					defaultValue={defaultValues.name}
 					disabled={pending}
-					aria-invalid={Boolean(state.errors?.name)}
-					aria-describedby={state.errors?.name ? nameErrorId : undefined}
+					onChange={(event) => {
+						const value = event.currentTarget.value;
+
+						setNameLength(value.length);
+
+						if (value.trim().length > 0) {
+							clearFieldError("name");
+						}
+					}}
+					aria-invalid={Boolean(nameErrors)}
+					aria-describedby={nameErrors ? nameErrorId : undefined}
 					placeholder="e.g. Shiro Capstone"
 					className={cn(
 						"w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60",
-						state.errors?.name && "border-destructive",
+						nameErrors && "border-destructive",
 					)}
 				/>
 
-				<FieldError id={nameErrorId} messages={state.errors?.name} />
+				<FormFieldError id={nameErrorId} messages={nameErrors} />
 			</div>
 
 			<div>
-				<label
-					htmlFor="project-description"
-					className="mb-2 block text-sm font-medium text-foreground"
-				>
-					Description
-				</label>
+				<div className="mb-2 flex items-center justify-between">
+					<label
+						htmlFor="project-description"
+						className="text-sm font-medium text-foreground"
+					>
+						Description
+					</label>
 
+					<CharacterCount
+						current={descriptionLength}
+						max={PROJECT_FIELD_LIMITS.description}
+					/>
+				</div>
 				<textarea
 					id="project-description"
 					name="description"
 					rows={4}
-					maxLength={500}
+					maxLength={PROJECT_FIELD_LIMITS.description}
 					defaultValue={defaultValues.description}
 					disabled={pending}
-					aria-invalid={Boolean(state.errors?.description)}
-					aria-describedby={
-						state.errors?.description ? descriptionErrorId : undefined
-					}
+					onChange={(event) => {
+						setDescriptionLength(event.currentTarget.value.length);
+
+						clearFieldError("description");
+					}}
+					aria-invalid={Boolean(descriptionErrors)}
+					aria-describedby={descriptionErrors ? descriptionErrorId : undefined}
 					placeholder="What is this project about?"
 					className={cn(
 						"w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60",
-						state.errors?.description && "border-destructive",
+						descriptionErrors && "border-destructive",
 					)}
 				/>
 
-				<FieldError
-					id={descriptionErrorId}
-					messages={state.errors?.description}
-				/>
+				<FormFieldError id={descriptionErrorId} messages={descriptionErrors} />
 			</div>
 
 			<div>
 				<p className="mb-2 text-sm font-medium text-foreground">Due date</p>
 
-				<ProjectDatePicker
+				<DueDatePicker
 					defaultValue={defaultValues.dueDate}
 					disabled={pending}
-					invalid={Boolean(state.errors?.dueDate)}
+					invalid={Boolean(dueDateErrors)}
 					errorId={dueDateErrorId}
+					onValueChange={() => clearFieldError("dueDate")}
 				/>
 
-				<FieldError id={dueDateErrorId} messages={state.errors?.dueDate} />
+				<FormFieldError id={dueDateErrorId} messages={dueDateErrors} />
 			</div>
 		</div>
 	);

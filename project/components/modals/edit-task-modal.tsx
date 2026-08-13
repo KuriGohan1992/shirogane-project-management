@@ -1,6 +1,3 @@
-// TODO: Extend task details with assignees, labels,
-// attachments, comments, and activity history.
-
 import { useActionState, useEffect } from "react";
 
 import { TaskFormFields } from "@/components/task-form-fields";
@@ -13,12 +10,11 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { createTask } from "@/lib/actions/tasks";
-import type { TaskActionState } from "@/types/task";
+import { updateTask } from "@/lib/actions/tasks";
+import type { EditableTask, TaskActionState } from "@/types/task";
 
-type CreateTaskModalProps = {
-	stageId: string;
-	stageName: string;
+type EditTaskModalProps = {
+	task: EditableTask;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 };
@@ -27,16 +23,15 @@ const initialState: TaskActionState = {
 	success: false,
 };
 
-export function CreateTaskModal({
-	stageId,
-	stageName,
+export function EditTaskModal({
+	task,
 	open,
 	onOpenChange,
-}: CreateTaskModalProps) {
-	const createAction = createTask.bind(null, stageId);
+}: EditTaskModalProps) {
+	const updateAction = updateTask.bind(null, task.id);
 
 	const [state, formAction, pending] = useActionState(
-		createAction,
+		updateAction,
 		initialState,
 	);
 
@@ -54,9 +49,9 @@ export function CreateTaskModal({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="sm:max-w-lg">
 				<DialogHeader>
-					<DialogTitle>Create task</DialogTitle>
+					<DialogTitle>Edit task</DialogTitle>
 
-					<DialogDescription>Add a task to {stageName}.</DialogDescription>
+					<DialogDescription>Update the task details.</DialogDescription>
 				</DialogHeader>
 
 				<form action={formAction} className="space-y-6" noValidate>
@@ -64,10 +59,10 @@ export function CreateTaskModal({
 						state={state}
 						pending={pending}
 						defaultValues={{
-							title: "",
-							description: "",
-							priority: "medium",
-							dueDate: "",
+							title: task.title,
+							description: task.description,
+							priority: task.priority,
+							dueDate: task.dueDate,
 						}}
 					/>
 
@@ -88,7 +83,7 @@ export function CreateTaskModal({
 						</Button>
 
 						<Button type="submit" disabled={pending}>
-							{pending ? "Creating..." : "Create task"}
+							{pending ? "Saving..." : "Save changes"}
 						</Button>
 					</DialogFooter>
 				</form>
