@@ -1,8 +1,9 @@
 import "server-only";
 
 import { and, eq, inArray, sql } from "drizzle-orm";
-
+import type { ProjectMemberRoleValue } from "@/lib/constants/project-roles";
 import { db } from "@/lib/db";
+import { getProjectAccess } from "@/lib/db/project-access";
 import { projectMembers, taskAssignees } from "@/lib/db/schema";
 
 type AddProjectMemberResult =
@@ -11,6 +12,11 @@ type AddProjectMemberResult =
 	| "user_not_found"
 	| "owner"
 	| "already_member";
+
+type UpdateProjectMemberRoleResult =
+	| "updated"
+	| "project_not_found"
+	| "member_not_found";
 
 export async function addProjectMemberByEmail(
 	projectId: string,
@@ -107,6 +113,8 @@ export async function removeProjectMemberOwnedByUser(
 		stage.tasks.map((task) => task.id),
 	);
 
+	await removeUserAssignmentsFromProject(projectId, memberUserId);
+
 	const deleteMembership = db
 		.delete(projectMembers)
 		.where(
@@ -139,4 +147,98 @@ export async function removeProjectMemberOwnedByUser(
 	]);
 
 	return deletedMembers[0] ? project.id : undefined;
+}
+
+async function removeUserAssignmentsFromProject(
+	projectId: string,
+	userId: string,
+) {
+	const project = await db.query.projects.findFirst({
+		columns: {
+			id: true,
+		},
+
+		where: (project, { eq }) => eq(project.id, projectId),
+
+		with: {
+			stages: {
+				columns: {
+					id: true,
+				},
+
+				with: {
+					tasks: {
+						columns: {
+							id: true,
+						},
+					},
+				},
+			},
+		},
+	});
+
+	if (!project) {
+		return;
+	}
+
+	const taskIds = project.stages.flatMap((stage) =>
+		stage.tasks.map((task) => task.id),
+	);
+
+	if (taskIds.length === 0) {
+		return;
+	}
+
+	await db
+		.delete(taskAssignees)
+		.where(
+			and(
+				eq(taskAssignees.userId, userId),
+				inArray(taskAssignees.taskId, taskIds),
+			),
+		);
+}
+
+export async function updateProjectMemberRoleOwnedByUser(
+	projectId: string,
+	memberUserId: string,
+	ownerId: string,
+	role: ProjectMemberRoleValue,
+): Promise<UpdateProjectMemberRoleResult> {
+	const accessRole = await getProjectAccess(projectId, ownerId);
+
+	if (accessRole !== "owner") {
+		return "project_not_found";
+	}
+
+	const existingMember = await db.query.projectMembers.findFirst({
+		columns: {
+			role: true,
+		},
+
+		where: (member, { and, eq }) =>
+			and(eq(member.projectId, projectId), eq(member.userId, memberUserId)),
+	});
+
+	if (!existingMember) {
+		return "member_not_found";
+	}
+
+	if (role === "viewer" && existingMember.role !== "viewer") {
+		await removeUserAssignmentsFromProject(projectId, memberUserId);
+	}
+
+	await db
+		.update(projectMembers)
+		.set({
+			role,
+		})
+		.where(
+			and(
+				eq(projectMembers.projectId, projectId),
+				eq(projectMembers.userId, memberUserId),
+			),
+		);
+
+	return "updated";
 }

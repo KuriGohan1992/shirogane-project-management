@@ -1,8 +1,9 @@
 import "server-only";
 
 import { and, eq, isNull } from "drizzle-orm";
-
+import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { db } from "@/lib/db";
+import { getProjectAccess } from "@/lib/db/project-access";
 import { type NewTask, type Task, tasks } from "@/lib/db/schema";
 
 type TaskMutationData = Pick<
@@ -15,47 +16,61 @@ type TaskMutationResult = {
 	projectId: string;
 };
 
-async function getOwnedStage(stageId: string, ownerId: string) {
+async function getEditableStage(stageId: string, userId: string) {
 	const stage = await db.query.stages.findFirst({
-		where: (stage, { eq }) => eq(stage.id, stageId),
-		with: {
-			project: true,
+		columns: {
+			id: true,
+			projectId: true,
 		},
+
+		where: (stage, { eq }) => eq(stage.id, stageId),
 	});
 
-	if (!stage || stage.project.ownerId !== ownerId) {
+	if (!stage) {
+		return undefined;
+	}
+
+	const accessRole = await getProjectAccess(stage.projectId, userId);
+
+	if (!accessRole || !getProjectPermissions(accessRole).canManageTasks) {
 		return undefined;
 	}
 
 	return stage;
 }
-
-async function getOwnedTask(taskId: string, ownerId: string) {
+async function getEditableTask(taskId: string, userId: string) {
 	const task = await db.query.tasks.findFirst({
 		where: (task, { and, eq, isNull }) =>
 			and(eq(task.id, taskId), isNull(task.archivedAt)),
+
 		with: {
 			stage: {
-				with: {
-					project: true,
+				columns: {
+					projectId: true,
 				},
 			},
 		},
 	});
 
-	if (!task || task.stage.project.ownerId !== ownerId) {
+	if (!task) {
+		return undefined;
+	}
+
+	const accessRole = await getProjectAccess(task.stage.projectId, userId);
+
+	if (!accessRole || !getProjectPermissions(accessRole).canManageTasks) {
 		return undefined;
 	}
 
 	return task;
 }
 
-export async function createTaskInOwnedStage(
+export async function createTaskInStage(
 	stageId: string,
 	ownerId: string,
 	data: TaskMutationData,
 ): Promise<TaskMutationResult | undefined> {
-	const stage = await getOwnedStage(stageId, ownerId);
+	const stage = await getEditableStage(stageId, ownerId);
 
 	if (!stage) {
 		return undefined;
@@ -88,12 +103,12 @@ export async function createTaskInOwnedStage(
 	};
 }
 
-export async function updateTaskOwnedByUser(
+export async function updateTaskForUser(
 	taskId: string,
 	ownerId: string,
 	data: TaskMutationData,
 ): Promise<TaskMutationResult | undefined> {
-	const existingTask = await getOwnedTask(taskId, ownerId);
+	const existingTask = await getEditableTask(taskId, ownerId);
 
 	if (!existingTask) {
 		return undefined;
@@ -118,11 +133,11 @@ export async function updateTaskOwnedByUser(
 	};
 }
 
-export async function deleteTaskOwnedByUser(
+export async function deleteTaskForUser(
 	taskId: string,
 	ownerId: string,
 ): Promise<string | undefined> {
-	const existingTask = await getOwnedTask(taskId, ownerId);
+	const existingTask = await getEditableTask(taskId, ownerId);
 
 	if (!existingTask) {
 		return undefined;

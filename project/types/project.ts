@@ -1,3 +1,5 @@
+import type { ProjectAccessRole } from "@/lib/auth/project-permissions";
+import type { Project } from "@/lib/db/schema";
 import type { ProjectFormData } from "@/lib/validations/project";
 
 export type ProjectActionState = {
@@ -12,4 +14,8 @@ export type ProjectActionState = {
 
 export type EditableProject = ProjectFormData & {
 	id: string;
+};
+
+export type ProjectWithAccess = Project & {
+	accessRole: ProjectAccessRole;
 };

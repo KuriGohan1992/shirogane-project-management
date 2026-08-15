@@ -3,10 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
-import {
-	assignUserToOwnedTask,
-	unassignUserFromOwnedTask,
-} from "@/lib/db/assignees";
+import { assignUserToTask, unassignUserFromTask } from "@/lib/db/assignees";
 import { taskIdSchema } from "@/lib/validations/task";
 import { userIdSchema } from "@/lib/validations/user";
 
@@ -25,7 +22,7 @@ export async function assignTask(
 
 	const user = await getCurrentDatabaseUser();
 
-	const result = await assignUserToOwnedTask(
+	const result = await assignUserToTask(
 		taskIdResult.data,
 		userIdResult.data,
 		user.id,
@@ -59,7 +56,7 @@ export async function unassignTask(
 
 	const user = await getCurrentDatabaseUser();
 
-	const result = await unassignUserFromOwnedTask(
+	const result = await unassignUserFromTask(
 		taskIdResult.data,
 		userIdResult.data,
 		user.id,

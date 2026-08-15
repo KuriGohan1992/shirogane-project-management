@@ -5,10 +5,10 @@ import { z } from "zod";
 
 import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import {
-	createStageInOwnedProject,
-	deleteStageOwnedByUser,
-	moveStageOwnedByUser,
-	renameStageOwnedByUser,
+	createStageInProject,
+	deleteStageForUser,
+	moveStageForUser,
+	renameStageForUser,
 } from "@/lib/db/stages";
 import { projectIdSchema } from "@/lib/validations/project";
 import { stageFormSchema, stageIdSchema } from "@/lib/validations/stage";
@@ -42,13 +42,9 @@ export async function createStage(
 	try {
 		const user = await getCurrentDatabaseUser();
 
-		const created = await createStageInOwnedProject(
-			projectIdResult.data,
-			user.id,
-			{
-				name: result.data.name,
-			},
-		);
+		const created = await createStageInProject(projectIdResult.data, user.id, {
+			name: result.data.name,
+		});
 
 		if (!created) {
 			return {
@@ -102,7 +98,7 @@ export async function renameStage(
 	try {
 		const user = await getCurrentDatabaseUser();
 
-		const renamed = await renameStageOwnedByUser(stageIdResult.data, user.id, {
+		const renamed = await renameStageForUser(stageIdResult.data, user.id, {
 			name: result.data.name,
 		});
 
@@ -144,7 +140,7 @@ export async function deleteStage(
 
 	const user = await getCurrentDatabaseUser();
 
-	const projectId = await deleteStageOwnedByUser(stageIdResult.data, user.id);
+	const projectId = await deleteStageForUser(stageIdResult.data, user.id);
 
 	if (!projectId) {
 		throw new Error(
@@ -174,7 +170,7 @@ export async function moveStage(
 
 	const user = await getCurrentDatabaseUser();
 
-	const projectId = await moveStageOwnedByUser(
+	const projectId = await moveStageForUser(
 		stageIdResult.data,
 		user.id,
 		direction,

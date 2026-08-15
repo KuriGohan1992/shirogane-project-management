@@ -7,8 +7,8 @@ import { z } from "zod";
 import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import {
 	createProjectWithDefaultStages,
-	deleteProjectOwnedByUser,
-	updateProjectOwnedByUser,
+	deleteProjectForUser,
+	updateProjectForUser,
 } from "@/lib/db/projects";
 import { projectFormSchema, projectIdSchema } from "@/lib/validations/project";
 import type { ProjectActionState } from "@/types/project";
@@ -95,15 +95,11 @@ export async function updateProject(
 	try {
 		const user = await getCurrentDatabaseUser();
 
-		const project = await updateProjectOwnedByUser(
-			projectIdResult.data,
-			user.id,
-			{
-				name: result.data.name,
-				description: result.data.description || null,
-				dueDate: parseDueDate(result.data.dueDate),
-			},
-		);
+		const project = await updateProjectForUser(projectIdResult.data, user.id, {
+			name: result.data.name,
+			description: result.data.description || null,
+			dueDate: parseDueDate(result.data.dueDate),
+		});
 
 		if (!project) {
 			return {
@@ -144,7 +140,7 @@ export async function deleteProject(
 	try {
 		const user = await getCurrentDatabaseUser();
 
-		const deletedProjectId = await deleteProjectOwnedByUser(
+		const deletedProjectId = await deleteProjectForUser(
 			projectIdResult.data,
 			user.id,
 		);

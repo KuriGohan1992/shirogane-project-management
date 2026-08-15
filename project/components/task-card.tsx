@@ -5,6 +5,7 @@ import { CalendarDays, CircleAlert } from "lucide-react";
 
 import { TaskActions } from "@/components/task-actions";
 import { TaskAssigneePicker } from "@/components/task-assignee-picker";
+import type { ProjectPermissions } from "@/lib/auth/project-permissions";
 import type { Task } from "@/lib/db/schema";
 import type { AssignmentCandidate } from "@/types/member";
 import type { EditableTask, TaskWithAssignees } from "@/types/task";
@@ -12,6 +13,7 @@ import type { EditableTask, TaskWithAssignees } from "@/types/task";
 type TaskCardProps = {
 	task: TaskWithAssignees;
 	assigneeCandidates: AssignmentCandidate[];
+	permissions: ProjectPermissions;
 };
 
 function formatDate(date: Date) {
@@ -49,7 +51,11 @@ function toEditableTask(task: Task): EditableTask {
 	};
 }
 
-export function TaskCard({ task, assigneeCandidates }: TaskCardProps) {
+export function TaskCard({
+	task,
+	assigneeCandidates,
+	permissions,
+}: TaskCardProps) {
 	const assignedUsers = task.assignees.map((assignee) => assignee.user);
 	return (
 		<article className="rounded-lg border border-border bg-card p-4 shadow-sm">
@@ -58,7 +64,9 @@ export function TaskCard({ task, assigneeCandidates }: TaskCardProps) {
 					{task.title}
 				</h4>
 
-				<TaskActions task={toEditableTask(task)} />
+				{permissions.canManageTasks && (
+					<TaskActions task={toEditableTask(task)} />
+				)}
 			</div>
 
 			{task.description && (
@@ -85,6 +93,7 @@ export function TaskCard({ task, assigneeCandidates }: TaskCardProps) {
 					taskId={task.id}
 					candidates={assigneeCandidates}
 					assignedUsers={assignedUsers}
+					canManage={permissions.canAssignTasks}
 				/>
 			</div>
 		</article>

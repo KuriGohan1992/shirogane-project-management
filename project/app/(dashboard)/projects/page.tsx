@@ -1,11 +1,11 @@
 import { CreateProjectButton } from "@/components/create-project-button";
 import { ProjectGrid } from "@/components/project-grid";
 import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
-import { getProjectsOwnedByUser } from "@/lib/db/projects";
+import { getProjectsForUser } from "@/lib/db/projects";
 
 export default async function ProjectsPage() {
 	const user = await getCurrentDatabaseUser();
-	const projects = await getProjectsOwnedByUser(user.id);
+	const projects = await getProjectsForUser(user.id);
 
 	return (
 		<div className="space-y-6">

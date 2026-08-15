@@ -9,6 +9,7 @@ import {
 	timestamp,
 	uuid,
 } from "drizzle-orm/pg-core";
+import { PROJECT_MEMBER_ROLE_VALUES } from "../constants/project-roles";
 
 /*
  * Enumerations
@@ -16,10 +17,10 @@ import {
  * PostgreSQL enums restrict a column to a predefined set of values.
  */
 
-export const projectMemberRoleEnum = pgEnum("project_member_role", [
-	"member",
-	"viewer",
-]);
+export const projectMemberRoleEnum = pgEnum(
+	"project_member_role",
+	PROJECT_MEMBER_ROLE_VALUES,
+);
 
 export const taskPriorityEnum = pgEnum("task_priority", [
 	"low",

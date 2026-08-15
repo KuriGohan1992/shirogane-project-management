@@ -3,6 +3,7 @@
 
 import { CreateStageButton } from "@/components/create-stage-button";
 import { StageColumn } from "@/components/stage-column";
+import type { ProjectPermissions } from "@/lib/auth/project-permissions";
 import type { AssignmentCandidate } from "@/types/member";
 import type { StageWithTasks } from "@/types/stage";
 
@@ -10,12 +11,14 @@ type KanbanBoardProps = {
 	projectId: string;
 	stages: StageWithTasks[];
 	assigneeCandidates: AssignmentCandidate[];
+	permissions: ProjectPermissions;
 };
 
 export function KanbanBoard({
 	projectId,
 	stages,
 	assigneeCandidates,
+	permissions,
 }: KanbanBoardProps) {
 	return (
 		<div className="flex min-h-[calc(100vh-22rem)] items-start gap-4 overflow-x-auto pb-4">
@@ -26,10 +29,12 @@ export function KanbanBoard({
 					canMoveLeft={index > 0}
 					canMoveRight={index < stages.length - 1}
 					assigneeCandidates={assigneeCandidates}
+					permissions={permissions}
 				/>
 			))}
-
-			<CreateStageButton projectId={projectId} />
+			{permissions.canManageStages && (
+				<CreateStageButton projectId={projectId} />
+			)}
 		</div>
 	);
 }

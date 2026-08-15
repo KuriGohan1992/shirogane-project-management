@@ -7,8 +7,12 @@ import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import {
 	addProjectMemberByEmail,
 	removeProjectMemberOwnedByUser,
+	updateProjectMemberRoleOwnedByUser,
 } from "@/lib/db/members";
-import { projectMemberFormSchema } from "@/lib/validations/member";
+import {
+	projectMemberFormSchema,
+	projectMemberRoleSchema,
+} from "@/lib/validations/member";
 import { projectIdSchema } from "@/lib/validations/project";
 import { userIdSchema } from "@/lib/validations/user";
 import type { ProjectMemberActionState } from "@/types/member";
@@ -118,6 +122,43 @@ export async function removeProjectMember(
 	}
 
 	revalidatePath(`/projects/${affectedProjectId}`);
+
+	revalidatePath("/projects");
+}
+
+export async function updateProjectMemberRole(
+	projectId: string,
+	memberUserId: string,
+	formData: FormData,
+): Promise<void> {
+	const projectIdResult = projectIdSchema.safeParse(projectId);
+
+	const userIdResult = userIdSchema.safeParse(memberUserId);
+
+	const roleResult = projectMemberRoleSchema.safeParse(formData.get("role"));
+
+	if (
+		!projectIdResult.success ||
+		!userIdResult.success ||
+		!roleResult.success
+	) {
+		throw new Error("The member role could not be updated.");
+	}
+
+	const user = await getCurrentDatabaseUser();
+
+	const result = await updateProjectMemberRoleOwnedByUser(
+		projectIdResult.data,
+		userIdResult.data,
+		user.id,
+		roleResult.data,
+	);
+
+	if (result !== "updated") {
+		throw new Error("The member role could not be updated.");
+	}
+
+	revalidatePath(`/projects/${projectIdResult.data}`);
 
 	revalidatePath("/projects");
 }

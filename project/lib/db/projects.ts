@@ -2,15 +2,17 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 
-import { and, eq } from "drizzle-orm";
-
+import { eq } from "drizzle-orm";
+import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { db } from "@/lib/db";
+import { getProjectAccess } from "@/lib/db/project-access";
 import {
 	type NewProject,
 	type Project,
 	projects,
 	stages,
 } from "@/lib/db/schema";
+import type { ProjectWithAccess } from "@/types/project";
 
 export const DEFAULT_PROJECT_STAGES = [
 	{
@@ -70,22 +72,53 @@ export async function createProjectWithDefaultStages(
 	return project;
 }
 
-export async function getProjectsOwnedByUser(
-	ownerId: string,
-): Promise<Project[]> {
-	return db.query.projects.findMany({
-		where: (project, { eq }) => eq(project.ownerId, ownerId),
-		orderBy: (project, { desc }) => [desc(project.updatedAt)],
-	});
+export async function getProjectsForUser(
+	userId: string,
+): Promise<ProjectWithAccess[]> {
+	const [ownedProjects, memberships] = await Promise.all([
+		db.query.projects.findMany({
+			where: (project, { eq }) => eq(project.ownerId, userId),
+		}),
+
+		db.query.projectMembers.findMany({
+			columns: {
+				role: true,
+			},
+
+			where: (member, { eq }) => eq(member.userId, userId),
+
+			with: {
+				project: true,
+			},
+		}),
+	]);
+
+	const accessibleProjects: ProjectWithAccess[] = [
+		...ownedProjects.map((project) => ({
+			...project,
+			accessRole: "owner" as const,
+		})),
+
+		...memberships.map((membership) => ({
+			...membership.project,
+			accessRole: membership.role,
+		})),
+	];
+
+	return accessibleProjects.sort(
+		(a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
+	);
 }
 
-export async function getProjectOwnedByUser(
-	projectId: string,
-	ownerId: string,
-) {
-	return db.query.projects.findFirst({
-		where: (project, { and, eq }) =>
-			and(eq(project.id, projectId), eq(project.ownerId, ownerId)),
+export async function getProjectForUser(projectId: string, userId: string) {
+	const accessRole = await getProjectAccess(projectId, userId);
+
+	if (!accessRole) {
+		return undefined;
+	}
+
+	const project = await db.query.projects.findFirst({
+		where: (project, { eq }) => eq(project.id, projectId),
 
 		with: {
 			owner: {
@@ -142,32 +175,53 @@ export async function getProjectOwnedByUser(
 			},
 		},
 	});
+
+	if (!project) {
+		return undefined;
+	}
+
+	return {
+		...project,
+		accessRole,
+	};
 }
 
-export async function updateProjectOwnedByUser(
+export async function updateProjectForUser(
 	projectId: string,
-	ownerId: string,
+	userId: string,
 	data: UpdateProjectData,
 ): Promise<Project | undefined> {
+	const accessRole = await getProjectAccess(projectId, userId);
+
+	if (!accessRole || !getProjectPermissions(accessRole).canEditProject) {
+		return undefined;
+	}
+
 	const [project] = await db
 		.update(projects)
 		.set({
 			...data,
 			updatedAt: new Date(),
 		})
-		.where(and(eq(projects.id, projectId), eq(projects.ownerId, ownerId)))
+		.where(eq(projects.id, projectId))
 		.returning();
 
 	return project;
 }
 
-export async function deleteProjectOwnedByUser(
+export async function deleteProjectForUser(
 	projectId: string,
-	ownerId: string,
+	userId: string,
 ): Promise<string | undefined> {
+	const accessRole = await getProjectAccess(projectId, userId);
+
+	if (!accessRole || !getProjectPermissions(accessRole).canDeleteProject) {
+		return undefined;
+	}
+
 	const [deletedProject] = await db
 		.delete(projects)
-		.where(and(eq(projects.id, projectId), eq(projects.ownerId, ownerId)))
+		.where(eq(projects.id, projectId))
 		.returning({
 			id: projects.id,
 		});

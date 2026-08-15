@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, UserPlus } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import {
 	Popover,
@@ -16,16 +17,46 @@ type TaskAssigneePickerProps = {
 	taskId: string;
 	candidates: AssignmentCandidate[];
 	assignedUsers: UserSummary[];
+	canManage: boolean;
 };
 
 export function TaskAssigneePicker({
 	taskId,
 	candidates,
 	assignedUsers,
+	canManage,
 }: TaskAssigneePickerProps) {
 	const assignedUserIds = new Set(assignedUsers.map((user) => user.id));
 
 	const visibleAssignees = assignedUsers.slice(0, 3);
+
+	if (!canManage) {
+		if (assignedUsers.length === 0) {
+			return null;
+		}
+
+		return (
+			<fieldset className="flex min-w-0 items-center gap-1.5 border-0 p-0">
+				<legend className="sr-only">Task assignees</legend>
+
+				<div className="flex -space-x-2">
+					{visibleAssignees.map((user) => (
+						<UserAvatar
+							key={user.id}
+							user={user}
+							className="size-6 border-2 border-card"
+						/>
+					))}
+				</div>
+
+				{assignedUsers.length > 3 && (
+					<span className="text-xs text-muted-foreground">
+						+{assignedUsers.length - 3}
+					</span>
+				)}
+			</fieldset>
+		);
+	}
 
 	return (
 		<Popover>

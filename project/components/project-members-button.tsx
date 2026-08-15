@@ -12,12 +12,14 @@ type ProjectMembersButtonProps = {
 	projectId: string;
 	owner: UserSummary;
 	members: ProjectMemberWithUser[];
+	canManageMembers: boolean;
 };
 
 export function ProjectMembersButton({
 	projectId,
 	owner,
 	members,
+	canManageMembers,
 }: ProjectMembersButtonProps) {
 	const [isOpen, setIsOpen] = useState(false);
 
@@ -42,6 +44,7 @@ export function ProjectMembersButton({
 					members={members}
 					open={isOpen}
 					onOpenChange={setIsOpen}
+					canManageMembers={canManageMembers}
 				/>
 			)}
 		</>

@@ -2,11 +2,13 @@ import { ArrowLeft, CalendarDays, Clock3 } from "lucide-react";
 import Link from "next/link";
 
 import { ProjectActions } from "@/components/project-actions";
+import type { ProjectPermissions } from "@/lib/auth/project-permissions";
 import type { Project } from "@/lib/db/schema";
 import type { EditableProject } from "@/types/project";
 
 type ProjectHeaderProps = {
 	project: Project;
+	permissions: ProjectPermissions;
 };
 
 function formatDate(date: Date) {
@@ -27,7 +29,7 @@ function toEditableProject(project: Project): EditableProject {
 	};
 }
 
-export function ProjectHeader({ project }: ProjectHeaderProps) {
+export function ProjectHeader({ project, permissions }: ProjectHeaderProps) {
 	return (
 		<div className="rounded-xl border border-border bg-card p-6">
 			<div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
@@ -69,7 +71,11 @@ export function ProjectHeader({ project }: ProjectHeaderProps) {
 					</div>
 				</div>
 
-				<ProjectActions project={toEditableProject(project)} />
+				<ProjectActions
+					project={toEditableProject(project)}
+					canEdit={permissions.canEditProject}
+					canDelete={permissions.canDeleteProject}
+				/>
 			</div>
 		</div>
 	);

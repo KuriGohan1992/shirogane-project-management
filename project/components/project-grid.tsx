@@ -2,10 +2,10 @@ import { FolderPlus } from "lucide-react";
 
 import { CreateProjectButton } from "@/components/create-project-button";
 import { ProjectCard } from "@/components/project-card";
-import type { Project } from "@/lib/db/schema";
+import type { ProjectWithAccess } from "@/types/project";
 
 type ProjectGridProps = {
-	projects: Project[];
+	projects: ProjectWithAccess[];
 };
 
 export function ProjectGrid({ projects }: ProjectGridProps) {

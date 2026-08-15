@@ -1,4 +1,10 @@
-import { useActionState, useEffect } from "react";
+import {
+	useActionState,
+	useEffect,
+	useRef,
+	useState,
+	useTransition,
+} from "react";
 
 import { FormFieldError } from "@/components/form-field-error";
 import {
@@ -19,9 +25,25 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { UserAvatar } from "@/components/user-avatar";
 import { useFieldErrors } from "@/hooks/use-field-errors";
-import { addProjectMember, removeProjectMember } from "@/lib/actions/members";
+import {
+	addProjectMember,
+	removeProjectMember,
+	updateProjectMemberRole,
+} from "@/lib/actions/members";
+import type { ProjectMemberRoleValue } from "@/lib/constants/project-roles";
+import {
+	PROJECT_MEMBER_ROLE_LABELS,
+	PROJECT_MEMBER_ROLE_VALUES,
+} from "@/lib/constants/project-roles";
 import { cn } from "@/lib/utils";
 import type {
 	ProjectMemberActionState,
@@ -35,13 +57,29 @@ type ProjectMembersModalProps = {
 	members: ProjectMemberWithUser[];
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
+	canManageMembers: boolean;
 };
 
 type MemberField = keyof NonNullable<ProjectMemberActionState["errors"]>;
 
+type RoleDrafts = Record<string, ProjectMemberRoleValue>;
+
+type RoleSaveFeedback =
+	| {
+			type: "success" | "error";
+			message: string;
+	  }
+	| undefined;
+
 const initialState: ProjectMemberActionState = {
 	success: false,
 };
+
+function createRoleDrafts(members: ProjectMemberWithUser[]): RoleDrafts {
+	return Object.fromEntries(
+		members.map((member) => [member.userId, member.role]),
+	) as RoleDrafts;
+}
 
 export function ProjectMembersModal({
 	projectId,
@@ -49,6 +87,7 @@ export function ProjectMembersModal({
 	members,
 	open,
 	onOpenChange,
+	canManageMembers,
 }: ProjectMembersModalProps) {
 	const addMemberAction = addProjectMember.bind(null, projectId);
 
@@ -56,6 +95,16 @@ export function ProjectMembersModal({
 		addMemberAction,
 		initialState,
 	);
+
+	const [roleDrafts, setRoleDrafts] = useState<RoleDrafts>(() =>
+		createRoleDrafts(members),
+	);
+
+	const [roleSaveFeedback, setRoleSaveFeedback] = useState<RoleSaveFeedback>();
+
+	const [isSavingRoles, startRoleSaveTransition] = useTransition();
+
+	const addMemberFormRef = useRef<HTMLFormElement>(null);
 
 	const emailErrorId = "project-member-email-error";
 
@@ -69,45 +118,185 @@ export function ProjectMembersModal({
 		Boolean(fieldErrors?.length),
 	);
 
+	const hasRoleChanges = members.some(
+		(member) => (roleDrafts[member.userId] ?? member.role) !== member.role,
+	);
+
 	useEffect(() => {
 		if (state.success) {
-			onOpenChange(false);
+			addMemberFormRef.current?.reset();
 		}
-	}, [state.success, onOpenChange]);
+	}, [state]);
+
+	useEffect(() => {
+		setRoleDrafts((current) => {
+			const next: RoleDrafts = {};
+
+			for (const member of members) {
+				next[member.userId] = current[member.userId] ?? member.role;
+			}
+
+			return next;
+		});
+	}, [members]);
+
+	function handleRoleChange(userId: string, role: ProjectMemberRoleValue) {
+		setRoleDrafts((current) => ({
+			...current,
+			[userId]: role,
+		}));
+
+		setRoleSaveFeedback(undefined);
+	}
+
+	function handleSaveRoleChanges() {
+		const changedMembers = members.filter(
+			(member) => (roleDrafts[member.userId] ?? member.role) !== member.role,
+		);
+
+		if (changedMembers.length === 0) {
+			return;
+		}
+
+		setRoleSaveFeedback(undefined);
+
+		startRoleSaveTransition(async () => {
+			try {
+				for (const member of changedMembers) {
+					const role = roleDrafts[member.userId];
+
+					if (!role) {
+						continue;
+					}
+
+					const formData = new FormData();
+
+					formData.set("role", role);
+
+					await updateProjectMemberRole(projectId, member.userId, formData);
+				}
+
+				setRoleSaveFeedback({
+					type: "success",
+					message: "Member roles updated.",
+				});
+
+				onOpenChange(false);
+			} catch {
+				setRoleSaveFeedback({
+					type: "error",
+					message: "Could not save member role changes.",
+				});
+			}
+		});
+	}
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-lg">
+			<DialogContent className="min-w-0 sm:max-w-xl">
 				<DialogHeader>
 					<DialogTitle>Project members</DialogTitle>
 
 					<DialogDescription>
-						Add existing Shiro users and manage who belongs to this project.
+						{canManageMembers
+							? "Add existing Shiro users and manage who belongs to this project."
+							: "View the people who belong to this project."}
 					</DialogDescription>
 				</DialogHeader>
 
-				<div className="space-y-3">
+				{/* Add member */}
+				{canManageMembers && (
+					<form
+						ref={addMemberFormRef}
+						action={formAction}
+						className="min-w-0 space-y-2"
+						noValidate
+					>
+						<label
+							htmlFor="project-member-email"
+							className="block text-sm font-medium"
+						>
+							Add member by email
+						</label>
+
+						<div className="flex min-w-0 items-start gap-2">
+							<div className="min-w-0 flex-1">
+								<input
+									id="project-member-email"
+									name="email"
+									type="email"
+									required
+									disabled={pending}
+									autoComplete="email"
+									placeholder="member@example.com"
+									onChange={() => clearFieldError("email")}
+									aria-invalid={Boolean(emailErrors)}
+									aria-describedby={emailErrors ? emailErrorId : undefined}
+									className={cn(
+										"h-9 w-full rounded-lg border border-input bg-background px-3 text-sm outline-none transition focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60",
+										emailErrors && "border-destructive",
+									)}
+								/>
+
+								<FormFieldError id={emailErrorId} messages={emailErrors} />
+							</div>
+
+							<Button
+								type="submit"
+								disabled={pending}
+								className="h-9 shrink-0 px-5"
+							>
+								{pending ? "Adding..." : "Add member"}
+							</Button>
+						</div>
+
+						{state.message && !state.success && !hasFieldErrors && (
+							<p aria-live="polite" className="text-sm text-destructive">
+								{state.message}
+							</p>
+						)}
+
+						{state.message && state.success && (
+							<p
+								aria-live="polite"
+								className="text-sm text-emerald-600 dark:text-emerald-400"
+							>
+								{state.message}
+							</p>
+						)}
+					</form>
+				)}
+
+				{/* Current members */}
+				<div
+					className={cn(
+						"min-w-0 space-y-3",
+						canManageMembers && "border-t border-border pt-4",
+					)}
+				>
 					<p className="text-sm font-medium">Current members</p>
 
-					<div className="max-h-64 space-y-2 overflow-y-auto pr-1">
-						<div className="flex items-center gap-3 rounded-lg border border-border p-3">
+					<div className="max-h-64 min-w-0 space-y-2 overflow-y-auto pr-1">
+						{/* Owner */}
+						<div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border p-3">
 							<UserAvatar user={owner} />
 
-							<div className="min-w-0 flex-1">
+							<div className="min-w-0">
 								<p className="truncate text-sm font-medium">
 									{owner.name ?? owner.email}
 								</p>
 
-								<p className="truncate text-xs text-muted-foreground">
+								<p className="mt-0.5 truncate text-xs text-muted-foreground">
 									{owner.email}
 								</p>
 							</div>
 
-							<span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">
+							<span className="shrink-0 text-sm text-muted-foreground">
 								Owner
 							</span>
 						</div>
 
+						{/* Members */}
 						{members.map((member) => {
 							const removeAction = removeProjectMember.bind(
 								null,
@@ -115,62 +304,95 @@ export function ProjectMembersModal({
 								member.userId,
 							);
 
+							const selectedRole = roleDrafts[member.userId] ?? member.role;
+
 							return (
 								<div
 									key={member.userId}
-									className="flex items-center gap-3 rounded-lg border border-border p-3"
+									className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border p-3"
 								>
 									<UserAvatar user={member.user} />
 
-									<div className="min-w-0 flex-1">
+									<div className="min-w-0">
 										<p className="truncate text-sm font-medium">
 											{member.user.name ?? member.user.email}
 										</p>
 
-										<p className="truncate text-xs text-muted-foreground">
+										<p className="mt-0.5 truncate text-xs text-muted-foreground">
 											{member.user.email}
 										</p>
 									</div>
 
-									<span className="text-xs capitalize text-muted-foreground">
-										{member.role}
-									</span>
-
-									<AlertDialog>
-										<AlertDialogTrigger asChild>
-											<Button
-												type="button"
-												variant="ghost"
-												size="sm"
-												className="text-muted-foreground hover:text-destructive"
+									{canManageMembers ? (
+										<div className="flex shrink-0 items-center gap-2">
+											<Select
+												value={selectedRole}
+												onValueChange={(value) =>
+													handleRoleChange(
+														member.userId,
+														value as ProjectMemberRoleValue,
+													)
+												}
 											>
-												Remove
-											</Button>
-										</AlertDialogTrigger>
+												<SelectTrigger
+													className="h-8 w-28"
+													aria-label={`Role for ${
+														member.user.name ?? member.user.email
+													}`}
+												>
+													<SelectValue />
+												</SelectTrigger>
 
-										<AlertDialogContent>
-											<AlertDialogHeader>
-												<AlertDialogTitle>
-													Remove {member.user.name ?? member.user.email}?
-												</AlertDialogTitle>
+												<SelectContent>
+													{PROJECT_MEMBER_ROLE_VALUES.map((role) => (
+														<SelectItem key={role} value={role}>
+															{PROJECT_MEMBER_ROLE_LABELS[role]}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
 
-												<AlertDialogDescription>
-													They will lose their project membership, and their
-													task assignments in this project will be removed.
-												</AlertDialogDescription>
-											</AlertDialogHeader>
-
-											<AlertDialogFooter>
-												<AlertDialogCancel>Cancel</AlertDialogCancel>
-
-												<form action={removeAction}>
-													<Button type="submit" variant="destructive">
-														Remove member
+											<AlertDialog>
+												<AlertDialogTrigger asChild>
+													<Button
+														type="button"
+														variant="ghost"
+														size="sm"
+														className="h-8 px-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
+													>
+														Remove
 													</Button>
-												</form>
-											</AlertDialogFooter>
-										</AlertDialogContent>
-									</AlertDialog>
+												</AlertDialogTrigger>
+
+												<AlertDialogContent>
+													<AlertDialogHeader>
+														<AlertDialogTitle>
+															Remove {member.user.name ?? member.user.email}?
+														</AlertDialogTitle>
+
+														<AlertDialogDescription>
+															They will lose their project membership, and their
+															task assignments in this project will be removed.
+														</AlertDialogDescription>
+													</AlertDialogHeader>
+
+													<AlertDialogFooter>
+														<AlertDialogCancel>Cancel</AlertDialogCancel>
+
+														<form action={removeAction}>
+															<Button type="submit" variant="destructive">
+																Remove member
+															</Button>
+														</form>
+													</AlertDialogFooter>
+												</AlertDialogContent>
+											</AlertDialog>
+										</div>
+									) : (
+										<span className="shrink-0 text-sm text-muted-foreground">
+											{PROJECT_MEMBER_ROLE_LABELS[member.role]}
+										</span>
+									)}
 								</div>
 							);
 						})}
@@ -181,51 +403,37 @@ export function ProjectMembersModal({
 							</p>
 						)}
 					</div>
-				</div>
 
-				<form
-					action={formAction}
-					className="space-y-4 border-t border-border pt-4"
-					noValidate
-				>
-					<div>
-						<label
-							htmlFor="project-member-email"
-							className="mb-2 block text-sm font-medium"
-						>
-							Add member by email
-						</label>
+					{/* Save role changes */}
+					{canManageMembers && (
+						<div className="flex min-w-0 items-center justify-between gap-4 pt-1">
+							<div className="min-w-0 flex-1">
+								{roleSaveFeedback && (
+									<p
+										aria-live="polite"
+										className={cn(
+											"truncate text-sm",
+											roleSaveFeedback.type === "success"
+												? "text-emerald-600 dark:text-emerald-400"
+												: "text-destructive",
+										)}
+									>
+										{roleSaveFeedback.message}
+									</p>
+								)}
+							</div>
 
-						<input
-							id="project-member-email"
-							name="email"
-							type="email"
-							required
-							disabled={pending}
-							autoComplete="email"
-							placeholder="member@example.com"
-							onChange={() => clearFieldError("email")}
-							aria-invalid={Boolean(emailErrors)}
-							aria-describedby={emailErrors ? emailErrorId : undefined}
-							className={cn(
-								"w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60",
-								emailErrors && "border-destructive",
-							)}
-						/>
-
-						<FormFieldError id={emailErrorId} messages={emailErrors} />
-					</div>
-
-					{state.message && !state.success && !hasFieldErrors && (
-						<p aria-live="polite" className="text-sm text-destructive">
-							{state.message}
-						</p>
+							<Button
+								type="button"
+								className="shrink-0 px-5"
+								disabled={!hasRoleChanges || isSavingRoles}
+								onClick={handleSaveRoleChanges}
+							>
+								{isSavingRoles ? "Saving..." : "Save changes"}
+							</Button>
+						</div>
 					)}
-
-					<Button type="submit" disabled={pending} className="w-full">
-						{pending ? "Adding..." : "Add member"}
-					</Button>
-				</form>
+				</div>
 			</DialogContent>
 		</Dialog>
 	);

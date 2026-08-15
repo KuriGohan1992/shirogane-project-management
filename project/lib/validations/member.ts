@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { PROJECT_MEMBER_ROLE_VALUES } from "../constants/project-roles";
 
 export const projectMemberFormSchema = z.object({
 	email: z.preprocess(
@@ -8,3 +9,5 @@ export const projectMemberFormSchema = z.object({
 		}),
 	),
 });
+
+export const projectMemberRoleSchema = z.enum(PROJECT_MEMBER_ROLE_VALUES);

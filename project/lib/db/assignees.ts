@@ -1,8 +1,9 @@
 import "server-only";
 
 import { and, eq } from "drizzle-orm";
-
+import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { db } from "@/lib/db";
+import { getProjectAccess } from "@/lib/db/project-access";
 import { taskAssignees } from "@/lib/db/schema";
 
 type AssignTaskResult =
@@ -23,7 +24,7 @@ type UnassignTaskResult =
 			projectId: string;
 	  };
 
-async function getOwnedTask(taskId: string, ownerId: string) {
+async function getAssignableTask(taskId: string, userId: string) {
 	const task = await db.query.tasks.findFirst({
 		columns: {
 			id: true,
@@ -34,7 +35,7 @@ async function getOwnedTask(taskId: string, ownerId: string) {
 		with: {
 			stage: {
 				columns: {
-					id: true,
+					projectId: true,
 				},
 
 				with: {
@@ -49,7 +50,15 @@ async function getOwnedTask(taskId: string, ownerId: string) {
 		},
 	});
 
-	if (!task || task.stage.project.ownerId !== ownerId) {
+	if (!task) {
+		return undefined;
+	}
+
+	const project = task.stage.project;
+
+	const accessRole = await getProjectAccess(project.id, userId);
+
+	if (!accessRole || !getProjectPermissions(accessRole).canAssignTasks) {
 		return undefined;
 	}
 
@@ -81,12 +90,12 @@ async function isAssignableProjectUser(
 	return Boolean(member);
 }
 
-export async function assignUserToOwnedTask(
+export async function assignUserToTask(
 	taskId: string,
 	assigneeUserId: string,
-	ownerId: string,
+	userId: string,
 ): Promise<AssignTaskResult> {
-	const task = await getOwnedTask(taskId, ownerId);
+	const task = await getAssignableTask(taskId, userId);
 
 	if (!task) {
 		return {
@@ -98,7 +107,7 @@ export async function assignUserToOwnedTask(
 
 	const canBeAssigned = await isAssignableProjectUser(
 		projectId,
-		ownerId,
+		userId,
 		assigneeUserId,
 	);
 
@@ -126,12 +135,12 @@ export async function assignUserToOwnedTask(
 	};
 }
 
-export async function unassignUserFromOwnedTask(
+export async function unassignUserFromTask(
 	taskId: string,
 	assigneeUserId: string,
-	ownerId: string,
+	userId: string,
 ): Promise<UnassignTaskResult> {
-	const task = await getOwnedTask(taskId, ownerId);
+	const task = await getAssignableTask(taskId, userId);
 
 	if (!task) {
 		return {

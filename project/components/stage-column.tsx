@@ -1,6 +1,7 @@
 import { CreateTaskButton } from "@/components/create-task-button";
 import { StageActions } from "@/components/stage-actions";
 import { TaskCard } from "@/components/task-card";
+import type { ProjectPermissions } from "@/lib/auth/project-permissions";
 import type { AssignmentCandidate } from "@/types/member";
 import type { StageWithTasks } from "@/types/stage";
 
@@ -9,6 +10,7 @@ type StageColumnProps = {
 	canMoveLeft: boolean;
 	canMoveRight: boolean;
 	assigneeCandidates: AssignmentCandidate[];
+	permissions: ProjectPermissions;
 };
 
 export function StageColumn({
@@ -16,6 +18,7 @@ export function StageColumn({
 	canMoveLeft,
 	canMoveRight,
 	assigneeCandidates,
+	permissions,
 }: StageColumnProps) {
 	return (
 		<section className="w-[min(20rem,85vw)] shrink-0 rounded-xl border border-border bg-muted/40">
@@ -28,14 +31,16 @@ export function StageColumn({
 					{stage.tasks.length}
 				</span>
 
-				<StageActions
-					stage={{
-						id: stage.id,
-						name: stage.name,
-					}}
-					canMoveLeft={canMoveLeft}
-					canMoveRight={canMoveRight}
-				/>
+				{permissions.canManageStages && (
+					<StageActions
+						stage={{
+							id: stage.id,
+							name: stage.name,
+						}}
+						canMoveLeft={canMoveLeft}
+						canMoveRight={canMoveRight}
+					/>
+				)}
 			</div>
 
 			<div className="space-y-3 p-3">
@@ -51,11 +56,14 @@ export function StageColumn({
 							key={task.id}
 							task={task}
 							assigneeCandidates={assigneeCandidates}
+							permissions={permissions}
 						/>
 					))
 				)}
 
-				<CreateTaskButton stageId={stage.id} stageName={stage.name} />
+				{permissions.canManageTasks && (
+					<CreateTaskButton stageId={stage.id} stageName={stage.name} />
+				)}
 			</div>
 		</section>
 	);

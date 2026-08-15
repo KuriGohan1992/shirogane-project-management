@@ -5,9 +5,9 @@ import { z } from "zod";
 
 import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import {
-	createTaskInOwnedStage,
-	deleteTaskOwnedByUser,
-	updateTaskOwnedByUser,
+	createTaskInStage,
+	deleteTaskForUser,
+	updateTaskForUser,
 } from "@/lib/db/tasks";
 import { taskFormSchema, taskIdSchema } from "@/lib/validations/task";
 import type { TaskActionState } from "@/types/task";
@@ -52,7 +52,7 @@ export async function createTask(
 	try {
 		const user = await getCurrentDatabaseUser();
 
-		const created = await createTaskInOwnedStage(stageIdResult.data, user.id, {
+		const created = await createTaskInStage(stageIdResult.data, user.id, {
 			title: result.data.title,
 			description: result.data.description || null,
 			priority: result.data.priority,
@@ -114,7 +114,7 @@ export async function updateTask(
 	try {
 		const user = await getCurrentDatabaseUser();
 
-		const updated = await updateTaskOwnedByUser(taskIdResult.data, user.id, {
+		const updated = await updateTaskForUser(taskIdResult.data, user.id, {
 			title: result.data.title,
 			description: result.data.description || null,
 			priority: result.data.priority,
@@ -159,7 +159,7 @@ export async function deleteTask(
 
 	const user = await getCurrentDatabaseUser();
 
-	const projectId = await deleteTaskOwnedByUser(taskIdResult.data, user.id);
+	const projectId = await deleteTaskForUser(taskIdResult.data, user.id);
 
 	if (!projectId) {
 		throw new Error(

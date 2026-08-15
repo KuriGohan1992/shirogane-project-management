@@ -4,7 +4,8 @@ import { KanbanBoard } from "@/components/kanban-board";
 import { ProjectHeader } from "@/components/project-header";
 import { ProjectMembersButton } from "@/components/project-members-button";
 import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
-import { getProjectOwnedByUser } from "@/lib/db/projects";
+import { getProjectPermissions } from "@/lib/auth/project-permissions";
+import { getProjectForUser } from "@/lib/db/projects";
 import { projectIdSchema } from "@/lib/validations/project";
 import type { AssignmentCandidate } from "@/types/member";
 
@@ -25,11 +26,13 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 
 	const user = await getCurrentDatabaseUser();
 
-	const project = await getProjectOwnedByUser(idResult.data, user.id);
+	const project = await getProjectForUser(idResult.data, user.id);
 
 	if (!project) {
 		notFound();
 	}
+
+	const permissions = getProjectPermissions(project.accessRole);
 
 	const assigneeCandidates: AssignmentCandidate[] = [
 		{
@@ -47,7 +50,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 
 	return (
 		<div className="space-y-6">
-			<ProjectHeader project={project} />
+			<ProjectHeader project={project} permissions={permissions} />
 
 			<section aria-labelledby="project-board-heading">
 				<div className="flex items-center justify-between gap-4">
@@ -57,6 +60,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 						projectId={project.id}
 						owner={project.owner}
 						members={project.members}
+						canManageMembers={permissions.canManageMembers}
 					/>
 				</div>
 
@@ -64,6 +68,7 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 					projectId={project.id}
 					stages={project.stages}
 					assigneeCandidates={assigneeCandidates}
+					permissions={permissions}
 				/>
 			</section>
 		</div>

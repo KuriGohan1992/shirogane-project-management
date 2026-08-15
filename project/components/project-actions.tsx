@@ -20,73 +20,84 @@ import type { EditableProject } from "@/types/project";
 
 type ProjectActionsProps = {
 	project: EditableProject;
+	canEdit: boolean;
+	canDelete: boolean;
 	compact?: boolean;
 };
 
 export function ProjectActions({
 	project,
+	canEdit,
+	canDelete,
 	compact = false,
 }: ProjectActionsProps) {
 	const [isEditOpen, setIsEditOpen] = useState(false);
 
 	const deleteAction = deleteProject.bind(null, project.id);
+	if (!canEdit && !canDelete) {
+		return null;
+	}
 
 	return (
 		<>
 			<div className="flex items-center gap-1">
-				<Button
-					type="button"
-					variant={compact ? "ghost" : "outline"}
-					size={compact ? "icon" : "sm"}
-					aria-label={compact ? `Edit ${project.name}` : undefined}
-					onClick={() => setIsEditOpen(true)}
-				>
-					<Pencil aria-hidden="true" />
-					{!compact && "Edit"}
-				</Button>
+				{canEdit && (
+					<Button
+						type="button"
+						variant={compact ? "ghost" : "outline"}
+						size={compact ? "icon" : "sm"}
+						aria-label={compact ? `Edit ${project.name}` : undefined}
+						onClick={() => setIsEditOpen(true)}
+					>
+						<Pencil aria-hidden="true" />
+						{!compact && "Edit"}
+					</Button>
+				)}
 
-				<AlertDialog>
-					<AlertDialogTrigger asChild>
-						<Button
-							type="button"
-							variant={compact ? "ghost" : "outline"}
-							size={compact ? "icon" : "sm"}
-							aria-label={compact ? `Delete ${project.name}` : undefined}
-							className="text-destructive hover:text-destructive"
-						>
-							<Trash2 aria-hidden="true" />
-							{!compact && "Delete"}
-						</Button>
-					</AlertDialogTrigger>
+				{canDelete && (
+					<AlertDialog>
+						<AlertDialogTrigger asChild>
+							<Button
+								type="button"
+								variant={compact ? "ghost" : "outline"}
+								size={compact ? "icon" : "sm"}
+								aria-label={compact ? `Delete ${project.name}` : undefined}
+								className="text-destructive hover:text-destructive"
+							>
+								<Trash2 aria-hidden="true" />
+								{!compact && "Delete"}
+							</Button>
+						</AlertDialogTrigger>
 
-					<AlertDialogContent>
-						<AlertDialogHeader>
-							<AlertDialogTitle>Delete {project.name}?</AlertDialogTitle>
+						<AlertDialogContent>
+							<AlertDialogHeader>
+								<AlertDialogTitle>Delete {project.name}?</AlertDialogTitle>
 
-							<AlertDialogDescription>
-								This permanently deletes the project and all of its stages and
-								tasks. This action cannot be undone.
-							</AlertDialogDescription>
-						</AlertDialogHeader>
+								<AlertDialogDescription>
+									This permanently deletes the project and all of its stages and
+									tasks. This action cannot be undone.
+								</AlertDialogDescription>
+							</AlertDialogHeader>
 
-						<form action={deleteAction}>
-							<AlertDialogFooter>
-								<AlertDialogCancel asChild>
-									<Button type="button" variant="outline">
-										Cancel
+							<form action={deleteAction}>
+								<AlertDialogFooter>
+									<AlertDialogCancel asChild>
+										<Button type="button" variant="outline">
+											Cancel
+										</Button>
+									</AlertDialogCancel>
+
+									<Button type="submit" variant="destructive">
+										Delete project
 									</Button>
-								</AlertDialogCancel>
-
-								<Button type="submit" variant="destructive">
-									Delete project
-								</Button>
-							</AlertDialogFooter>
-						</form>
-					</AlertDialogContent>
-				</AlertDialog>
+								</AlertDialogFooter>
+							</form>
+						</AlertDialogContent>
+					</AlertDialog>
+				)}
 			</div>
 
-			{isEditOpen && (
+			{canEdit && isEditOpen && (
 				<EditProjectModal
 					project={project}
 					open={isEditOpen}

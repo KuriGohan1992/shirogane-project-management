@@ -49,11 +49,12 @@ import { ArrowUpRight, CalendarDays, Clock3 } from "lucide-react";
 import Link from "next/link";
 
 import { ProjectActions } from "@/components/project-actions";
+import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import type { Project } from "@/lib/db/schema";
-import type { EditableProject } from "@/types/project";
+import type { EditableProject, ProjectWithAccess } from "@/types/project";
 
 type ProjectCardProps = {
-	project: Project;
+	project: ProjectWithAccess;
 };
 
 function formatDate(date: Date) {
@@ -75,10 +76,20 @@ function toEditableProject(project: Project): EditableProject {
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
+	const permissions = getProjectPermissions(project.accessRole);
 	return (
 		<article className="group flex h-full flex-col rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
 			<div className="mb-4 flex items-center justify-between">
-				<ProjectActions project={toEditableProject(project)} compact />
+				<ProjectActions
+					project={toEditableProject(project)}
+					canEdit={permissions.canEditProject}
+					canDelete={permissions.canDeleteProject}
+					compact
+				/>
+
+				<span className="text-xs font-medium capitalize text-muted-foreground">
+					{project.accessRole}
+				</span>
 			</div>
 
 			<Link href={`/projects/${project.id}`} className="block">

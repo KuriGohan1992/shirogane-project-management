@@ -1,8 +1,9 @@
 import "server-only";
 
 import { and, eq } from "drizzle-orm";
-
+import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { db } from "@/lib/db";
+import { getProjectAccess } from "@/lib/db/project-access";
 import { type NewStage, type Stage, stages } from "@/lib/db/schema";
 
 type StageMutationData = Pick<NewStage, "name">;
@@ -14,37 +15,14 @@ type StageMutationResult = {
 
 type StageMoveDirection = "left" | "right";
 
-async function getOwnedProject(projectId: string, ownerId: string) {
-	return db.query.projects.findFirst({
-		where: (project, { and, eq }) =>
-			and(eq(project.id, projectId), eq(project.ownerId, ownerId)),
-	});
-}
-
-async function getOwnedStage(stageId: string, ownerId: string) {
-	const stage = await db.query.stages.findFirst({
-		where: (stage, { eq }) => eq(stage.id, stageId),
-
-		with: {
-			project: true,
-		},
-	});
-
-	if (!stage || stage.project.ownerId !== ownerId) {
-		return undefined;
-	}
-
-	return stage;
-}
-
-export async function createStageInOwnedProject(
+export async function createStageInProject(
 	projectId: string,
-	ownerId: string,
+	userId: string,
 	data: StageMutationData,
 ): Promise<StageMutationResult | undefined> {
-	const project = await getOwnedProject(projectId, ownerId);
+	const accessRole = await getProjectAccess(projectId, userId);
 
-	if (!project) {
+	if (!accessRole || !getProjectPermissions(accessRole).canManageStages) {
 		return undefined;
 	}
 
@@ -75,12 +53,12 @@ export async function createStageInOwnedProject(
 	};
 }
 
-export async function renameStageOwnedByUser(
+export async function renameStageForUser(
 	stageId: string,
 	ownerId: string,
 	data: StageMutationData,
 ): Promise<StageMutationResult | undefined> {
-	const existingStage = await getOwnedStage(stageId, ownerId);
+	const existingStage = await getEditableStage(stageId, ownerId);
 
 	if (!existingStage) {
 		return undefined;
@@ -110,11 +88,11 @@ export async function renameStageOwnedByUser(
 	};
 }
 
-export async function deleteStageOwnedByUser(
+export async function deleteStageForUser(
 	stageId: string,
 	ownerId: string,
 ): Promise<string | undefined> {
-	const existingStage = await getOwnedStage(stageId, ownerId);
+	const existingStage = await getEditableStage(stageId, ownerId);
 
 	if (!existingStage) {
 		return undefined;
@@ -139,12 +117,12 @@ export async function deleteStageOwnedByUser(
 	return existingStage.projectId;
 }
 
-export async function moveStageOwnedByUser(
+export async function moveStageForUser(
 	stageId: string,
 	ownerId: string,
 	direction: StageMoveDirection,
 ): Promise<string | undefined> {
-	const currentStage = await getOwnedStage(stageId, ownerId);
+	const currentStage = await getEditableStage(stageId, ownerId);
 
 	if (!currentStage) {
 		return undefined;
@@ -204,4 +182,28 @@ export async function moveStageOwnedByUser(
 	]);
 
 	return currentStage.projectId;
+}
+
+async function getEditableStage(stageId: string, userId: string) {
+	const stage = await db.query.stages.findFirst({
+		columns: {
+			id: true,
+			projectId: true,
+			position: true,
+		},
+
+		where: (stage, { eq }) => eq(stage.id, stageId),
+	});
+
+	if (!stage) {
+		return undefined;
+	}
+
+	const accessRole = await getProjectAccess(stage.projectId, userId);
+
+	if (!accessRole || !getProjectPermissions(accessRole).canManageStages) {
+		return undefined;
+	}
+
+	return stage;
 }
