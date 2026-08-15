@@ -1,5 +1,6 @@
-import type { Stage, Task } from "@/lib/db/schema";
+import type { Stage } from "@/lib/db/schema";
 import type { StageFormData } from "@/lib/validations/stage";
+import type { TaskWithAssignees } from "@/types/task";
 
 export type StageActionState = {
 	success: boolean;
@@ -14,5 +15,5 @@ export type EditableStage = StageFormData & {
 };
 
 export type StageWithTasks = Stage & {
-	tasks: Task[];
+	tasks: TaskWithAssignees[];
 };

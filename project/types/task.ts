@@ -1,4 +1,6 @@
+import type { Task, TaskAssignee } from "@/lib/db/schema";
 import type { TaskFormData } from "@/lib/validations/task";
+import type { UserSummary } from "@/types/user";
 
 export type TaskActionState = {
 	success: boolean;
@@ -13,4 +15,12 @@ export type TaskActionState = {
 
 export type EditableTask = TaskFormData & {
 	id: string;
+};
+
+export type TaskAssigneeWithUser = TaskAssignee & {
+	user: UserSummary;
+};
+
+export type TaskWithAssignees = Task & {
+	assignees: TaskAssigneeWithUser[];
 };

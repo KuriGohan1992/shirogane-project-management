@@ -2,9 +2,11 @@ import { notFound } from "next/navigation";
 
 import { KanbanBoard } from "@/components/kanban-board";
 import { ProjectHeader } from "@/components/project-header";
+import { ProjectMembersButton } from "@/components/project-members-button";
 import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import { getProjectOwnedByUser } from "@/lib/db/projects";
 import { projectIdSchema } from "@/lib/validations/project";
+import type { AssignmentCandidate } from "@/types/member";
 
 type ProjectPageProps = {
 	params: Promise<{
@@ -29,25 +31,40 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 		notFound();
 	}
 
+	const assigneeCandidates: AssignmentCandidate[] = [
+		{
+			...project.owner,
+			isOwner: true,
+		},
+
+		...project.members
+			.filter((member) => member.role === "member")
+			.map((member) => ({
+				...member.user,
+				isOwner: false,
+			})),
+	];
+
 	return (
 		<div className="space-y-6">
 			<ProjectHeader project={project} />
 
 			<section aria-labelledby="project-board-heading">
-				<div className="mb-4">
-					<h2
-						id="project-board-heading"
-						className="text-xl font-semibold text-foreground"
-					>
-						Board
-					</h2>
+				<div className="flex items-center justify-between gap-4">
+					<h2 className="text-xl font-semibold">Board</h2>
 
-					<p className="mt-1 text-sm text-muted-foreground">
-						Organize tasks across your project stages.
-					</p>
+					<ProjectMembersButton
+						projectId={project.id}
+						owner={project.owner}
+						members={project.members}
+					/>
 				</div>
 
-				<KanbanBoard projectId={project.id} stages={project.stages} />
+				<KanbanBoard
+					projectId={project.id}
+					stages={project.stages}
+					assigneeCandidates={assigneeCandidates}
+				/>
 			</section>
 		</div>
 	);

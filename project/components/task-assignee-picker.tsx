@@ -1,0 +1,125 @@
+"use client";
+
+import { Check, UserPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import { UserAvatar } from "@/components/user-avatar";
+import { assignTask, unassignTask } from "@/lib/actions/assignees";
+import type { AssignmentCandidate } from "@/types/member";
+import type { UserSummary } from "@/types/user";
+
+type TaskAssigneePickerProps = {
+	taskId: string;
+	candidates: AssignmentCandidate[];
+	assignedUsers: UserSummary[];
+};
+
+export function TaskAssigneePicker({
+	taskId,
+	candidates,
+	assignedUsers,
+}: TaskAssigneePickerProps) {
+	const assignedUserIds = new Set(assignedUsers.map((user) => user.id));
+
+	const visibleAssignees = assignedUsers.slice(0, 3);
+
+	return (
+		<Popover>
+			<PopoverTrigger asChild>
+				<Button
+					type="button"
+					variant="ghost"
+					size="sm"
+					className="h-8 px-2"
+					aria-label="Manage task assignees"
+				>
+					{visibleAssignees.length === 0 ? (
+						<>
+							<UserPlus aria-hidden="true" />
+							Assign
+						</>
+					) : (
+						<div className="flex items-center gap-1.5">
+							<div className="flex -space-x-2">
+								{visibleAssignees.map((user) => (
+									<UserAvatar
+										key={user.id}
+										user={user}
+										className="size-6 border-2 border-card"
+									/>
+								))}
+							</div>
+
+							{assignedUsers.length > 3 && (
+								<span className="text-xs text-muted-foreground">
+									+{assignedUsers.length - 3}
+								</span>
+							)}
+
+							<UserPlus
+								aria-hidden="true"
+								className="size-3.5 text-muted-foreground"
+							/>
+						</div>
+					)}
+				</Button>
+			</PopoverTrigger>
+
+			<PopoverContent align="end" className="w-80 p-2">
+				<div className="px-2 pb-2">
+					<p className="text-sm font-medium">Assignees</p>
+
+					<p className="text-xs text-muted-foreground">
+						Assign project members to this task.
+					</p>
+				</div>
+
+				<div className="max-h-72 space-y-1 overflow-y-auto">
+					{candidates.map((candidate) => {
+						const isAssigned = assignedUserIds.has(candidate.id);
+
+						const action = isAssigned
+							? unassignTask.bind(null, taskId, candidate.id)
+							: assignTask.bind(null, taskId, candidate.id);
+
+						return (
+							<form key={candidate.id} action={action}>
+								<button
+									type="submit"
+									className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition hover:bg-muted"
+								>
+									<UserAvatar user={candidate} className="size-7" />
+
+									<div className="min-w-0 flex-1">
+										<p className="truncate text-sm font-medium">
+											{candidate.name ?? candidate.email}
+										</p>
+
+										<p className="truncate text-xs text-muted-foreground">
+											{candidate.email}
+										</p>
+									</div>
+
+									{candidate.isOwner && (
+										<span className="text-xs text-muted-foreground">Owner</span>
+									)}
+
+									{isAssigned && (
+										<Check
+											className="size-4 shrink-0 text-primary"
+											aria-hidden="true"
+										/>
+									)}
+								</button>
+							</form>
+						);
+					})}
+				</div>
+			</PopoverContent>
+		</Popover>
+	);
+}

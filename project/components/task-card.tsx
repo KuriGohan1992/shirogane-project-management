@@ -1,14 +1,17 @@
-// TODO: Add assignees, labels, overdue state, comments,
+// TODO: Add labels, overdue state, comments,
 // and drag-and-drop support in later feature phases.
 
 import { CalendarDays, CircleAlert } from "lucide-react";
 
 import { TaskActions } from "@/components/task-actions";
+import { TaskAssigneePicker } from "@/components/task-assignee-picker";
 import type { Task } from "@/lib/db/schema";
-import type { EditableTask } from "@/types/task";
+import type { AssignmentCandidate } from "@/types/member";
+import type { EditableTask, TaskWithAssignees } from "@/types/task";
 
 type TaskCardProps = {
-	task: Task;
+	task: TaskWithAssignees;
+	assigneeCandidates: AssignmentCandidate[];
 };
 
 function formatDate(date: Date) {
@@ -46,7 +49,8 @@ function toEditableTask(task: Task): EditableTask {
 	};
 }
 
-export function TaskCard({ task }: TaskCardProps) {
+export function TaskCard({ task, assigneeCandidates }: TaskCardProps) {
+	const assignedUsers = task.assignees.map((assignee) => assignee.user);
 	return (
 		<article className="rounded-lg border border-border bg-card p-4 shadow-sm">
 			<div className="flex items-start justify-between gap-3">
@@ -77,6 +81,11 @@ export function TaskCard({ task }: TaskCardProps) {
 						{formatDate(task.dueDate)}
 					</span>
 				)}
+				<TaskAssigneePicker
+					taskId={task.id}
+					candidates={assigneeCandidates}
+					assignedUsers={assignedUsers}
+				/>
 			</div>
 		</article>
 	);
