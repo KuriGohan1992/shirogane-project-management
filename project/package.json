@@ -31,7 +31,8 @@
 		"react-day-picker": "^10.0.1",
 		"react-dom": "^19",
 		"tailwind-merge": "^2.5.5",
-		"zod": "^4.4.3"
+		"zod": "^4.4.3",
+		"zustand": "^5.0.15"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.5.6",

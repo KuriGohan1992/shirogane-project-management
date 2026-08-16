@@ -1,72 +1,25 @@
-// TODO: Task 5.3 - Set up client-side state management with Zustand
-// TODO: Task 5.4 - Implement optimistic UI updates for smooth interactions
+import { createStore } from "zustand/vanilla";
 
-/*
-TODO: Implementation Notes for Interns:
+import type { StageWithTasks } from "@/types/stage";
 
-Board state management for Kanban functionality:
-- Current project data
-- Lists/columns
-- Tasks
-- Drag and drop state
-- Optimistic updates
-- Sync with server
+type BoardState = {
+	stages: StageWithTasks[];
+};
 
-Key features:
-- Optimistic task creation/updates
-- Drag and drop state management
-- Real-time synchronization
-- Conflict resolution
-- Offline support (optional)
+type BoardActions = {
+	syncStages: (stages: StageWithTasks[]) => void;
+};
 
-Example structure:
-import { create } from 'zustand'
-import { subscribeWithSelector } from 'zustand/middleware'
+export type BoardStore = BoardState & BoardActions;
 
-interface BoardState {
-  // Data
-  currentProject: Project | null
-  lists: List[]
-  tasks: Task[]
-  
-  // UI state
-  draggedTask: Task | null
-  draggedOverList: string | null
-  
-  // Loading states
-  isLoading: boolean
-  isSaving: boolean
-  
-  // Actions
-  loadProject: (projectId: string) => Promise<void>
-  createTask: (listId: string, task: Partial<Task>) => Promise<void>
-  updateTask: (taskId: string, updates: Partial<Task>) => Promise<void>
-  moveTask: (taskId: string, newListId: string, newPosition: number) => Promise<void>
-  deleteTask: (taskId: string) => Promise<void>
-  
-  // Drag and drop
-  setDraggedTask: (task: Task | null) => void
-  setDraggedOverList: (listId: string | null) => void
+export function createBoardStore(initialStages: StageWithTasks[]) {
+	return createStore<BoardStore>()((set) => ({
+		stages: initialStages,
+
+		syncStages: (stages) => {
+			set({ stages });
+		},
+	}));
 }
 
-export const useBoardStore = create<BoardState>()(
-  subscribeWithSelector((set, get) => ({
-    // ... implementation
-  }))
-)
-*/
-
-// Placeholder to prevent import errors
-export const useBoardStore = () => {
-	console.log("TODO: Implement board store with Zustand");
-	return {
-		currentProject: null,
-		lists: [],
-		tasks: [],
-		isLoading: false,
-		loadProject: (projectId: string) =>
-			console.log(`TODO: Load project ${projectId}`),
-		createTask: (listId: string, task: any) =>
-			console.log(`TODO: Create task in list ${listId}`, task),
-	};
-};
+export type BoardStoreApi = ReturnType<typeof createBoardStore>;
