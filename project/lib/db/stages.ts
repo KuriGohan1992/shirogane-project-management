@@ -117,6 +117,76 @@ export async function deleteStageForUser(
 	return existingStage.projectId;
 }
 
+export async function reorderStageForUser(
+	stageId: string,
+	userId: string,
+	targetIndex: number,
+): Promise<string | undefined> {
+	const currentStage = await getEditableStage(stageId, userId);
+
+	if (!currentStage) {
+		return undefined;
+	}
+
+	const projectStages = await db.query.stages.findMany({
+		where: (stage, { eq }) => eq(stage.projectId, currentStage.projectId),
+
+		orderBy: (stage, { asc }) => [asc(stage.position)],
+	});
+
+	const currentIndex = projectStages.findIndex(
+		(stage) => stage.id === currentStage.id,
+	);
+
+	if (currentIndex === -1) {
+		return undefined;
+	}
+
+	const boundedTargetIndex = Math.min(
+		Math.max(targetIndex, 0),
+		projectStages.length - 1,
+	);
+
+	if (currentIndex === boundedTargetIndex) {
+		return currentStage.projectId;
+	}
+
+	const reorderedStages = [...projectStages];
+
+	const [movedStage] = reorderedStages.splice(currentIndex, 1);
+
+	if (!movedStage) {
+		return undefined;
+	}
+
+	reorderedStages.splice(boundedTargetIndex, 0, movedStage);
+
+	const updatedAt = new Date();
+
+	const updates = reorderedStages.map((stage, index) =>
+		db
+			.update(stages)
+			.set({
+				position: index * 1000,
+				updatedAt,
+			})
+			.where(
+				and(
+					eq(stages.id, stage.id),
+					eq(stages.projectId, currentStage.projectId),
+				),
+			),
+	);
+
+	const [firstUpdate, ...remainingUpdates] = updates;
+
+	if (firstUpdate) {
+		await db.batch([firstUpdate, ...remainingUpdates]);
+	}
+
+	return currentStage.projectId;
+}
+
 export async function moveStageForUser(
 	stageId: string,
 	ownerId: string,

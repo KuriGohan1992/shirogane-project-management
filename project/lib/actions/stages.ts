@@ -9,9 +9,11 @@ import {
 	deleteStageForUser,
 	moveStageForUser,
 	renameStageForUser,
+	reorderStageForUser,
 } from "@/lib/db/stages";
 import { projectIdSchema } from "@/lib/validations/project";
 import { stageFormSchema, stageIdSchema } from "@/lib/validations/stage";
+import type { BoardMutationResult } from "@/types/board";
 import type { StageActionState } from "@/types/stage";
 
 export async function createStage(
@@ -175,7 +177,6 @@ export async function moveStage(
 		user.id,
 		direction,
 	);
-
 	if (!projectId) {
 		throw new Error(
 			"The stage could not be found or you do not have permission to move it.",
@@ -183,4 +184,53 @@ export async function moveStage(
 	}
 
 	revalidatePath(`/projects/${projectId}`);
+}
+export async function reorderStage(
+	stageId: string,
+	targetIndex: number,
+): Promise<BoardMutationResult> {
+	const stageIdResult = stageIdSchema.safeParse(stageId);
+
+	const targetIndexResult = z
+		.number()
+		.int()
+		.nonnegative()
+		.safeParse(targetIndex);
+
+	if (!stageIdResult.success || !targetIndexResult.success) {
+		return {
+			success: false,
+			message: "The requested stage movement is invalid.",
+		};
+	}
+
+	try {
+		const user = await getCurrentDatabaseUser();
+
+		const projectId = await reorderStageForUser(
+			stageIdResult.data,
+			user.id,
+			targetIndexResult.data,
+		);
+
+		if (!projectId) {
+			return {
+				success: false,
+				message: "You do not have permission to reorder this stage.",
+			};
+		}
+
+		revalidatePath(`/projects/${projectId}`);
+
+		return {
+			success: true,
+		};
+	} catch (error) {
+		console.error("Failed to reorder stage:", error);
+
+		return {
+			success: false,
+			message: "Something went wrong while reordering the stage.",
+		};
+	}
 }

@@ -156,3 +156,169 @@ export async function deleteTaskForUser(
 
 	return existingTask.stage.projectId;
 }
+
+export async function moveTaskForUser(
+	taskId: string,
+	targetStageId: string,
+	userId: string,
+	targetIndex: number,
+): Promise<string | undefined> {
+	const existingTask = await getEditableTask(taskId, userId);
+
+	if (!existingTask) {
+		return undefined;
+	}
+
+	const targetStage = await db.query.stages.findFirst({
+		columns: {
+			id: true,
+			projectId: true,
+		},
+
+		where: (stage, { eq }) => eq(stage.id, targetStageId),
+	});
+
+	if (!targetStage || targetStage.projectId !== existingTask.stage.projectId) {
+		return undefined;
+	}
+
+	const sourceStageId = existingTask.stageId;
+
+	/*
+	 * Reordering inside one Stage.
+	 */
+	if (sourceStageId === targetStage.id) {
+		const stageTasks = await db.query.tasks.findMany({
+			where: (task, { and, eq, isNull }) =>
+				and(eq(task.stageId, sourceStageId), isNull(task.archivedAt)),
+
+			orderBy: (task, { asc }) => [asc(task.position)],
+		});
+
+		const currentIndex = stageTasks.findIndex(
+			(task) => task.id === existingTask.id,
+		);
+
+		if (currentIndex === -1) {
+			return undefined;
+		}
+
+		const reorderedTasks = [...stageTasks];
+
+		const [movedTask] = reorderedTasks.splice(currentIndex, 1);
+
+		if (!movedTask) {
+			return undefined;
+		}
+
+		const boundedTargetIndex = Math.min(
+			Math.max(targetIndex, 0),
+			reorderedTasks.length,
+		);
+
+		reorderedTasks.splice(boundedTargetIndex, 0, movedTask);
+
+		const updatedAt = new Date();
+
+		const updates = reorderedTasks.map((task, index) =>
+			db
+				.update(tasks)
+				.set({
+					position: index * 1000,
+					updatedAt,
+				})
+				.where(
+					and(
+						eq(tasks.id, task.id),
+						eq(tasks.stageId, sourceStageId),
+						isNull(tasks.archivedAt),
+					),
+				),
+		);
+
+		const [firstUpdate, ...remainingUpdates] = updates;
+
+		if (firstUpdate) {
+			await db.batch([firstUpdate, ...remainingUpdates]);
+		}
+
+		return targetStage.projectId;
+	}
+
+	/*
+	 * Moving between two different Stages.
+	 */
+	const [sourceTasks, targetTasks] = await Promise.all([
+		db.query.tasks.findMany({
+			where: (task, { and, eq, isNull }) =>
+				and(eq(task.stageId, sourceStageId), isNull(task.archivedAt)),
+
+			orderBy: (task, { asc }) => [asc(task.position)],
+		}),
+
+		db.query.tasks.findMany({
+			where: (task, { and, eq, isNull }) =>
+				and(eq(task.stageId, targetStage.id), isNull(task.archivedAt)),
+
+			orderBy: (task, { asc }) => [asc(task.position)],
+		}),
+	]);
+
+	const movedTask = sourceTasks.find((task) => task.id === existingTask.id);
+
+	if (!movedTask) {
+		return undefined;
+	}
+
+	const nextSourceTasks = sourceTasks.filter(
+		(task) => task.id !== existingTask.id,
+	);
+
+	const nextTargetTasks = [...targetTasks];
+
+	const boundedTargetIndex = Math.min(
+		Math.max(targetIndex, 0),
+		nextTargetTasks.length,
+	);
+
+	nextTargetTasks.splice(boundedTargetIndex, 0, movedTask);
+
+	const updatedAt = new Date();
+
+	const sourceUpdates = nextSourceTasks.map((task, index) =>
+		db
+			.update(tasks)
+			.set({
+				position: index * 1000,
+				updatedAt,
+			})
+			.where(
+				and(
+					eq(tasks.id, task.id),
+					eq(tasks.stageId, sourceStageId),
+					isNull(tasks.archivedAt),
+				),
+			),
+	);
+
+	const targetUpdates = nextTargetTasks.map((task, index) =>
+		db
+			.update(tasks)
+			.set({
+				stageId: targetStage.id,
+				position: index * 1000,
+				updatedAt,
+			})
+			.where(and(eq(tasks.id, task.id), isNull(tasks.archivedAt))),
+	);
+
+	const updates = [...sourceUpdates, ...targetUpdates];
+
+	const [firstUpdate, ...remainingUpdates] = updates;
+
+	if (firstUpdate) {
+		await db.batch([firstUpdate, ...remainingUpdates]);
+	}
+
+	return targetStage.projectId;
+}

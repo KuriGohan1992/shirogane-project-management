@@ -7,11 +7,13 @@ import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import {
 	createTaskInStage,
 	deleteTaskForUser,
+	moveTaskForUser,
 	updateTaskForUser,
 } from "@/lib/db/tasks";
+import { stageIdSchema } from "@/lib/validations/stage";
 import { taskFormSchema, taskIdSchema } from "@/lib/validations/task";
+import type { BoardMutationResult } from "@/types/board";
 import type { TaskActionState } from "@/types/task";
-import { stageIdSchema } from "../validations/stage";
 
 function parseDueDate(value: string): Date | null {
 	if (!value) {
@@ -168,4 +170,62 @@ export async function deleteTask(
 	}
 
 	revalidatePath(`/projects/${projectId}`);
+}
+
+export async function moveTaskOnBoard(
+	taskId: string,
+	targetStageId: string,
+	targetIndex: number,
+): Promise<BoardMutationResult> {
+	const taskIdResult = taskIdSchema.safeParse(taskId);
+
+	const targetStageIdResult = stageIdSchema.safeParse(targetStageId);
+
+	const targetIndexResult = z
+		.number()
+		.int()
+		.nonnegative()
+		.safeParse(targetIndex);
+
+	if (
+		!taskIdResult.success ||
+		!targetStageIdResult.success ||
+		!targetIndexResult.success
+	) {
+		return {
+			success: false,
+			message: "The requested task movement is invalid.",
+		};
+	}
+
+	try {
+		const user = await getCurrentDatabaseUser();
+
+		const projectId = await moveTaskForUser(
+			taskIdResult.data,
+			targetStageIdResult.data,
+			user.id,
+			targetIndexResult.data,
+		);
+
+		if (!projectId) {
+			return {
+				success: false,
+				message: "You do not have permission to move this task.",
+			};
+		}
+
+		revalidatePath(`/projects/${projectId}`);
+
+		return {
+			success: true,
+		};
+	} catch (error) {
+		console.error("Failed to move task:", error);
+
+		return {
+			success: false,
+			message: "Something went wrong while moving the task.",
+		};
+	}
 }
