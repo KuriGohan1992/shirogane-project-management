@@ -3,10 +3,9 @@
 import {
 	AlignLeft,
 	CalendarDays,
-	Check,
 	CircleAlert,
 	Columns3,
-	Copy,
+	Link2,
 	MessageSquare,
 	Send,
 	Users,
@@ -39,11 +38,10 @@ type TaskDetailsViewProps = {
 	isProjectOwner: boolean;
 };
 
-type PropertyItemProps = {
+type MetadataItemProps = {
 	icon: ReactNode;
 	label: string;
 	children: ReactNode;
-	className?: string;
 };
 
 const initialCommentState: CommentActionState = {
@@ -62,16 +60,16 @@ function formatDate(date: Date) {
 function getPriorityClasses(priority: Task["priority"]) {
 	switch (priority) {
 		case "low":
-			return "border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
+			return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
 
 		case "medium":
-			return "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300";
+			return "bg-amber-500/10 text-amber-700 dark:text-amber-300";
 
 		case "high":
-			return "border-orange-500/20 bg-orange-500/10 text-orange-700 dark:text-orange-300";
+			return "bg-orange-500/10 text-orange-700 dark:text-orange-300";
 
 		case "urgent":
-			return "border-destructive/30 bg-destructive/10 text-destructive";
+			return "bg-destructive/10 text-destructive";
 	}
 }
 
@@ -85,24 +83,16 @@ function toEditableTask(task: Task): EditableTask {
 	};
 }
 
-function PropertyItem({ icon, label, children, className }: PropertyItemProps) {
+function MetadataItem({ icon, label, children }: MetadataItemProps) {
 	return (
-		<div
-			className={cn(
-				"flex min-h-14 items-center gap-3 rounded-xl border border-border/70 bg-card px-3.5 py-2.5 shadow-xs",
-				className,
-			)}
-		>
-			<div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+		<div className="min-w-0">
+			<div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
 				{icon}
+				<span>{label}</span>
 			</div>
 
-			<div className="min-w-0 flex-1">
-				<p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-					{label}
-				</p>
-
-				<div className="mt-0.5 text-sm font-medium">{children}</div>
+			<div className="mt-1.5 flex min-h-8 items-center text-sm font-medium">
+				{children}
 			</div>
 		</div>
 	);
@@ -126,8 +116,6 @@ export function TaskDetailsView({
 
 	const [content, setContent] = useState("");
 
-	const [copied, setCopied] = useState(false);
-
 	const assignedUsers = task.assignees.map((assignee) => assignee.user);
 
 	useEffect(() => {
@@ -136,59 +124,31 @@ export function TaskDetailsView({
 		}
 	}, [state.success]);
 
-	async function copyTaskLink() {
-		try {
-			await navigator.clipboard.writeText(window.location.href);
-
-			setCopied(true);
-
-			window.setTimeout(() => {
-				setCopied(false);
-			}, 1500);
-		} catch {
-			setCopied(false);
-		}
+	function copyTaskLink() {
+		void navigator.clipboard.writeText(window.location.href);
 	}
 
 	return (
-		<div className="overflow-hidden bg-background">
-			<header className="border-b border-border/70 bg-gradient-to-br from-primary/15 via-primary/5 to-background px-6 py-5 lg:px-8 lg:py-6">
-				<div className="flex items-start gap-4 pr-8">
-					<div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-						<CircleAlert aria-hidden="true" size={19} />
-					</div>
-
+		<div className="bg-background">
+			<header className="border-b border-border px-6 py-5 lg:px-8">
+				<div className="flex items-start justify-between gap-5 pr-8">
 					<div className="min-w-0 flex-1">
-						<p className="mb-1 text-xs font-medium text-primary">
-							{projectName}
-							<span className="px-1.5 text-muted-foreground">/</span>
-							{stageName}
-						</p>
+						<div className="mb-2 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+							<span className="font-medium text-foreground">{projectName}</span>
 
-						<h1 className="break-words text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+							<span>/</span>
+
+							<span>{stageName}</span>
+						</div>
+
+						<h1 className="break-words text-2xl font-semibold tracking-tight text-foreground">
 							{task.title}
 						</h1>
-
-						<div className="mt-3 flex flex-wrap items-center gap-2">
-							<span
-								className={cn(
-									"inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium capitalize",
-									getPriorityClasses(task.priority),
-								)}
-							>
-								{task.priority} priority
-							</span>
-
-							{task.dueDate && (
-								<span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-1 text-xs font-medium text-blue-700 dark:text-blue-300">
-									<CalendarDays aria-hidden="true" size={12} />
-									{formatDate(task.dueDate)}
-								</span>
-							)}
-						</div>
 					</div>
 
-					<div className="flex shrink-0 items-center gap-1">
+					{permissions.canManageTasks ? (
+						<TaskActions task={toEditableTask(task)} showCopyLink />
+					) : (
 						<Button
 							type="button"
 							variant="ghost"
@@ -196,125 +156,128 @@ export function TaskDetailsView({
 							aria-label="Copy task link"
 							onClick={copyTaskLink}
 						>
-							{copied ? (
-								<Check aria-hidden="true" size={16} />
-							) : (
-								<Copy aria-hidden="true" size={16} />
-							)}
+							<Link2 aria-hidden="true" size={16} />
 						</Button>
-
-						{permissions.canManageTasks && (
-							<TaskActions task={toEditableTask(task)} />
-						)}
-					</div>
+					)}
 				</div>
 			</header>
 
-			<div className="grid lg:grid-cols-[minmax(0,1.55fr)_minmax(21rem,0.85fr)]">
-				<main className="bg-background px-6 py-6 lg:px-8 lg:py-7">
-					<div className="mx-auto max-w-3xl space-y-7">
-						<section>
-							<div className="mb-3 flex items-center gap-2">
-								<AlignLeft
-									aria-hidden="true"
-									size={17}
-									className="text-primary"
-								/>
+			<div className="grid lg:grid-cols-[minmax(0,1fr)_22rem] xl:grid-cols-[minmax(0,1fr)_24rem]">
+				<main className="min-w-0 px-6 py-7 lg:px-8">
+					<div className="mx-auto max-w-4xl space-y-10">
+						<section
+							aria-label="Task details"
+							className="grid grid-cols-2 gap-x-8 gap-y-6 md:grid-cols-4"
+						>
+							<MetadataItem
+								icon={<Columns3 aria-hidden="true" size={14} />}
+								label="Stage"
+							>
+								<span className="truncate">{stageName}</span>
+							</MetadataItem>
 
-								<h2 className="font-semibold">Description</h2>
-							</div>
+							<MetadataItem
+								icon={<CircleAlert aria-hidden="true" size={14} />}
+								label="Priority"
+							>
+								<span
+									className={cn(
+										"inline-flex rounded-md px-2 py-1 text-xs font-medium capitalize",
+										getPriorityClasses(task.priority),
+									)}
+								>
+									{task.priority}
+								</span>
+							</MetadataItem>
 
-							<div className="rounded-xl border border-border/70 bg-card p-5 shadow-xs">
-								{task.description ? (
-									<p className="whitespace-pre-wrap break-words text-sm leading-7 text-foreground/90">
-										{task.description}
-									</p>
+							<MetadataItem
+								icon={<CalendarDays aria-hidden="true" size={14} />}
+								label="Due date"
+							>
+								{task.dueDate ? (
+									<time dateTime={task.dueDate.toISOString()}>
+										{formatDate(task.dueDate)}
+									</time>
 								) : (
-									<p className="text-sm text-muted-foreground">
-										No description has been added yet.
-									</p>
+									<span className="font-normal text-muted-foreground">
+										No due date
+									</span>
 								)}
-							</div>
+							</MetadataItem>
+
+							<MetadataItem
+								icon={<Users aria-hidden="true" size={14} />}
+								label="Assignees"
+							>
+								{assignedUsers.length === 0 && !permissions.canAssignTasks ? (
+									<span className="font-normal text-muted-foreground">
+										Unassigned
+									</span>
+								) : (
+									<TaskAssigneePicker
+										taskId={task.id}
+										candidates={assigneeCandidates}
+										assignedUsers={assignedUsers}
+										canManage={permissions.canAssignTasks}
+									/>
+								)}
+							</MetadataItem>
 						</section>
 
 						<section>
-							<h2 className="mb-3 font-semibold">Task details</h2>
+							<div className="mb-4 flex items-center gap-2">
+								<AlignLeft
+									aria-hidden="true"
+									size={17}
+									className="text-muted-foreground"
+								/>
 
-							<div className="grid gap-3 sm:grid-cols-2">
-								<PropertyItem
-									icon={<Columns3 aria-hidden="true" size={16} />}
-									label="Stage"
-								>
-									{stageName}
-								</PropertyItem>
-
-								<PropertyItem
-									icon={<CircleAlert aria-hidden="true" size={16} />}
-									label="Priority"
-									className={getPriorityClasses(task.priority)}
-								>
-									<span className="capitalize">{task.priority}</span>
-								</PropertyItem>
-
-								<PropertyItem
-									icon={<CalendarDays aria-hidden="true" size={16} />}
-									label="Due date"
-								>
-									{task.dueDate ? formatDate(task.dueDate) : "No due date"}
-								</PropertyItem>
-
-								<PropertyItem
-									icon={<Users aria-hidden="true" size={16} />}
-									label="Assignees"
-								>
-									{assignedUsers.length === 0 && !permissions.canAssignTasks ? (
-										<span className="text-muted-foreground">Unassigned</span>
-									) : (
-										<TaskAssigneePicker
-											taskId={task.id}
-											candidates={assigneeCandidates}
-											assignedUsers={assignedUsers}
-											canManage={permissions.canAssignTasks}
-										/>
-									)}
-								</PropertyItem>
+								<h2 className="text-sm font-semibold">Description</h2>
 							</div>
+
+							{task.description ? (
+								<p className="whitespace-pre-wrap break-words text-sm leading-7 text-foreground/90">
+									{task.description}
+								</p>
+							) : (
+								<p className="text-sm text-muted-foreground">
+									No description has been added yet.
+								</p>
+							)}
 						</section>
 					</div>
 				</main>
 
-				<aside className="border-t border-border/70 bg-muted/35 lg:border-t-0 lg:border-l">
-					<div className="flex items-center justify-between border-b border-border/70 bg-card/70 px-5 py-4">
+				<aside className="border-t border-border lg:border-t-0 lg:border-l">
+					<div className="flex items-center justify-between border-b border-border px-5 py-4">
 						<div className="flex items-center gap-2">
-							<div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-								<MessageSquare aria-hidden="true" size={15} />
-							</div>
+							<MessageSquare
+								aria-hidden="true"
+								size={16}
+								className="text-muted-foreground"
+							/>
 
-							<div>
-								<h2 className="text-sm font-semibold">Comments</h2>
-
-								<p className="text-xs text-muted-foreground">
-									Discussion and updates
-								</p>
-							</div>
+							<h2 className="text-sm font-semibold">Comments</h2>
 						</div>
 
-						<span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+						<span className="text-xs font-medium text-muted-foreground">
 							{task.comments.length}
 						</span>
 					</div>
 
-					<div className="max-h-[42vh] overflow-y-auto p-4">
+					<div className="max-h-[50vh] overflow-y-auto px-4 py-5">
 						{task.comments.length === 0 ? (
-							<div className="flex min-h-40 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-background/60 px-6 text-center">
-								<div className="mb-3 flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-									<MessageSquare aria-hidden="true" size={17} />
-								</div>
+							<div className="flex min-h-36 flex-col items-center justify-center text-center">
+								<MessageSquare
+									aria-hidden="true"
+									size={20}
+									className="text-muted-foreground"
+								/>
 
-								<p className="text-sm font-medium">No comments yet</p>
+								<p className="mt-3 text-sm font-medium">No comments yet</p>
 
 								<p className="mt-1 max-w-56 text-xs leading-5 text-muted-foreground">
-									Start a discussion with your project collaborators.
+									Start a conversation about this task.
 								</p>
 							</div>
 						) : (
@@ -332,7 +295,7 @@ export function TaskDetailsView({
 						)}
 					</div>
 
-					<div className="border-t border-border/70 bg-background/90 p-4">
+					<div className="border-t border-border p-4">
 						{permissions.canManageTasks ? (
 							<form action={formAction} className="space-y-3" noValidate>
 								<div>
@@ -367,7 +330,7 @@ export function TaskDetailsView({
 
 											event.currentTarget.form?.requestSubmit();
 										}}
-										className="min-h-20 w-full resize-none rounded-xl border border-input bg-card px-3.5 py-3 text-sm shadow-xs outline-none transition placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+										className="min-h-20 w-full resize-none rounded-lg border border-input bg-background px-3 py-2.5 text-sm outline-none transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50"
 									/>
 
 									<div className="mt-1.5 flex items-start justify-between gap-3">
@@ -391,25 +354,29 @@ export function TaskDetailsView({
 										</p>
 									)}
 
-								<div className="flex justify-end">
+								<div className="flex items-center justify-between gap-3">
+									<p className="text-[11px] leading-4 text-muted-foreground">
+										Enter to post
+										<span className="hidden sm:inline">
+											{" "}
+											· Shift + Enter for a new line
+										</span>
+									</p>
+
 									<Button
 										type="submit"
+										size="sm"
 										disabled={pending || content.trim().length === 0}
 									>
 										<Send aria-hidden="true" size={14} />
-
-										{pending ? "Posting..." : "Post comment"}
+										{pending ? "Posting..." : "Comment"}
 									</Button>
 								</div>
-
-								<p className="text-right text-[11px] text-muted-foreground">
-									Enter to post · Shift + Enter for a new line
-								</p>
 							</form>
 						) : (
-							<div className="rounded-xl border border-border bg-muted px-3.5 py-3 text-xs leading-5 text-muted-foreground">
+							<p className="text-xs leading-5 text-muted-foreground">
 								You have read-only access to this discussion.
-							</div>
+							</p>
 						)}
 					</div>
 				</aside>

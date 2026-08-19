@@ -39,12 +39,13 @@ export function Header() {
 					</nav>
 
 					<div className="flex items-center space-x-4">
-						<button
-							onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-							className="p-2 rounded-lg bg-muted text-foreground hover:bg-muted transition-colors"
-						>
-							{theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
-						</button>
+<button
+	type="button"
+	onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+	className="p-2 rounded-lg bg-muted text-foreground hover:bg-muted transition-colors"
+>
+	{theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
+</button>
 
 						<Link
 							href="/dashboard"

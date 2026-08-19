@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Link2, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { EditTaskModal } from "@/components/modals/edit-task-modal";
@@ -24,14 +24,20 @@ import type { EditableTask } from "@/types/task";
 
 type TaskActionsProps = {
 	task: EditableTask;
+	showCopyLink?: boolean;
 };
 
-export function TaskActions({ task }: TaskActionsProps) {
+export function TaskActions({ task, showCopyLink = false }: TaskActionsProps) {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [isEditOpen, setIsEditOpen] = useState(false);
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
 	const deleteAction = deleteTask.bind(null, task.id);
+
+	function copyTaskLink() {
+		void navigator.clipboard.writeText(window.location.href);
+		setIsMenuOpen(false);
+	}
 
 	return (
 		<>
@@ -43,11 +49,23 @@ export function TaskActions({ task }: TaskActionsProps) {
 						size="icon"
 						aria-label={`Actions for ${task.title}`}
 					>
-						<MoreHorizontal aria-hidden="true" size={16} />
+						<MoreVertical aria-hidden="true" size={16} />
 					</Button>
 				</PopoverTrigger>
 
 				<PopoverContent align="end" className="w-40 p-1">
+					{showCopyLink && (
+						<Button
+							type="button"
+							variant="ghost"
+							className="w-full justify-start"
+							onClick={copyTaskLink}
+						>
+							<Link2 aria-hidden="true" size={14} />
+							Copy link
+						</Button>
+					)}
+
 					<Button
 						type="button"
 						variant="ghost"
@@ -60,6 +78,8 @@ export function TaskActions({ task }: TaskActionsProps) {
 						<Pencil aria-hidden="true" size={14} />
 						Edit task
 					</Button>
+
+					<div className="my-1 h-px bg-border" />
 
 					<Button
 						type="button"

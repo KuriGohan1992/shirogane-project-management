@@ -24,7 +24,11 @@ export function TaskRouteModal({
 }: TaskRouteModalProps) {
 	const router = useRouter();
 
-	function closeModal() {
+	function handleOpenChange(open: boolean) {
+		if (open) {
+			return;
+		}
+
 		if (closeHref) {
 			router.replace(closeHref);
 			return;
@@ -34,17 +38,10 @@ export function TaskRouteModal({
 	}
 
 	return (
-		<Dialog
-			open
-			onOpenChange={(open) => {
-				if (!open) {
-					closeModal();
-				}
-			}}
-		>
+		<Dialog open onOpenChange={handleOpenChange}>
 			<DialogContent
 				showCloseButton
-				className="max-h-[90vh] w-[min(1180px,calc(100vw-2rem))] max-w-none gap-0 overflow-y-auto border-border/80 bg-background p-0 shadow-2xl sm:max-w-none"
+				className="max-h-[90vh] w-[min(1180px,calc(100vw-2rem))] max-w-none gap-0 overflow-y-auto border-border bg-background p-0 shadow-2xl sm:max-w-none"
 			>
 				<DialogHeader className="sr-only">
 					<DialogTitle>{taskTitle}</DialogTitle>
