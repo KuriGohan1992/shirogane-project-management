@@ -3,6 +3,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 
 import { eq } from "drizzle-orm";
+
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { db } from "@/lib/db";
 import { getProjectAccess } from "@/lib/db/project-access";
@@ -160,6 +161,21 @@ export async function getProjectForUser(projectId: string, userId: string) {
 
 								with: {
 									user: {
+										columns: {
+											id: true,
+											name: true,
+											email: true,
+											imageUrl: true,
+										},
+									},
+								},
+							},
+
+							comments: {
+								orderBy: (comment, { asc }) => [asc(comment.createdAt)],
+
+								with: {
+									author: {
 										columns: {
 											id: true,
 											name: true,

@@ -269,6 +269,44 @@ export const taskAssignees = pgTable(
 );
 
 /*
+ * Task comments
+ *
+ * Comments belong to a task and record the Shiro user who authored them.
+ * Deleting a task also deletes its comments.
+ */
+
+export const taskComments = pgTable(
+	"task_comments",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+
+		taskId: uuid("task_id")
+			.notNull()
+			.references(() => tasks.id, {
+				onDelete: "cascade",
+			}),
+
+		authorId: uuid("author_id")
+			.notNull()
+			.references(() => users.id, {
+				onDelete: "cascade",
+			}),
+
+		content: text("content").notNull(),
+
+		...timestamps,
+	},
+	(table) => [
+		index("task_comments_task_created_at_idx").on(
+			table.taskId,
+			table.createdAt,
+		),
+
+		index("task_comments_author_id_idx").on(table.authorId),
+	],
+);
+
+/*
  * Drizzle relational-query definitions
  *
  * Foreign keys protect the actual PostgreSQL data.
@@ -280,6 +318,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 	ownedProjects: many(projects),
 	projectMemberships: many(projectMembers),
 	taskAssignments: many(taskAssignees),
+	taskComments: many(taskComments),
 }));
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
@@ -321,6 +360,8 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
 	}),
 
 	assignees: many(taskAssignees),
+
+	comments: many(taskComments),
 }));
 
 export const taskAssigneesRelations = relations(taskAssignees, ({ one }) => ({
@@ -331,6 +372,18 @@ export const taskAssigneesRelations = relations(taskAssignees, ({ one }) => ({
 
 	user: one(users, {
 		fields: [taskAssignees.userId],
+		references: [users.id],
+	}),
+}));
+
+export const taskCommentsRelations = relations(taskComments, ({ one }) => ({
+	task: one(tasks, {
+		fields: [taskComments.taskId],
+		references: [tasks.id],
+	}),
+
+	author: one(users, {
+		fields: [taskComments.authorId],
 		references: [users.id],
 	}),
 }));
@@ -359,3 +412,6 @@ export type NewTask = typeof tasks.$inferInsert;
 
 export type TaskAssignee = typeof taskAssignees.$inferSelect;
 export type NewTaskAssignee = typeof taskAssignees.$inferInsert;
+
+export type TaskComment = typeof taskComments.$inferSelect;
+export type NewTaskComment = typeof taskComments.$inferInsert;

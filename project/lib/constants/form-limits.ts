@@ -11,3 +11,7 @@ export const TASK_FIELD_LIMITS = {
 export const STAGE_FIELD_LIMITS = {
 	name: 100,
 } as const;
+
+export const COMMENT_FIELD_LIMITS = {
+	content: 1000,
+} as const;

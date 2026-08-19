@@ -25,6 +25,8 @@ type StageColumnProps = {
 	canMoveRight: boolean;
 	assigneeCandidates: AssignmentCandidate[];
 	permissions: ProjectPermissions;
+	currentUserId: string;
+	isProjectOwner: boolean;
 };
 
 export function StageColumn({
@@ -34,6 +36,8 @@ export function StageColumn({
 	canMoveRight,
 	assigneeCandidates,
 	permissions,
+	currentUserId,
+	isProjectOwner,
 }: StageColumnProps) {
 	const stageDragDisabled = !permissions.canManageStages;
 
@@ -118,6 +122,8 @@ export function StageColumn({
 							stageId={stage.id}
 							assigneeCandidates={assigneeCandidates}
 							permissions={permissions}
+							currentUserId={currentUserId}
+							isProjectOwner={isProjectOwner}
 						/>
 					))
 				)}

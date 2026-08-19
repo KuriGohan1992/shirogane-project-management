@@ -69,6 +69,8 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
 					stages={project.stages}
 					assigneeCandidates={assigneeCandidates}
 					permissions={permissions}
+					currentUserId={user.id}
+					isProjectOwner={project.accessRole === "owner"}
 				/>
 			</section>
 		</div>
