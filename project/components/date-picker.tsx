@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 
 type DatePickerProps = {
 	name: string;
+	form?: string;
 	defaultValue?: string;
 	placeholder?: string;
 	disabled?: boolean;
@@ -54,6 +55,7 @@ function formatDateLabel(date: Date) {
 
 export function DatePicker({
 	name,
+	form,
 	defaultValue,
 	placeholder = "Select a date",
 	disabled = false,
@@ -74,7 +76,13 @@ export function DatePicker({
 
 	return (
 		<>
-			<input type="hidden" name={name} value={toDateValue(date)} readOnly />
+			<input
+				type="hidden"
+				name={name}
+				form={form}
+				value={toDateValue(date)}
+				readOnly
+			/>
 
 			<Popover open={isOpen} onOpenChange={setIsOpen}>
 				<PopoverTrigger asChild>

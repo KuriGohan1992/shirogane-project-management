@@ -15,3 +15,7 @@ export const STAGE_FIELD_LIMITS = {
 export const COMMENT_FIELD_LIMITS = {
 	content: 1000,
 } as const;
+
+export const LABEL_FIELD_LIMITS = {
+	name: 50,
+} as const;

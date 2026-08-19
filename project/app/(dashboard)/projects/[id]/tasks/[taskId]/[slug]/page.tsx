@@ -63,6 +63,7 @@ export default async function TaskPage({ params }: TaskPageProps) {
 					task={details.task}
 					projectName={details.projectName}
 					stageName={details.stageName}
+					labelCandidates={details.labelCandidates}
 					assigneeCandidates={details.assigneeCandidates}
 					permissions={permissions}
 					currentUserId={user.id}

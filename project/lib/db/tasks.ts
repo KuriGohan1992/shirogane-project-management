@@ -1,11 +1,17 @@
 import "server-only";
 
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { db } from "@/lib/db";
 import { getProjectAccess } from "@/lib/db/project-access";
-import { type NewTask, type Task, tasks } from "@/lib/db/schema";
+import {
+	type NewTask,
+	projectLabels,
+	type Task,
+	taskLabels,
+	tasks,
+} from "@/lib/db/schema";
 
 type TaskMutationData = Pick<
 	NewTask,
@@ -71,6 +77,7 @@ export async function createTaskInStage(
 	stageId: string,
 	ownerId: string,
 	data: TaskMutationData,
+	labelIds: string[] = [],
 ): Promise<TaskMutationResult | undefined> {
 	const stage = await getEditableStage(stageId, ownerId);
 
@@ -98,6 +105,34 @@ export async function createTaskInStage(
 
 	if (!task) {
 		throw new Error("Failed to create task.");
+	}
+
+	const uniqueLabelIds = [...new Set(labelIds)];
+
+	if (uniqueLabelIds.length > 0) {
+		const validLabels = await db
+			.select({
+				id: projectLabels.id,
+			})
+			.from(projectLabels)
+			.where(
+				and(
+					eq(projectLabels.projectId, stage.projectId),
+					inArray(projectLabels.id, uniqueLabelIds),
+				),
+			);
+
+		if (validLabels.length > 0) {
+			await db
+				.insert(taskLabels)
+				.values(
+					validLabels.map((label) => ({
+						taskId: task.id,
+						labelId: label.id,
+					})),
+				)
+				.onConflictDoNothing();
+		}
 	}
 
 	return {

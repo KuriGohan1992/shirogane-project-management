@@ -14,6 +14,7 @@ import {
 	getStageDndId,
 	getStageTaskDropZoneDndId,
 } from "@/lib/board/dnd";
+import type { ProjectLabel } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 import type { AssignmentCandidate } from "@/types/member";
 import type { StageWithTasks } from "@/types/stage";
@@ -23,6 +24,7 @@ type StageColumnProps = {
 	index: number;
 	canMoveLeft: boolean;
 	canMoveRight: boolean;
+	labelCandidates: ProjectLabel[];
 	assigneeCandidates: AssignmentCandidate[];
 	permissions: ProjectPermissions;
 	currentUserId: string;
@@ -34,6 +36,7 @@ export function StageColumn({
 	index,
 	canMoveLeft,
 	canMoveRight,
+	labelCandidates,
 	assigneeCandidates,
 	permissions,
 	currentUserId,
@@ -121,6 +124,7 @@ export function StageColumn({
 							index={taskIndex}
 							stageId={stage.id}
 							projectId={stage.projectId}
+							labelCandidates={labelCandidates}
 							assigneeCandidates={assigneeCandidates}
 							permissions={permissions}
 							currentUserId={currentUserId}
@@ -130,7 +134,11 @@ export function StageColumn({
 				)}
 
 				{permissions.canManageTasks && (
-					<CreateTaskButton stageId={stage.id} stageName={stage.name} />
+					<CreateTaskButton
+						stageId={stage.id}
+						stageName={stage.name}
+						labelCandidates={labelCandidates}
+					/>
 				)}
 			</div>
 		</section>

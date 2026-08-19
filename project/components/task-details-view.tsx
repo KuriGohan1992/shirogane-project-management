@@ -8,6 +8,7 @@ import {
 	Link2,
 	MessageSquare,
 	Send,
+	Tag,
 	Users,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -18,11 +19,12 @@ import { FormFieldError } from "@/components/form-field-error";
 import { TaskActions } from "@/components/task-actions";
 import { TaskAssigneePicker } from "@/components/task-assignee-picker";
 import { TaskCommentItem } from "@/components/task-comment-item";
+import { TaskLabelBadge } from "@/components/task-label-badge";
 import { Button } from "@/components/ui/button";
 import { createComment } from "@/lib/actions/comments";
 import type { ProjectPermissions } from "@/lib/auth/project-permissions";
 import { COMMENT_FIELD_LIMITS } from "@/lib/constants/form-limits";
-import type { Task } from "@/lib/db/schema";
+import type { ProjectLabel, Task } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 import type { CommentActionState } from "@/types/comment";
 import type { AssignmentCandidate } from "@/types/member";
@@ -32,6 +34,7 @@ type TaskDetailsViewProps = {
 	task: TaskWithDetails;
 	projectName: string;
 	stageName: string;
+	labelCandidates: ProjectLabel[];
 	assigneeCandidates: AssignmentCandidate[];
 	permissions: ProjectPermissions;
 	currentUserId: string;
@@ -103,6 +106,7 @@ export function TaskDetailsView({
 	task,
 	projectName,
 	stageName,
+	labelCandidates,
 	assigneeCandidates,
 	permissions,
 	currentUserId,
@@ -118,6 +122,10 @@ export function TaskDetailsView({
 	const [content, setContent] = useState("");
 
 	const assignedUsers = task.assignees.map((assignee) => assignee.user);
+
+	const assignedLabels = task.labels
+		.map((taskLabel) => taskLabel.label)
+		.toSorted((a, b) => a.name.localeCompare(b.name));
 
 	useEffect(() => {
 		if (state.success) {
@@ -148,7 +156,12 @@ export function TaskDetailsView({
 					</div>
 
 					{permissions.canManageTasks ? (
-						<TaskActions task={toEditableTask(task)} showCopyLink />
+						<TaskActions
+							task={toEditableTask(task)}
+							labelCandidates={labelCandidates}
+							assignedLabels={assignedLabels}
+							showCopyLink
+						/>
 					) : (
 						<Button
 							type="button"
@@ -227,6 +240,28 @@ export function TaskDetailsView({
 									/>
 								)}
 							</MetadataItem>
+						</section>
+
+						<section>
+							<div className="mb-3 flex items-center gap-2">
+								<Tag
+									aria-hidden="true"
+									size={16}
+									className="text-muted-foreground"
+								/>
+
+								<h2 className="text-sm font-semibold">Labels</h2>
+							</div>
+
+							{assignedLabels.length > 0 ? (
+								<div className="flex flex-wrap gap-2">
+									{assignedLabels.map((label) => (
+										<TaskLabelBadge key={label.id} label={label} />
+									))}
+								</div>
+							) : (
+								<span className="text-sm text-muted-foreground">No labels</span>
+							)}
 						</section>
 
 						<section>

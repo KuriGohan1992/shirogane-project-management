@@ -11,10 +11,11 @@ import Link from "next/link";
 
 import { TaskActions } from "@/components/task-actions";
 import { TaskAssigneePicker } from "@/components/task-assignee-picker";
+import { TaskLabelBadge } from "@/components/task-label-badge";
 import { Button } from "@/components/ui/button";
 import type { ProjectPermissions } from "@/lib/auth/project-permissions";
 import { BOARD_DND_TYPES, getTaskDndId } from "@/lib/board/dnd";
-import type { Task } from "@/lib/db/schema";
+import type { ProjectLabel, Task } from "@/lib/db/schema";
 import { getTaskHref } from "@/lib/task-route";
 import { cn } from "@/lib/utils";
 import type { AssignmentCandidate } from "@/types/member";
@@ -25,6 +26,7 @@ type TaskCardProps = {
 	index: number;
 	stageId: string;
 	projectId: string;
+	labelCandidates: ProjectLabel[];
 	assigneeCandidates: AssignmentCandidate[];
 	permissions: ProjectPermissions;
 	currentUserId: string;
@@ -120,10 +122,17 @@ export function TaskCard({
 	index,
 	stageId,
 	projectId,
+	labelCandidates,
 	assigneeCandidates,
 	permissions,
 }: TaskCardProps) {
 	const assignedUsers = task.assignees.map((assignee) => assignee.user);
+
+	const assignedLabels = task.labels
+		.map((taskLabel) => taskLabel.label)
+		.toSorted((a, b) => a.name.localeCompare(b.name));
+
+	const visibleLabels = assignedLabels.slice(0, 2);
 
 	const taskDragDisabled = !permissions.canManageTasks;
 
@@ -177,10 +186,32 @@ export function TaskCard({
 
 						{permissions.canManageTasks && (
 							<div className="pointer-events-auto">
-								<TaskActions task={toEditableTask(task)} />
+								<TaskActions
+									task={toEditableTask(task)}
+									labelCandidates={labelCandidates}
+									assignedLabels={assignedLabels}
+								/>
 							</div>
 						)}
 					</div>
+
+					{visibleLabels.length > 0 && (
+						<div className="mt-2 flex flex-wrap items-center gap-1.5">
+							{visibleLabels.map((label) => (
+								<TaskLabelBadge
+									key={label.id}
+									label={label}
+									className="max-w-32 py-0.5"
+								/>
+							))}
+
+							{assignedLabels.length > visibleLabels.length && (
+								<span className="text-xs text-muted-foreground">
+									+{assignedLabels.length - visibleLabels.length}
+								</span>
+							)}
+						</div>
+					)}
 
 					{task.description && (
 						<p className="mt-2 line-clamp-3 text-xs leading-5 text-muted-foreground">

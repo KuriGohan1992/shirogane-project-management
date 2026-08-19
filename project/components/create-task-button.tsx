@@ -5,15 +5,18 @@ import { useState } from "react";
 
 import { CreateTaskModal } from "@/components/modals/create-task-modal";
 import { Button } from "@/components/ui/button";
+import type { ProjectLabel } from "@/lib/db/schema";
 
 type CreateTaskButtonProps = {
 	stageId: string;
 	stageName: string;
+	labelCandidates: ProjectLabel[];
 };
 
 export function CreateTaskButton({
 	stageId,
 	stageName,
+	labelCandidates,
 }: CreateTaskButtonProps) {
 	const [isOpen, setIsOpen] = useState(false);
 
@@ -33,6 +36,7 @@ export function CreateTaskButton({
 				<CreateTaskModal
 					stageId={stageId}
 					stageName={stageName}
+					labelCandidates={labelCandidates}
 					open={isOpen}
 					onOpenChange={setIsOpen}
 				/>

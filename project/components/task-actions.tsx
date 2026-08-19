@@ -20,14 +20,22 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { deleteTask } from "@/lib/actions/tasks";
+import type { ProjectLabel } from "@/lib/db/schema";
 import type { EditableTask } from "@/types/task";
 
 type TaskActionsProps = {
 	task: EditableTask;
+	labelCandidates: ProjectLabel[];
+	assignedLabels: ProjectLabel[];
 	showCopyLink?: boolean;
 };
 
-export function TaskActions({ task, showCopyLink = false }: TaskActionsProps) {
+export function TaskActions({
+	task,
+	labelCandidates,
+	assignedLabels,
+	showCopyLink = false,
+}: TaskActionsProps) {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [isEditOpen, setIsEditOpen] = useState(false);
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -99,6 +107,8 @@ export function TaskActions({ task, showCopyLink = false }: TaskActionsProps) {
 			{isEditOpen && (
 				<EditTaskModal
 					task={task}
+					labelCandidates={labelCandidates}
+					assignedLabels={assignedLabels}
 					open={isEditOpen}
 					onOpenChange={setIsEditOpen}
 				/>

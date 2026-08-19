@@ -149,6 +149,10 @@ export async function getProjectForUser(projectId: string, userId: string) {
 				},
 			},
 
+			labels: {
+				orderBy: (label, { asc }) => [asc(label.name)],
+			},
+
 			stages: {
 				orderBy: (stage, { asc }) => [asc(stage.position)],
 
@@ -171,6 +175,12 @@ export async function getProjectForUser(projectId: string, userId: string) {
 											imageUrl: true,
 										},
 									},
+								},
+							},
+
+							labels: {
+								with: {
+									label: true,
 								},
 							},
 

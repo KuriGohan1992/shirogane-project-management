@@ -59,6 +59,7 @@ export async function ProjectBoardContent({
 				<KanbanBoard
 					projectId={project.id}
 					stages={project.stages}
+					labelCandidates={project.labels}
 					assigneeCandidates={assigneeCandidates}
 					permissions={permissions}
 					currentUserId={currentUserId}

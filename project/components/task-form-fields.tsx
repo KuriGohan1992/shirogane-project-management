@@ -3,8 +3,10 @@
 import { useState } from "react";
 
 import { CharacterCount } from "@/components/character-count";
+import { CreateTaskLabelsField } from "@/components/create-task-labels-field";
 import { DatePicker } from "@/components/date-picker";
 import { FormFieldError } from "@/components/form-field-error";
+import { TaskLabelPicker } from "@/components/task-label-picker";
 import {
 	Select,
 	SelectContent,
@@ -14,14 +16,30 @@ import {
 } from "@/components/ui/select";
 import { useFieldErrors } from "@/hooks/use-field-errors";
 import { TASK_FIELD_LIMITS } from "@/lib/constants/form-limits";
+import type { ProjectLabel } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 import type { TaskFormData } from "@/lib/validations/task";
 import type { TaskActionState } from "@/types/task";
 
+type TaskLabelFieldConfig =
+	| {
+			mode: "create";
+			candidates: ProjectLabel[];
+	  }
+	| {
+			mode: "edit";
+			taskId: string;
+			candidates: ProjectLabel[];
+			assignedLabels: ProjectLabel[];
+			canManage: boolean;
+	  };
+
 type TaskFormFieldsProps = {
+	formId: string;
 	state: TaskActionState;
 	defaultValues: TaskFormData;
 	pending: boolean;
+	labels: TaskLabelFieldConfig;
 };
 
 const TASK_PRIORITY_OPTIONS = [
@@ -37,15 +55,17 @@ const TASK_PRIORITY_OPTIONS = [
 type TaskField = keyof NonNullable<TaskActionState["errors"]>;
 
 export function TaskFormFields({
+	formId,
 	state,
 	defaultValues,
 	pending,
+	labels,
 }: TaskFormFieldsProps) {
 	const [titleLength, setTitleLength] = useState(defaultValues.title.length);
-
 	const [descriptionLength, setDescriptionLength] = useState(
 		defaultValues.description.length,
 	);
+	const [priority, setPriority] = useState(defaultValues.priority);
 
 	const titleErrorId = "task-title-error";
 	const descriptionErrorId = "task-description-error";
@@ -80,6 +100,7 @@ export function TaskFormFields({
 				<input
 					id="task-title"
 					name="title"
+					form={formId}
 					type="text"
 					required
 					maxLength={TASK_FIELD_LIMITS.title}
@@ -124,6 +145,7 @@ export function TaskFormFields({
 				<textarea
 					id="task-description"
 					name="description"
+					form={formId}
 					rows={4}
 					maxLength={TASK_FIELD_LIMITS.description}
 					defaultValue={defaultValues.description}
@@ -153,11 +175,21 @@ export function TaskFormFields({
 					Priority
 				</label>
 
-				<Select
+				<input
+					type="hidden"
 					name="priority"
-					defaultValue={defaultValues.priority}
+					form={formId}
+					value={priority}
+					readOnly
+				/>
+
+				<Select
+					value={priority}
 					disabled={pending}
-					onValueChange={() => clearFieldError("priority")}
+					onValueChange={(value) => {
+						setPriority(value as TaskFormData["priority"]);
+						clearFieldError("priority");
+					}}
 				>
 					<SelectTrigger
 						id="task-priority"
@@ -186,6 +218,7 @@ export function TaskFormFields({
 
 					<DatePicker
 						name="startDate"
+						form={formId}
 						defaultValue={defaultValues.startDate}
 						placeholder="Select a start date"
 						disabled={pending}
@@ -202,6 +235,7 @@ export function TaskFormFields({
 
 					<DatePicker
 						name="dueDate"
+						form={formId}
 						defaultValue={defaultValues.dueDate}
 						placeholder="Select a due date"
 						disabled={pending}
@@ -212,6 +246,25 @@ export function TaskFormFields({
 
 					<FormFieldError id={dueDateErrorId} messages={dueDateErrors} />
 				</div>
+			</div>
+
+			<div>
+				<p className="mb-2 text-sm font-medium text-foreground">Labels</p>
+
+				{labels.mode === "create" ? (
+					<CreateTaskLabelsField
+						formId={formId}
+						labels={labels.candidates}
+						pending={pending}
+					/>
+				) : (
+					<TaskLabelPicker
+						taskId={labels.taskId}
+						labels={labels.candidates}
+						assignedLabels={labels.assignedLabels}
+						canManage={labels.canManage}
+					/>
+				)}
 			</div>
 		</div>
 	);

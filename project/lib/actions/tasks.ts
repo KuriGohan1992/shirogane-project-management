@@ -10,6 +10,7 @@ import {
 	moveTaskForUser,
 	updateTaskForUser,
 } from "@/lib/db/tasks";
+import { labelIdSchema } from "@/lib/validations/label";
 import { stageIdSchema } from "@/lib/validations/stage";
 import { taskFormSchema, taskIdSchema } from "@/lib/validations/task";
 import type { BoardMutationResult } from "@/types/board";
@@ -45,6 +46,10 @@ export async function createTask(
 		dueDate: formData.get("dueDate"),
 	});
 
+	const labelIdsResult = z
+		.array(labelIdSchema)
+		.safeParse(formData.getAll("labelIds"));
+
 	if (!result.success) {
 		return {
 			success: false,
@@ -52,16 +57,28 @@ export async function createTask(
 		};
 	}
 
+	if (!labelIdsResult.success) {
+		return {
+			success: false,
+			message: "One or more selected labels are invalid.",
+		};
+	}
+
 	try {
 		const user = await getCurrentDatabaseUser();
 
-		const created = await createTaskInStage(stageIdResult.data, user.id, {
-			title: result.data.title,
-			description: result.data.description || null,
-			priority: result.data.priority,
-			startDate: parseDate(result.data.startDate),
-			dueDate: parseDate(result.data.dueDate),
-		});
+		const created = await createTaskInStage(
+			stageIdResult.data,
+			user.id,
+			{
+				title: result.data.title,
+				description: result.data.description || null,
+				priority: result.data.priority,
+				startDate: parseDate(result.data.startDate),
+				dueDate: parseDate(result.data.dueDate),
+			},
+			labelIdsResult.data,
+		);
 
 		if (!created) {
 			return {

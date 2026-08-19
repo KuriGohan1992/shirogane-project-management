@@ -1,6 +1,7 @@
 import type { Task, TaskAssignee } from "@/lib/db/schema";
 import type { TaskFormData } from "@/lib/validations/task";
 import type { TaskCommentWithAuthor } from "@/types/comment";
+import type { TaskLabelWithLabel } from "@/types/label";
 import type { UserSummary } from "@/types/user";
 
 export type TaskActionState = {
@@ -28,5 +29,6 @@ export type TaskWithAssignees = Task & {
 };
 
 export type TaskWithDetails = TaskWithAssignees & {
+	labels: TaskLabelWithLabel[];
 	comments: TaskCommentWithAuthor[];
 };

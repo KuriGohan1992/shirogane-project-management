@@ -59,6 +59,10 @@ export async function getTaskDetailsForUser(
 						},
 
 						with: {
+							labels: {
+								orderBy: (label, { asc }) => [asc(label.name)],
+							},
+
 							owner: {
 								columns: {
 									id: true,
@@ -103,6 +107,12 @@ export async function getTaskDetailsForUser(
 							imageUrl: true,
 						},
 					},
+				},
+			},
+
+			labels: {
+				with: {
+					label: true,
 				},
 			},
 
@@ -152,6 +162,7 @@ export async function getTaskDetailsForUser(
 			task,
 			stageName: stage.name,
 			projectName: stage.project.name,
+			labelCandidates: stage.project.labels,
 			assigneeCandidates,
 			accessRole,
 		},

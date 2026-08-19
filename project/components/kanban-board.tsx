@@ -22,6 +22,7 @@ import {
 	getStageIdFromTaskDropZoneDndId,
 	getTaskIdFromDndId,
 } from "@/lib/board/dnd";
+import type { ProjectLabel } from "@/lib/db/schema";
 import type { BoardMutationResult } from "@/types/board";
 import type { AssignmentCandidate } from "@/types/member";
 import type { StageWithTasks } from "@/types/stage";
@@ -29,6 +30,7 @@ import type { StageWithTasks } from "@/types/stage";
 type KanbanBoardProps = {
 	projectId: string;
 	stages: StageWithTasks[];
+	labelCandidates: ProjectLabel[];
 	assigneeCandidates: AssignmentCandidate[];
 	permissions: ProjectPermissions;
 	currentUserId: string;
@@ -37,6 +39,7 @@ type KanbanBoardProps = {
 
 type KanbanBoardContentProps = {
 	projectId: string;
+	labelCandidates: ProjectLabel[];
 	assigneeCandidates: AssignmentCandidate[];
 	permissions: ProjectPermissions;
 	currentUserId: string;
@@ -81,6 +84,7 @@ function findTaskLocation(
 
 function KanbanBoardContent({
 	projectId,
+	labelCandidates,
 	assigneeCandidates,
 	permissions,
 	currentUserId,
@@ -426,6 +430,7 @@ function KanbanBoardContent({
 							index={index}
 							canMoveLeft={index > 0}
 							canMoveRight={index < renderedStages.length - 1}
+							labelCandidates={labelCandidates}
 							assigneeCandidates={assigneeCandidates}
 							permissions={permissions}
 							currentUserId={currentUserId}
@@ -445,6 +450,7 @@ function KanbanBoardContent({
 export function KanbanBoard({
 	projectId,
 	stages,
+	labelCandidates,
 	assigneeCandidates,
 	permissions,
 	currentUserId,
@@ -454,6 +460,7 @@ export function KanbanBoard({
 		<BoardStoreProvider key={projectId} serverStages={stages}>
 			<KanbanBoardContent
 				projectId={projectId}
+				labelCandidates={labelCandidates}
 				assigneeCandidates={assigneeCandidates}
 				permissions={permissions}
 				currentUserId={currentUserId}
