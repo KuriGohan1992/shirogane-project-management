@@ -1,6 +1,4 @@
 import { relations } from "drizzle-orm";
-import type { ColorValue } from "@/lib/constants/colors";
-import { DEFAULT_COLOR } from "@/lib/constants/colors";
 import {
 	index,
 	integer,
@@ -11,6 +9,8 @@ import {
 	timestamp,
 	uuid,
 } from "drizzle-orm/pg-core";
+import type { ColorValue } from "@/lib/constants/colors";
+import { DEFAULT_COLOR } from "@/lib/constants/colors";
 
 import { PROJECT_MEMBER_ROLE_VALUES } from "@/lib/constants/project-roles";
 
@@ -68,24 +68,21 @@ export const projects = pgTable(
 				onDelete: "cascade",
 			}),
 
-name: text("name").notNull(),
+		name: text("name").notNull(),
 
-description: text("description"),
+		description: text("description"),
 
-color: text("color")
-	.$type<ColorValue>()
-	.default(DEFAULT_COLOR)
-	.notNull(),
+		color: text("color").$type<ColorValue>().default(DEFAULT_COLOR).notNull(),
 
-startDate: timestamp("start_date", {
-	withTimezone: true,
-	mode: "date",
-}),
+		startDate: timestamp("start_date", {
+			withTimezone: true,
+			mode: "date",
+		}),
 
-dueDate: timestamp("due_date", {
-	withTimezone: true,
-	mode: "date",
-}),
+		dueDate: timestamp("due_date", {
+			withTimezone: true,
+			mode: "date",
+		}),
 
 		...timestamps,
 	},
@@ -169,15 +166,15 @@ export const tasks = pgTable(
 
 		priority: taskPriorityEnum("priority").default("medium").notNull(),
 
-startDate: timestamp("start_date", {
-	withTimezone: true,
-	mode: "date",
-}),
+		startDate: timestamp("start_date", {
+			withTimezone: true,
+			mode: "date",
+		}),
 
-dueDate: timestamp("due_date", {
-	withTimezone: true,
-	mode: "date",
-}),
+		dueDate: timestamp("due_date", {
+			withTimezone: true,
+			mode: "date",
+		}),
 
 		archivedAt: timestamp("archived_at", {
 			withTimezone: true,

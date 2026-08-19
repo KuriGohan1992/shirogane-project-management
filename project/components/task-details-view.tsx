@@ -191,24 +191,24 @@ export function TaskDetailsView({
 								</span>
 							</MetadataItem>
 
-<MetadataItem
-	icon={<CalendarDays aria-hidden="true" size={14} />}
-	label="Schedule"
->
-	{task.startDate && task.dueDate ? (
-		<span>
-			{formatDate(task.startDate)} – {formatDate(task.dueDate)}
-		</span>
-	) : task.startDate ? (
-		<span>Starts {formatDate(task.startDate)}</span>
-	) : task.dueDate ? (
-		<span>Due {formatDate(task.dueDate)}</span>
-	) : (
-		<span className="font-normal text-muted-foreground">
-			No dates
-		</span>
-	)}
-</MetadataItem>
+							<MetadataItem
+								icon={<CalendarDays aria-hidden="true" size={14} />}
+								label="Schedule"
+							>
+								{task.startDate && task.dueDate ? (
+									<span>
+										{formatDate(task.startDate)} – {formatDate(task.dueDate)}
+									</span>
+								) : task.startDate ? (
+									<span>Starts {formatDate(task.startDate)}</span>
+								) : task.dueDate ? (
+									<span>Due {formatDate(task.dueDate)}</span>
+								) : (
+									<span className="font-normal text-muted-foreground">
+										No dates
+									</span>
+								)}
+							</MetadataItem>
 
 							<MetadataItem
 								icon={<Users aria-hidden="true" size={14} />}

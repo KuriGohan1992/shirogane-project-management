@@ -182,9 +182,7 @@ export function TaskFormFields({
 
 			<div className="grid gap-4 sm:grid-cols-2">
 				<div>
-					<p className="mb-2 text-sm font-medium text-foreground">
-						Start date
-					</p>
+					<p className="mb-2 text-sm font-medium text-foreground">Start date</p>
 
 					<DatePicker
 						name="startDate"
@@ -196,16 +194,11 @@ export function TaskFormFields({
 						onValueChange={() => clearFieldError("startDate")}
 					/>
 
-					<FormFieldError
-						id={startDateErrorId}
-						messages={startDateErrors}
-					/>
+					<FormFieldError id={startDateErrorId} messages={startDateErrors} />
 				</div>
 
 				<div>
-					<p className="mb-2 text-sm font-medium text-foreground">
-						Due date
-					</p>
+					<p className="mb-2 text-sm font-medium text-foreground">Due date</p>
 
 					<DatePicker
 						name="dueDate"

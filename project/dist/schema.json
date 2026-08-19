@@ -1,555 +1,490 @@
 {
-  "tables": {
-    "users": {
-      "name": "users",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "default": "gen_random_uuid()",
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "clerkId": {
-          "name": "clerk_id",
-          "type": "text",
-          "default": null,
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "email": {
-          "name": "email",
-          "type": "text",
-          "default": null,
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "default": null,
-          "notNull": false,
-          "comment": null,
-          "check": null
-        },
-        "imageUrl": {
-          "name": "image_url",
-          "type": "text",
-          "default": null,
-          "notNull": false,
-          "comment": null,
-          "check": null
-        }
-      },
-      "constraints": {
-        "PRIMARY_id": {
-          "type": "PRIMARY KEY",
-          "name": "PRIMARY_id",
-          "columnNames": [
-            "id"
-          ]
-        },
-        "UNIQUE_clerk_id": {
-          "type": "UNIQUE",
-          "name": "UNIQUE_clerk_id",
-          "columnNames": [
-            "clerk_id"
-          ]
-        },
-        "UNIQUE_email": {
-          "type": "UNIQUE",
-          "name": "UNIQUE_email",
-          "columnNames": [
-            "email"
-          ]
-        }
-      },
-      "indexes": {
-        "users_pkey": {
-          "name": "users_pkey",
-          "columns": [
-            "id"
-          ],
-          "unique": true,
-          "type": ""
-        }
-      },
-      "comment": null
-    },
-    "projects": {
-      "name": "projects",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "default": "gen_random_uuid()",
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "ownerId": {
-          "name": "owner_id",
-          "type": "uuid",
-          "default": null,
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "default": null,
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "default": null,
-          "notNull": false,
-          "comment": null,
-          "check": null
-        },
-        "dueDate": {
-          "name": "due_date",
-          "type": "timestamp with time zone",
-          "default": null,
-          "notNull": false,
-          "comment": null,
-          "check": null
-        }
-      },
-      "constraints": {
-        "PRIMARY_id": {
-          "type": "PRIMARY KEY",
-          "name": "PRIMARY_id",
-          "columnNames": [
-            "id"
-          ]
-        },
-        "projects_owner_id_users_id_fk": {
-          "type": "FOREIGN KEY",
-          "name": "projects_owner_id_users_id_fk",
-          "columnNames": [
-            "owner_id"
-          ],
-          "targetTableName": "users",
-          "targetColumnNames": [
-            "id"
-          ],
-          "updateConstraint": "NO_ACTION",
-          "deleteConstraint": "CASCADE"
-        }
-      },
-      "indexes": {
-        "projects_pkey": {
-          "name": "projects_pkey",
-          "columns": [
-            "id"
-          ],
-          "unique": true,
-          "type": ""
-        }
-      },
-      "comment": null
-    },
-    "project_members": {
-      "name": "project_members",
-      "columns": {
-        "projectId": {
-          "name": "project_id",
-          "type": "uuid",
-          "default": null,
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "userId": {
-          "name": "user_id",
-          "type": "uuid",
-          "default": null,
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "role": {
-          "name": "role",
-          "type": "projectMemberRoleEnum",
-          "default": "member",
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "joinedAt": {
-          "name": "joined_at",
-          "type": "timestamp with time zone",
-          "default": "now()",
-          "notNull": true,
-          "comment": null,
-          "check": null
-        }
-      },
-      "constraints": {
-        "project_members_project_id_projects_id_fk": {
-          "type": "FOREIGN KEY",
-          "name": "project_members_project_id_projects_id_fk",
-          "columnNames": [
-            "project_id"
-          ],
-          "targetTableName": "projects",
-          "targetColumnNames": [
-            "id"
-          ],
-          "updateConstraint": "NO_ACTION",
-          "deleteConstraint": "CASCADE"
-        },
-        "project_members_user_id_users_id_fk": {
-          "type": "FOREIGN KEY",
-          "name": "project_members_user_id_users_id_fk",
-          "columnNames": [
-            "user_id"
-          ],
-          "targetTableName": "users",
-          "targetColumnNames": [
-            "id"
-          ],
-          "updateConstraint": "NO_ACTION",
-          "deleteConstraint": "CASCADE"
-        }
-      },
-      "indexes": {},
-      "comment": null
-    },
-    "stages": {
-      "name": "stages",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "default": "gen_random_uuid()",
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "projectId": {
-          "name": "project_id",
-          "type": "uuid",
-          "default": null,
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "default": null,
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "position": {
-          "name": "position",
-          "type": "integer",
-          "default": null,
-          "notNull": true,
-          "comment": null,
-          "check": null
-        }
-      },
-      "constraints": {
-        "PRIMARY_id": {
-          "type": "PRIMARY KEY",
-          "name": "PRIMARY_id",
-          "columnNames": [
-            "id"
-          ]
-        },
-        "stages_project_id_projects_id_fk": {
-          "type": "FOREIGN KEY",
-          "name": "stages_project_id_projects_id_fk",
-          "columnNames": [
-            "project_id"
-          ],
-          "targetTableName": "projects",
-          "targetColumnNames": [
-            "id"
-          ],
-          "updateConstraint": "NO_ACTION",
-          "deleteConstraint": "CASCADE"
-        }
-      },
-      "indexes": {
-        "stages_pkey": {
-          "name": "stages_pkey",
-          "columns": [
-            "id"
-          ],
-          "unique": true,
-          "type": ""
-        }
-      },
-      "comment": null
-    },
-    "tasks": {
-      "name": "tasks",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "default": "gen_random_uuid()",
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "stageId": {
-          "name": "stage_id",
-          "type": "uuid",
-          "default": null,
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "title": {
-          "name": "title",
-          "type": "text",
-          "default": null,
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "default": null,
-          "notNull": false,
-          "comment": null,
-          "check": null
-        },
-        "position": {
-          "name": "position",
-          "type": "integer",
-          "default": null,
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "priority": {
-          "name": "priority",
-          "type": "task_priority",
-          "default": "medium",
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "dueDate": {
-          "name": "due_date",
-          "type": "timestamp with time zone",
-          "default": null,
-          "notNull": false,
-          "comment": null,
-          "check": null
-        },
-        "archivedAt": {
-          "name": "archived_at",
-          "type": "timestamp with time zone",
-          "default": null,
-          "notNull": false,
-          "comment": null,
-          "check": null
-        }
-      },
-      "constraints": {
-        "PRIMARY_id": {
-          "type": "PRIMARY KEY",
-          "name": "PRIMARY_id",
-          "columnNames": [
-            "id"
-          ]
-        },
-        "tasks_stage_id_stages_id_fk": {
-          "type": "FOREIGN KEY",
-          "name": "tasks_stage_id_stages_id_fk",
-          "columnNames": [
-            "stage_id"
-          ],
-          "targetTableName": "stages",
-          "targetColumnNames": [
-            "id"
-          ],
-          "updateConstraint": "NO_ACTION",
-          "deleteConstraint": "CASCADE"
-        }
-      },
-      "indexes": {
-        "tasks_pkey": {
-          "name": "tasks_pkey",
-          "columns": [
-            "id"
-          ],
-          "unique": true,
-          "type": ""
-        }
-      },
-      "comment": null
-    },
-    "task_assignees": {
-      "name": "task_assignees",
-      "columns": {
-        "taskId": {
-          "name": "task_id",
-          "type": "uuid",
-          "default": null,
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "userId": {
-          "name": "user_id",
-          "type": "uuid",
-          "default": null,
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "assignedAt": {
-          "name": "assigned_at",
-          "type": "timestamp with time zone",
-          "default": "now()",
-          "notNull": true,
-          "comment": null,
-          "check": null
-        }
-      },
-      "constraints": {
-        "task_assignees_task_id_tasks_id_fk": {
-          "type": "FOREIGN KEY",
-          "name": "task_assignees_task_id_tasks_id_fk",
-          "columnNames": [
-            "task_id"
-          ],
-          "targetTableName": "tasks",
-          "targetColumnNames": [
-            "id"
-          ],
-          "updateConstraint": "NO_ACTION",
-          "deleteConstraint": "CASCADE"
-        },
-        "task_assignees_user_id_users_id_fk": {
-          "type": "FOREIGN KEY",
-          "name": "task_assignees_user_id_users_id_fk",
-          "columnNames": [
-            "user_id"
-          ],
-          "targetTableName": "users",
-          "targetColumnNames": [
-            "id"
-          ],
-          "updateConstraint": "NO_ACTION",
-          "deleteConstraint": "CASCADE"
-        }
-      },
-      "indexes": {},
-      "comment": null
-    },
-    "task_comments": {
-      "name": "task_comments",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "default": "gen_random_uuid()",
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "taskId": {
-          "name": "task_id",
-          "type": "uuid",
-          "default": null,
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "authorId": {
-          "name": "author_id",
-          "type": "uuid",
-          "default": null,
-          "notNull": true,
-          "comment": null,
-          "check": null
-        },
-        "content": {
-          "name": "content",
-          "type": "text",
-          "default": null,
-          "notNull": true,
-          "comment": null,
-          "check": null
-        }
-      },
-      "constraints": {
-        "PRIMARY_id": {
-          "type": "PRIMARY KEY",
-          "name": "PRIMARY_id",
-          "columnNames": [
-            "id"
-          ]
-        },
-        "task_comments_task_id_tasks_id_fk": {
-          "type": "FOREIGN KEY",
-          "name": "task_comments_task_id_tasks_id_fk",
-          "columnNames": [
-            "task_id"
-          ],
-          "targetTableName": "tasks",
-          "targetColumnNames": [
-            "id"
-          ],
-          "updateConstraint": "NO_ACTION",
-          "deleteConstraint": "CASCADE"
-        },
-        "task_comments_author_id_users_id_fk": {
-          "type": "FOREIGN KEY",
-          "name": "task_comments_author_id_users_id_fk",
-          "columnNames": [
-            "author_id"
-          ],
-          "targetTableName": "users",
-          "targetColumnNames": [
-            "id"
-          ],
-          "updateConstraint": "NO_ACTION",
-          "deleteConstraint": "CASCADE"
-        }
-      },
-      "indexes": {
-        "task_comments_pkey": {
-          "name": "task_comments_pkey",
-          "columns": [
-            "id"
-          ],
-          "unique": true,
-          "type": ""
-        }
-      },
-      "comment": null
-    }
-  },
-  "enums": {
-    "task_priority": {
-      "name": "task_priority",
-      "values": [
-        "low",
-        "medium",
-        "high",
-        "urgent"
-      ],
-      "comment": null
-    }
-  },
-  "extensions": {}
+	"tables": {
+		"users": {
+			"name": "users",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"default": "gen_random_uuid()",
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"clerkId": {
+					"name": "clerk_id",
+					"type": "text",
+					"default": null,
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"email": {
+					"name": "email",
+					"type": "text",
+					"default": null,
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"default": null,
+					"notNull": false,
+					"comment": null,
+					"check": null
+				},
+				"imageUrl": {
+					"name": "image_url",
+					"type": "text",
+					"default": null,
+					"notNull": false,
+					"comment": null,
+					"check": null
+				}
+			},
+			"constraints": {
+				"PRIMARY_id": {
+					"type": "PRIMARY KEY",
+					"name": "PRIMARY_id",
+					"columnNames": ["id"]
+				},
+				"UNIQUE_clerk_id": {
+					"type": "UNIQUE",
+					"name": "UNIQUE_clerk_id",
+					"columnNames": ["clerk_id"]
+				},
+				"UNIQUE_email": {
+					"type": "UNIQUE",
+					"name": "UNIQUE_email",
+					"columnNames": ["email"]
+				}
+			},
+			"indexes": {
+				"users_pkey": {
+					"name": "users_pkey",
+					"columns": ["id"],
+					"unique": true,
+					"type": ""
+				}
+			},
+			"comment": null
+		},
+		"projects": {
+			"name": "projects",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"default": "gen_random_uuid()",
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"ownerId": {
+					"name": "owner_id",
+					"type": "uuid",
+					"default": null,
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"default": null,
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"default": null,
+					"notNull": false,
+					"comment": null,
+					"check": null
+				},
+				"dueDate": {
+					"name": "due_date",
+					"type": "timestamp with time zone",
+					"default": null,
+					"notNull": false,
+					"comment": null,
+					"check": null
+				}
+			},
+			"constraints": {
+				"PRIMARY_id": {
+					"type": "PRIMARY KEY",
+					"name": "PRIMARY_id",
+					"columnNames": ["id"]
+				},
+				"projects_owner_id_users_id_fk": {
+					"type": "FOREIGN KEY",
+					"name": "projects_owner_id_users_id_fk",
+					"columnNames": ["owner_id"],
+					"targetTableName": "users",
+					"targetColumnNames": ["id"],
+					"updateConstraint": "NO_ACTION",
+					"deleteConstraint": "CASCADE"
+				}
+			},
+			"indexes": {
+				"projects_pkey": {
+					"name": "projects_pkey",
+					"columns": ["id"],
+					"unique": true,
+					"type": ""
+				}
+			},
+			"comment": null
+		},
+		"project_members": {
+			"name": "project_members",
+			"columns": {
+				"projectId": {
+					"name": "project_id",
+					"type": "uuid",
+					"default": null,
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"userId": {
+					"name": "user_id",
+					"type": "uuid",
+					"default": null,
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"role": {
+					"name": "role",
+					"type": "projectMemberRoleEnum",
+					"default": "member",
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"joinedAt": {
+					"name": "joined_at",
+					"type": "timestamp with time zone",
+					"default": "now()",
+					"notNull": true,
+					"comment": null,
+					"check": null
+				}
+			},
+			"constraints": {
+				"project_members_project_id_projects_id_fk": {
+					"type": "FOREIGN KEY",
+					"name": "project_members_project_id_projects_id_fk",
+					"columnNames": ["project_id"],
+					"targetTableName": "projects",
+					"targetColumnNames": ["id"],
+					"updateConstraint": "NO_ACTION",
+					"deleteConstraint": "CASCADE"
+				},
+				"project_members_user_id_users_id_fk": {
+					"type": "FOREIGN KEY",
+					"name": "project_members_user_id_users_id_fk",
+					"columnNames": ["user_id"],
+					"targetTableName": "users",
+					"targetColumnNames": ["id"],
+					"updateConstraint": "NO_ACTION",
+					"deleteConstraint": "CASCADE"
+				}
+			},
+			"indexes": {},
+			"comment": null
+		},
+		"stages": {
+			"name": "stages",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"default": "gen_random_uuid()",
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"projectId": {
+					"name": "project_id",
+					"type": "uuid",
+					"default": null,
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"default": null,
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"position": {
+					"name": "position",
+					"type": "integer",
+					"default": null,
+					"notNull": true,
+					"comment": null,
+					"check": null
+				}
+			},
+			"constraints": {
+				"PRIMARY_id": {
+					"type": "PRIMARY KEY",
+					"name": "PRIMARY_id",
+					"columnNames": ["id"]
+				},
+				"stages_project_id_projects_id_fk": {
+					"type": "FOREIGN KEY",
+					"name": "stages_project_id_projects_id_fk",
+					"columnNames": ["project_id"],
+					"targetTableName": "projects",
+					"targetColumnNames": ["id"],
+					"updateConstraint": "NO_ACTION",
+					"deleteConstraint": "CASCADE"
+				}
+			},
+			"indexes": {
+				"stages_pkey": {
+					"name": "stages_pkey",
+					"columns": ["id"],
+					"unique": true,
+					"type": ""
+				}
+			},
+			"comment": null
+		},
+		"tasks": {
+			"name": "tasks",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"default": "gen_random_uuid()",
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"stageId": {
+					"name": "stage_id",
+					"type": "uuid",
+					"default": null,
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"title": {
+					"name": "title",
+					"type": "text",
+					"default": null,
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"default": null,
+					"notNull": false,
+					"comment": null,
+					"check": null
+				},
+				"position": {
+					"name": "position",
+					"type": "integer",
+					"default": null,
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"priority": {
+					"name": "priority",
+					"type": "task_priority",
+					"default": "medium",
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"dueDate": {
+					"name": "due_date",
+					"type": "timestamp with time zone",
+					"default": null,
+					"notNull": false,
+					"comment": null,
+					"check": null
+				},
+				"archivedAt": {
+					"name": "archived_at",
+					"type": "timestamp with time zone",
+					"default": null,
+					"notNull": false,
+					"comment": null,
+					"check": null
+				}
+			},
+			"constraints": {
+				"PRIMARY_id": {
+					"type": "PRIMARY KEY",
+					"name": "PRIMARY_id",
+					"columnNames": ["id"]
+				},
+				"tasks_stage_id_stages_id_fk": {
+					"type": "FOREIGN KEY",
+					"name": "tasks_stage_id_stages_id_fk",
+					"columnNames": ["stage_id"],
+					"targetTableName": "stages",
+					"targetColumnNames": ["id"],
+					"updateConstraint": "NO_ACTION",
+					"deleteConstraint": "CASCADE"
+				}
+			},
+			"indexes": {
+				"tasks_pkey": {
+					"name": "tasks_pkey",
+					"columns": ["id"],
+					"unique": true,
+					"type": ""
+				}
+			},
+			"comment": null
+		},
+		"task_assignees": {
+			"name": "task_assignees",
+			"columns": {
+				"taskId": {
+					"name": "task_id",
+					"type": "uuid",
+					"default": null,
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"userId": {
+					"name": "user_id",
+					"type": "uuid",
+					"default": null,
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"assignedAt": {
+					"name": "assigned_at",
+					"type": "timestamp with time zone",
+					"default": "now()",
+					"notNull": true,
+					"comment": null,
+					"check": null
+				}
+			},
+			"constraints": {
+				"task_assignees_task_id_tasks_id_fk": {
+					"type": "FOREIGN KEY",
+					"name": "task_assignees_task_id_tasks_id_fk",
+					"columnNames": ["task_id"],
+					"targetTableName": "tasks",
+					"targetColumnNames": ["id"],
+					"updateConstraint": "NO_ACTION",
+					"deleteConstraint": "CASCADE"
+				},
+				"task_assignees_user_id_users_id_fk": {
+					"type": "FOREIGN KEY",
+					"name": "task_assignees_user_id_users_id_fk",
+					"columnNames": ["user_id"],
+					"targetTableName": "users",
+					"targetColumnNames": ["id"],
+					"updateConstraint": "NO_ACTION",
+					"deleteConstraint": "CASCADE"
+				}
+			},
+			"indexes": {},
+			"comment": null
+		},
+		"task_comments": {
+			"name": "task_comments",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "uuid",
+					"default": "gen_random_uuid()",
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"taskId": {
+					"name": "task_id",
+					"type": "uuid",
+					"default": null,
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"authorId": {
+					"name": "author_id",
+					"type": "uuid",
+					"default": null,
+					"notNull": true,
+					"comment": null,
+					"check": null
+				},
+				"content": {
+					"name": "content",
+					"type": "text",
+					"default": null,
+					"notNull": true,
+					"comment": null,
+					"check": null
+				}
+			},
+			"constraints": {
+				"PRIMARY_id": {
+					"type": "PRIMARY KEY",
+					"name": "PRIMARY_id",
+					"columnNames": ["id"]
+				},
+				"task_comments_task_id_tasks_id_fk": {
+					"type": "FOREIGN KEY",
+					"name": "task_comments_task_id_tasks_id_fk",
+					"columnNames": ["task_id"],
+					"targetTableName": "tasks",
+					"targetColumnNames": ["id"],
+					"updateConstraint": "NO_ACTION",
+					"deleteConstraint": "CASCADE"
+				},
+				"task_comments_author_id_users_id_fk": {
+					"type": "FOREIGN KEY",
+					"name": "task_comments_author_id_users_id_fk",
+					"columnNames": ["author_id"],
+					"targetTableName": "users",
+					"targetColumnNames": ["id"],
+					"updateConstraint": "NO_ACTION",
+					"deleteConstraint": "CASCADE"
+				}
+			},
+			"indexes": {
+				"task_comments_pkey": {
+					"name": "task_comments_pkey",
+					"columns": ["id"],
+					"unique": true,
+					"type": ""
+				}
+			},
+			"comment": null
+		}
+	},
+	"enums": {
+		"task_priority": {
+			"name": "task_priority",
+			"values": ["low", "medium", "high", "urgent"],
+			"comment": null
+		}
+	},
+	"extensions": {}
 }

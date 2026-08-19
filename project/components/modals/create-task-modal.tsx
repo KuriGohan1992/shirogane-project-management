@@ -63,13 +63,13 @@ export function CreateTaskModal({
 					<TaskFormFields
 						state={state}
 						pending={pending}
-defaultValues={{
-	title: "",
-	description: "",
-	priority: "medium",
-	startDate: "",
-	dueDate: "",
-}}
+						defaultValues={{
+							title: "",
+							description: "",
+							priority: "medium",
+							startDate: "",
+							dueDate: "",
+						}}
 					/>
 
 					{state.message && !state.success && !hasFieldErrors && (
