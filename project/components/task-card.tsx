@@ -1,7 +1,5 @@
 "use client";
 
-// TODO: Add labels and overdue state later.
-
 import { useSortable } from "@dnd-kit/react/sortable";
 import {
 	CalendarDays,
@@ -9,15 +7,15 @@ import {
 	GripVertical,
 	MessageSquare,
 } from "lucide-react";
-import { useState } from "react";
+import Link from "next/link";
 
-import { TaskCommentsModal } from "@/components/modals/task-comments-modal";
 import { TaskActions } from "@/components/task-actions";
 import { TaskAssigneePicker } from "@/components/task-assignee-picker";
 import { Button } from "@/components/ui/button";
 import type { ProjectPermissions } from "@/lib/auth/project-permissions";
 import { BOARD_DND_TYPES, getTaskDndId } from "@/lib/board/dnd";
 import type { Task } from "@/lib/db/schema";
+import { getTaskHref } from "@/lib/task-route";
 import { cn } from "@/lib/utils";
 import type { AssignmentCandidate } from "@/types/member";
 import type { EditableTask, TaskWithDetails } from "@/types/task";
@@ -26,6 +24,7 @@ type TaskCardProps = {
 	task: TaskWithDetails;
 	index: number;
 	stageId: string;
+	projectId: string;
 	assigneeCandidates: AssignmentCandidate[];
 	permissions: ProjectPermissions;
 	currentUserId: string;
@@ -71,16 +70,15 @@ export function TaskCard({
 	task,
 	index,
 	stageId,
+	projectId,
 	assigneeCandidates,
 	permissions,
-	currentUserId,
-	isProjectOwner,
 }: TaskCardProps) {
-	const [isCommentsOpen, setIsCommentsOpen] = useState(false);
-
 	const assignedUsers = task.assignees.map((assignee) => assignee.user);
 
 	const taskDragDisabled = !permissions.canManageTasks;
+
+	const taskHref = getTaskHref(projectId, task.id, task.title);
 
 	const sortable = useSortable({
 		id: getTaskDndId(task.id),
@@ -92,95 +90,92 @@ export function TaskCard({
 	});
 
 	return (
-		<>
-			<article
-				ref={sortable.ref}
-				className={cn(
-					"rounded-lg border border-border bg-card p-4 shadow-sm",
-					sortable.isDragging && "opacity-50",
+		<article
+			ref={sortable.ref}
+			className={cn(
+				"relative rounded-lg border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md",
+				sortable.isDragging && "opacity-50",
+			)}
+		>
+			<Link
+				href={taskHref}
+				aria-label={`Open ${task.title}`}
+				className="absolute inset-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+			/>
+			<div className="pointer-events-none relative z-10 flex items-start gap-2">
+				{permissions.canManageTasks && (
+					<button
+						ref={sortable.handleRef}
+						type="button"
+						disabled={taskDragDisabled}
+						aria-label={`Drag ${task.title}`}
+						className="pointer-events-auto mt-0.5 flex size-6 shrink-0 touch-none cursor-grab items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50 active:cursor-grabbing"
+					>
+						<GripVertical aria-hidden="true" size={15} />
+					</button>
 				)}
-			>
-				<div className="flex items-start gap-2">
-					{permissions.canManageTasks && (
-						<button
-							ref={sortable.handleRef}
-							type="button"
-							disabled={taskDragDisabled}
-							aria-label={`Drag ${task.title}`}
-							className="mt-0.5 flex size-6 shrink-0 touch-none cursor-grab items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50 active:cursor-grabbing"
-						>
-							<GripVertical aria-hidden="true" size={15} />
-						</button>
-					)}
 
-					<div className="min-w-0 flex-1">
-						<div className="flex items-start justify-between gap-3">
-							<h4 className="min-w-0 flex-1 text-sm font-medium leading-5 text-foreground">
+				<div className="min-w-0 flex-1">
+					<div className="flex items-start justify-between gap-3">
+						<div className="min-w-0 flex-1">
+							<h4 className="text-sm font-medium leading-5 text-foreground">
 								{task.title}
 							</h4>
-
-							{permissions.canManageTasks && (
-								<TaskActions task={toEditableTask(task)} />
-							)}
 						</div>
 
-						{task.description && (
-							<p className="mt-2 line-clamp-3 text-xs leading-5 text-muted-foreground">
-								{task.description}
-							</p>
+						{permissions.canManageTasks && (
+							<div className="pointer-events-auto">
+								<TaskActions task={toEditableTask(task)} />
+							</div>
+						)}
+					</div>
+
+					{task.description && (
+						<p className="mt-2 line-clamp-3 text-xs leading-5 text-muted-foreground">
+							{task.description}
+						</p>
+					)}
+
+					<div className="mt-4 flex flex-wrap items-center gap-2">
+						<span
+							className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium capitalize ${getPriorityClasses(
+								task.priority,
+							)}`}
+						>
+							<CircleAlert aria-hidden="true" size={12} />
+							{task.priority}
+						</span>
+
+						{task.dueDate && (
+							<span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+								<CalendarDays aria-hidden="true" size={13} />
+								{formatDate(task.dueDate)}
+							</span>
 						)}
 
-						<div className="mt-4 flex flex-wrap items-center gap-2">
-							<span
-								className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium capitalize ${getPriorityClasses(
-									task.priority,
-								)}`}
-							>
-								<CircleAlert aria-hidden="true" size={12} />
-								{task.priority}
-							</span>
-
-							{task.dueDate && (
-								<span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-									<CalendarDays aria-hidden="true" size={13} />
-									{formatDate(task.dueDate)}
-								</span>
-							)}
-
+						<div className="pointer-events-auto">
 							<TaskAssigneePicker
 								taskId={task.id}
 								candidates={assigneeCandidates}
 								assignedUsers={assignedUsers}
 								canManage={permissions.canAssignTasks}
 							/>
+						</div>
 
-							<Button
-								type="button"
-								variant="ghost"
-								size="xs"
-								aria-label={`${task.comments.length} comments on ${task.title}`}
-								onClick={() => setIsCommentsOpen(true)}
-							>
-								<MessageSquare aria-hidden="true" size={13} />
-								{task.comments.length}
+						<div className="pointer-events-auto">
+							<Button asChild variant="ghost" size="xs">
+								<Link
+									href={taskHref}
+									aria-label={`${task.comments.length} comments on ${task.title}`}
+								>
+									<MessageSquare aria-hidden="true" size={13} />
+									{task.comments.length}
+								</Link>
 							</Button>
 						</div>
 					</div>
 				</div>
-			</article>
-
-			{isCommentsOpen && (
-				<TaskCommentsModal
-					taskId={task.id}
-					taskTitle={task.title}
-					comments={task.comments}
-					currentUserId={currentUserId}
-					canComment={permissions.canManageTasks}
-					isProjectOwner={isProjectOwner}
-					open={isCommentsOpen}
-					onOpenChange={setIsCommentsOpen}
-				/>
-			)}
-		</>
+			</div>
+		</article>
 	);
 }

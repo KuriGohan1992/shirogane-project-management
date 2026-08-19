@@ -1,0 +1,74 @@
+import { notFound } from "next/navigation";
+import { TaskRouteModal } from "@/components/modals/task-route-modal";
+import { ProjectBoardContent } from "@/components/project-board-content";
+import { TaskAccessDenied } from "@/components/task-access-denied";
+import { TaskDetailsView } from "@/components/task-details-view";
+import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
+import { getProjectPermissions } from "@/lib/auth/project-permissions";
+import { getTaskDetailsForUser } from "@/lib/db/task-details";
+import { projectIdSchema } from "@/lib/validations/project";
+import { taskIdSchema } from "@/lib/validations/task";
+
+type TaskPageProps = {
+	params: Promise<{
+		id: string;
+		taskId: string;
+		slug: string;
+	}>;
+};
+
+export default async function TaskPage({ params }: TaskPageProps) {
+	const { id, taskId } = await params;
+
+	const projectIdResult = projectIdSchema.safeParse(id);
+
+	const taskIdResult = taskIdSchema.safeParse(taskId);
+
+	if (!projectIdResult.success || !taskIdResult.success) {
+		notFound();
+	}
+
+	const user = await getCurrentDatabaseUser();
+
+	const lookup = await getTaskDetailsForUser(
+		projectIdResult.data,
+		taskIdResult.data,
+		user.id,
+	);
+
+	if (lookup.status === "not_found") {
+		notFound();
+	}
+
+	if (lookup.status === "forbidden") {
+		return <TaskAccessDenied />;
+	}
+
+	const { details } = lookup;
+
+	const permissions = getProjectPermissions(details.accessRole);
+
+	return (
+		<>
+			<ProjectBoardContent
+				projectId={projectIdResult.data}
+				currentUserId={user.id}
+			/>
+
+			<TaskRouteModal
+				taskTitle={details.task.title}
+				closeHref={`/projects/${projectIdResult.data}`}
+			>
+				<TaskDetailsView
+					task={details.task}
+					projectName={details.projectName}
+					stageName={details.stageName}
+					assigneeCandidates={details.assigneeCandidates}
+					permissions={permissions}
+					currentUserId={user.id}
+					isProjectOwner={details.accessRole === "owner"}
+				/>
+			</TaskRouteModal>
+		</>
+	);
+}

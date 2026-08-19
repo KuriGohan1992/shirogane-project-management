@@ -120,6 +120,7 @@ export function StageColumn({
 							task={task}
 							index={taskIndex}
 							stageId={stage.id}
+							projectId={stage.projectId}
 							assigneeCandidates={assigneeCandidates}
 							permissions={permissions}
 							currentUserId={currentUserId}

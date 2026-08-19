@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { EditTaskModal } from "@/components/modals/edit-task-modal";
@@ -12,9 +12,13 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
-	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
 import { deleteTask } from "@/lib/actions/tasks";
 import type { EditableTask } from "@/types/task";
 
@@ -23,61 +27,54 @@ type TaskActionsProps = {
 };
 
 export function TaskActions({ task }: TaskActionsProps) {
+	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [isEditOpen, setIsEditOpen] = useState(false);
+	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
 	const deleteAction = deleteTask.bind(null, task.id);
 
 	return (
 		<>
-			<div className="flex items-center gap-1">
-				<Button
-					type="button"
-					variant="ghost"
-					size="icon"
-					aria-label={`Edit ${task.title}`}
-					onClick={() => setIsEditOpen(true)}
-				>
-					<Pencil aria-hidden="true" size={15} />
-				</Button>
+			<Popover open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+				<PopoverTrigger asChild>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon"
+						aria-label={`Actions for ${task.title}`}
+					>
+						<MoreHorizontal aria-hidden="true" size={16} />
+					</Button>
+				</PopoverTrigger>
 
-				<AlertDialog>
-					<AlertDialogTrigger asChild>
-						<Button
-							type="button"
-							variant="ghost"
-							size="icon"
-							aria-label={`Delete ${task.title}`}
-							className="text-muted-foreground hover:text-destructive"
-						>
-							<Trash2 aria-hidden="true" size={15} />
-						</Button>
-					</AlertDialogTrigger>
+				<PopoverContent align="end" className="w-40 p-1">
+					<Button
+						type="button"
+						variant="ghost"
+						className="w-full justify-start"
+						onClick={() => {
+							setIsMenuOpen(false);
+							setIsEditOpen(true);
+						}}
+					>
+						<Pencil aria-hidden="true" size={14} />
+						Edit task
+					</Button>
 
-					<AlertDialogContent>
-						<AlertDialogHeader>
-							<AlertDialogTitle>Delete {task.title}?</AlertDialogTitle>
-
-							<AlertDialogDescription>
-								This permanently deletes the task. This action cannot be undone.
-							</AlertDialogDescription>
-						</AlertDialogHeader>
-
-						<form action={deleteAction}>
-							<AlertDialogFooter>
-								<AlertDialogCancel asChild>
-									<Button type="button" variant="outline">
-										Cancel
-									</Button>
-								</AlertDialogCancel>
-
-								<Button type="submit" variant="destructive">
-									Delete task
-								</Button>
-							</AlertDialogFooter>
-						</form>
-					</AlertDialogContent>
-				</AlertDialog>
-			</div>
+					<Button
+						type="button"
+						variant="ghost"
+						className="w-full justify-start text-destructive hover:text-destructive"
+						onClick={() => {
+							setIsMenuOpen(false);
+							setIsDeleteOpen(true);
+						}}
+					>
+						<Trash2 aria-hidden="true" size={14} />
+						Delete task
+					</Button>
+				</PopoverContent>
+			</Popover>
 
 			{isEditOpen && (
 				<EditTaskModal
@@ -86,6 +83,33 @@ export function TaskActions({ task }: TaskActionsProps) {
 					onOpenChange={setIsEditOpen}
 				/>
 			)}
+
+			<AlertDialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Delete {task.title}?</AlertDialogTitle>
+
+						<AlertDialogDescription>
+							This permanently deletes the task and its comments. This action
+							cannot be undone.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+
+					<form action={deleteAction}>
+						<AlertDialogFooter>
+							<AlertDialogCancel asChild>
+								<Button type="button" variant="outline">
+									Cancel
+								</Button>
+							</AlertDialogCancel>
+
+							<Button type="submit" variant="destructive">
+								Delete task
+							</Button>
+						</AlertDialogFooter>
+					</form>
+				</AlertDialogContent>
+			</AlertDialog>
 		</>
 	);
 }

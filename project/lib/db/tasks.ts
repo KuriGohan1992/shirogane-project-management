@@ -1,6 +1,7 @@
 import "server-only";
 
 import { and, eq, isNull } from "drizzle-orm";
+
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { db } from "@/lib/db";
 import { getProjectAccess } from "@/lib/db/project-access";
@@ -38,6 +39,7 @@ async function getEditableStage(stageId: string, userId: string) {
 
 	return stage;
 }
+
 async function getEditableTask(taskId: string, userId: string) {
 	const task = await db.query.tasks.findFirst({
 		where: (task, { and, eq, isNull }) =>
@@ -79,6 +81,7 @@ export async function createTaskInStage(
 	const lastTask = await db.query.tasks.findFirst({
 		where: (task, { and, eq, isNull }) =>
 			and(eq(task.stageId, stageId), isNull(task.archivedAt)),
+
 		orderBy: (task, { desc }) => [desc(task.position)],
 	});
 
@@ -184,9 +187,7 @@ export async function moveTaskForUser(
 
 	const sourceStageId = existingTask.stageId;
 
-	/*
-	 * Reordering inside one Stage.
-	 */
+	// Reorder inside the same Stage.
 	if (sourceStageId === targetStage.id) {
 		const stageTasks = await db.query.tasks.findMany({
 			where: (task, { and, eq, isNull }) =>
@@ -245,9 +246,7 @@ export async function moveTaskForUser(
 		return targetStage.projectId;
 	}
 
-	/*
-	 * Moving between two different Stages.
-	 */
+	// Move between different Stages.
 	const [sourceTasks, targetTasks] = await Promise.all([
 		db.query.tasks.findMany({
 			where: (task, { and, eq, isNull }) =>

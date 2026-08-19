@@ -1,10 +1,10 @@
 import { z } from "zod";
 
+import { TASK_FIELD_LIMITS } from "@/lib/constants/form-limits";
 import {
 	optionalDateValueSchema,
 	uuidV4Schema,
 } from "@/lib/validations/common";
-import { TASK_FIELD_LIMITS } from "../constants/form-limits";
 
 export const taskFormSchema = z.object({
 	title: z
@@ -30,5 +30,11 @@ export const taskFormSchema = z.object({
 });
 
 export const taskIdSchema = uuidV4Schema;
+
+export const taskSlugSchema = z
+	.string()
+	.min(1)
+	.max(81)
+	.regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "The task link is invalid.");
 
 export type TaskFormData = z.infer<typeof taskFormSchema>;

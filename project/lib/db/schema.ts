@@ -9,13 +9,8 @@ import {
 	timestamp,
 	uuid,
 } from "drizzle-orm/pg-core";
-import { PROJECT_MEMBER_ROLE_VALUES } from "../constants/project-roles";
 
-/*
- * Enumerations
- *
- * PostgreSQL enums restrict a column to a predefined set of values.
- */
+import { PROJECT_MEMBER_ROLE_VALUES } from "@/lib/constants/project-roles";
 
 export const projectMemberRoleEnum = pgEnum(
 	"project_member_role",
@@ -29,14 +24,7 @@ export const taskPriorityEnum = pgEnum("task_priority", [
 	"urgent",
 ]);
 
-/*
- * Reusable timestamp columns
- *
- * createdAt records when a row is first inserted.
- * updatedAt starts with the same value, but our update operations must
- * explicitly change it whenever the row is edited.
- */
-
+// Shared creation and update timestamps.
 const timestamps = {
 	createdAt: timestamp("created_at", {
 		withTimezone: true,
@@ -53,16 +41,6 @@ const timestamps = {
 		.notNull(),
 };
 
-/*
- * Users
- *
- * Clerk remains responsible for authentication, passwords, sessions,
- * email verification, and Google login.
- *
- * This table stores the user information Shiro needs for its own
- * projects, memberships, assignments, and database relationships.
- */
-
 export const users = pgTable("users", {
 	id: uuid("id").defaultRandom().primaryKey(),
 
@@ -76,13 +54,6 @@ export const users = pgTable("users", {
 
 	...timestamps,
 });
-
-/*
- * Projects
- *
- * Every project has exactly one owner.
- * Other collaborators are stored in projectMembers.
- */
 
 export const projects = pgTable(
 	"projects",
@@ -111,18 +82,6 @@ export const projects = pgTable(
 		index("projects_created_at_idx").on(table.createdAt),
 	],
 );
-
-/*
- * Project members
- *
- * This is a junction table connecting users and projects.
- *
- * One project can have many users.
- * One user can belong to many projects.
- *
- * The project owner is stored in projects.ownerId and is not duplicated
- * here. This table is for invited collaborators.
- */
 
 export const projectMembers = pgTable(
 	"project_members",
@@ -157,17 +116,6 @@ export const projectMembers = pgTable(
 	],
 );
 
-/*
- * Stages
- *
- * User-managed Kanban columns belonging to a project.
- *
- * New projects currently start with:
- * Backlog, To Do, In Progress, and Done.
- *
- * Users can add, rename, delete, and reorder stages.
- */
-
 export const stages = pgTable(
 	"stages",
 	{
@@ -189,15 +137,6 @@ export const stages = pgTable(
 		index("stages_project_position_idx").on(table.projectId, table.position),
 	],
 );
-
-/*
- * Tasks
- *
- * A task belongs to a stage.
- *
- * Its stage represents its current Kanban status, so there is deliberately
- * no separate status column.
- */
 
 export const tasks = pgTable(
 	"tasks",
@@ -268,13 +207,6 @@ export const taskAssignees = pgTable(
 	],
 );
 
-/*
- * Task comments
- *
- * Comments belong to a task and record the Shiro user who authored them.
- * Deleting a task also deletes its comments.
- */
-
 export const taskComments = pgTable(
 	"task_comments",
 	{
@@ -306,18 +238,13 @@ export const taskComments = pgTable(
 	],
 );
 
-/*
- * Drizzle relational-query definitions
- *
- * Foreign keys protect the actual PostgreSQL data.
- * These relation objects teach Drizzle how tables connect when using
- * db.query.* with nested "with" queries.
- */
-
 export const usersRelations = relations(users, ({ many }) => ({
 	ownedProjects: many(projects),
+
 	projectMemberships: many(projectMembers),
+
 	taskAssignments: many(taskAssignees),
+
 	taskComments: many(taskComments),
 }));
 
@@ -387,13 +314,6 @@ export const taskCommentsRelations = relations(taskComments, ({ one }) => ({
 		references: [users.id],
 	}),
 }));
-
-/*
- * Inferred TypeScript types
- *
- * Select types represent rows returned by PostgreSQL.
- * Insert types represent values accepted when inserting rows.
- */
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;

@@ -38,7 +38,7 @@ export async function assignTask(
 		throw new Error("Only project members can be assigned to this task.");
 	}
 
-	revalidatePath(`/projects/${result.projectId}`);
+	revalidatePath(`/projects/${result.projectId}`, "layout");
 }
 
 export async function unassignTask(
@@ -68,5 +68,5 @@ export async function unassignTask(
 		);
 	}
 
-	revalidatePath(`/projects/${result.projectId}`);
+	revalidatePath(`/projects/${result.projectId}`, "layout");
 }

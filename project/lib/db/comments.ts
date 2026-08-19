@@ -44,6 +44,33 @@ async function getCommentableTask(taskId: string, userId: string) {
 	return task;
 }
 
+async function getCommentContext(commentId: string) {
+	return db.query.taskComments.findFirst({
+		columns: {
+			id: true,
+			authorId: true,
+		},
+
+		where: (comment, { eq }) => eq(comment.id, commentId),
+
+		with: {
+			task: {
+				columns: {
+					archivedAt: true,
+				},
+
+				with: {
+					stage: {
+						columns: {
+							projectId: true,
+						},
+					},
+				},
+			},
+		},
+	});
+}
+
 export async function createCommentForTask(
 	taskId: string,
 	userId: string,
@@ -74,34 +101,49 @@ export async function createCommentForTask(
 	};
 }
 
+export async function updateCommentForUser(
+	commentId: string,
+	userId: string,
+	content: string,
+): Promise<CommentMutationResult | undefined> {
+	const comment = await getCommentContext(commentId);
+
+	if (!comment || comment.task.archivedAt || comment.authorId !== userId) {
+		return undefined;
+	}
+
+	const projectId = comment.task.stage.projectId;
+
+	const accessRole = await getProjectAccess(projectId, userId);
+
+	if (!accessRole || !getProjectPermissions(accessRole).canManageTasks) {
+		return undefined;
+	}
+
+	const [updatedComment] = await db
+		.update(taskComments)
+		.set({
+			content,
+			updatedAt: new Date(),
+		})
+		.where(eq(taskComments.id, commentId))
+		.returning();
+
+	if (!updatedComment) {
+		return undefined;
+	}
+
+	return {
+		comment: updatedComment,
+		projectId,
+	};
+}
+
 export async function deleteCommentForUser(
 	commentId: string,
 	userId: string,
 ): Promise<string | undefined> {
-	const comment = await db.query.taskComments.findFirst({
-		columns: {
-			id: true,
-			authorId: true,
-		},
-
-		where: (comment, { eq }) => eq(comment.id, commentId),
-
-		with: {
-			task: {
-				columns: {
-					archivedAt: true,
-				},
-
-				with: {
-					stage: {
-						columns: {
-							projectId: true,
-						},
-					},
-				},
-			},
-		},
-	});
+	const comment = await getCommentContext(commentId);
 
 	if (!comment || comment.task.archivedAt) {
 		return undefined;
