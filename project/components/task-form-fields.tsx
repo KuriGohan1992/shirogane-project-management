@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+
 import { CharacterCount } from "@/components/character-count";
 import { DatePicker } from "@/components/date-picker";
 import { FormFieldError } from "@/components/form-field-error";
@@ -45,9 +46,11 @@ export function TaskFormFields({
 	const [descriptionLength, setDescriptionLength] = useState(
 		defaultValues.description.length,
 	);
+
 	const titleErrorId = "task-title-error";
 	const descriptionErrorId = "task-description-error";
 	const priorityErrorId = "task-priority-error";
+	const startDateErrorId = "task-start-date-error";
 	const dueDateErrorId = "task-due-date-error";
 
 	const { getFieldErrors, clearFieldError } = useFieldErrors<TaskField>(
@@ -57,6 +60,7 @@ export function TaskFormFields({
 	const titleErrors = getFieldErrors("title");
 	const descriptionErrors = getFieldErrors("description");
 	const priorityErrors = getFieldErrors("priority");
+	const startDateErrors = getFieldErrors("startDate");
 	const dueDateErrors = getFieldErrors("dueDate");
 
 	return (
@@ -176,19 +180,45 @@ export function TaskFormFields({
 				<FormFieldError id={priorityErrorId} messages={priorityErrors} />
 			</div>
 
-			<div>
-				<p className="mb-2 text-sm font-medium text-foreground">Due date</p>
+			<div className="grid gap-4 sm:grid-cols-2">
+				<div>
+					<p className="mb-2 text-sm font-medium text-foreground">
+						Start date
+					</p>
 
-				<DatePicker
-					name="dueDate"
-					defaultValue={defaultValues.dueDate}
-					disabled={pending}
-					invalid={Boolean(dueDateErrors)}
-					errorId={dueDateErrorId}
-					onValueChange={() => clearFieldError("dueDate")}
-				/>
+					<DatePicker
+						name="startDate"
+						defaultValue={defaultValues.startDate}
+						placeholder="Select a start date"
+						disabled={pending}
+						invalid={Boolean(startDateErrors)}
+						errorId={startDateErrorId}
+						onValueChange={() => clearFieldError("startDate")}
+					/>
 
-				<FormFieldError id={dueDateErrorId} messages={dueDateErrors} />
+					<FormFieldError
+						id={startDateErrorId}
+						messages={startDateErrors}
+					/>
+				</div>
+
+				<div>
+					<p className="mb-2 text-sm font-medium text-foreground">
+						Due date
+					</p>
+
+					<DatePicker
+						name="dueDate"
+						defaultValue={defaultValues.dueDate}
+						placeholder="Select a due date"
+						disabled={pending}
+						invalid={Boolean(dueDateErrors)}
+						errorId={dueDateErrorId}
+						onValueChange={() => clearFieldError("dueDate")}
+					/>
+
+					<FormFieldError id={dueDateErrorId} messages={dueDateErrors} />
+				</div>
 			</div>
 		</div>
 	);

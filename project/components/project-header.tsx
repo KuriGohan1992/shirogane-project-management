@@ -53,7 +53,7 @@ export function ProjectHeader({ project, permissions }: ProjectHeaderProps) {
 		<div className="relative overflow-hidden rounded-xl border border-border bg-card">
 			<div
 				aria-hidden="true"
-				className="absolute inset-x-0 top-0 h-1"
+				className="absolute inset-x-0 top-0 h-4"
 				style={{
 					backgroundColor: getColorHex(project.color),
 				}}

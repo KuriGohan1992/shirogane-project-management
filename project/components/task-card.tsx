@@ -31,7 +31,15 @@ type TaskCardProps = {
 	isProjectOwner: boolean;
 };
 
-function formatDate(date: Date) {
+function formatMonthDay(date: Date) {
+	return new Intl.DateTimeFormat("en-US", {
+		month: "short",
+		day: "numeric",
+		timeZone: "UTC",
+	}).format(date);
+}
+
+function formatMonthDayYear(date: Date) {
 	return new Intl.DateTimeFormat("en-US", {
 		month: "short",
 		day: "numeric",
@@ -40,6 +48,46 @@ function formatDate(date: Date) {
 	}).format(date);
 }
 
+function formatTaskSchedule(task: Task) {
+	const currentYear = new Date().getFullYear();
+
+	if (task.startDate && task.dueDate) {
+		const startYear = task.startDate.getUTCFullYear();
+		const dueYear = task.dueDate.getUTCFullYear();
+
+		const formattedStart =
+			startYear === currentYear
+				? formatMonthDay(task.startDate)
+				: formatMonthDayYear(task.startDate);
+
+		const formattedDue =
+			dueYear === currentYear
+				? formatMonthDay(task.dueDate)
+				: formatMonthDayYear(task.dueDate);
+
+		return `${formattedStart} – ${formattedDue}`;
+	}
+
+	if (task.startDate) {
+		const startDate =
+			task.startDate.getUTCFullYear() === currentYear
+				? formatMonthDay(task.startDate)
+				: formatMonthDayYear(task.startDate);
+
+		return `Starts ${startDate}`;
+	}
+
+	if (task.dueDate) {
+		const dueDate =
+			task.dueDate.getUTCFullYear() === currentYear
+				? formatMonthDay(task.dueDate)
+				: formatMonthDayYear(task.dueDate);
+
+		return `Due ${dueDate}`;
+	}
+
+	return null;
+}
 function getPriorityClasses(priority: Task["priority"]) {
 	switch (priority) {
 		case "low":
@@ -62,6 +110,7 @@ function toEditableTask(task: Task): EditableTask {
 		title: task.title,
 		description: task.description ?? "",
 		priority: task.priority,
+		startDate: task.startDate?.toISOString().slice(0, 10) ?? "",
 		dueDate: task.dueDate?.toISOString().slice(0, 10) ?? "",
 	};
 }
@@ -79,6 +128,8 @@ export function TaskCard({
 	const taskDragDisabled = !permissions.canManageTasks;
 
 	const taskHref = getTaskHref(projectId, task.id, task.title);
+
+	const schedule = formatTaskSchedule(task);
 
 	const sortable = useSortable({
 		id: getTaskDndId(task.id),
@@ -102,6 +153,7 @@ export function TaskCard({
 				aria-label={`Open ${task.title}`}
 				className="absolute inset-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
 			/>
+
 			<div className="pointer-events-none relative z-10 flex items-start gap-2">
 				{permissions.canManageTasks && (
 					<button
@@ -146,10 +198,10 @@ export function TaskCard({
 							{task.priority}
 						</span>
 
-						{task.dueDate && (
+						{schedule && (
 							<span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
 								<CalendarDays aria-hidden="true" size={13} />
-								{formatDate(task.dueDate)}
+								{schedule}
 							</span>
 						)}
 

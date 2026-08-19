@@ -62,6 +62,7 @@ export function EditTaskModal({
 							title: task.title,
 							description: task.description,
 							priority: task.priority,
+							startDate: task.startDate,
 							dueDate: task.dueDate,
 						}}
 					/>

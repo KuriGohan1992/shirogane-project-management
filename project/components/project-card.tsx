@@ -54,7 +54,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
 		<article className="group relative flex h-full overflow-hidden rounded-xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
 			<div
 				aria-hidden="true"
-				className="absolute inset-x-0 top-0 h-1"
+				className="absolute inset-x-0 top-0 h-4"
 				style={{
 					backgroundColor: getColorHex(project.color),
 				}}

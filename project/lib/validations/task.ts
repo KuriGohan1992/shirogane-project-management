@@ -6,28 +6,46 @@ import {
 	uuidV4Schema,
 } from "@/lib/validations/common";
 
-export const taskFormSchema = z.object({
-	title: z
-		.string()
-		.trim()
-		.min(1, "Task title is required.")
-		.max(
-			TASK_FIELD_LIMITS.title,
-			`Task title must be ${TASK_FIELD_LIMITS.title} characters or fewer.`,
-		),
+export const taskFormSchema = z
+	.object({
+		title: z
+			.string()
+			.trim()
+			.min(1, "Task title is required.")
+			.max(
+				TASK_FIELD_LIMITS.title,
+				`Task title must be ${TASK_FIELD_LIMITS.title} characters or fewer.`,
+			),
 
-	description: z
-		.string()
-		.trim()
-		.max(
-			TASK_FIELD_LIMITS.description,
-			`Description must be ${TASK_FIELD_LIMITS.description} characters or fewer.`,
-		),
+		description: z
+			.string()
+			.trim()
+			.max(
+				TASK_FIELD_LIMITS.description,
+				`Description must be ${TASK_FIELD_LIMITS.description} characters or fewer.`,
+			),
 
-	priority: z.enum(["low", "medium", "high", "urgent"]),
+		priority: z.enum(["low", "medium", "high", "urgent"]),
 
-	dueDate: optionalDateValueSchema,
-});
+		startDate: optionalDateValueSchema,
+
+		dueDate: optionalDateValueSchema,
+	})
+	.superRefine((data, context) => {
+		if (!data.startDate || !data.dueDate) {
+			return;
+		}
+
+		if (data.startDate <= data.dueDate) {
+			return;
+		}
+
+		context.addIssue({
+			code: "custom",
+			path: ["dueDate"],
+			message: "Due date cannot be before the start date.",
+		});
+	});
 
 export const taskIdSchema = uuidV4Schema;
 

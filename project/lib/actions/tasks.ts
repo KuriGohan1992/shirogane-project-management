@@ -15,7 +15,7 @@ import { taskFormSchema, taskIdSchema } from "@/lib/validations/task";
 import type { BoardMutationResult } from "@/types/board";
 import type { TaskActionState } from "@/types/task";
 
-function parseDueDate(value: string): Date | null {
+function parseDate(value: string): Date | null {
 	if (!value) {
 		return null;
 	}
@@ -41,6 +41,7 @@ export async function createTask(
 		title: formData.get("title"),
 		description: formData.get("description"),
 		priority: formData.get("priority"),
+		startDate: formData.get("startDate"),
 		dueDate: formData.get("dueDate"),
 	});
 
@@ -58,7 +59,8 @@ export async function createTask(
 			title: result.data.title,
 			description: result.data.description || null,
 			priority: result.data.priority,
-			dueDate: parseDueDate(result.data.dueDate),
+			startDate: parseDate(result.data.startDate),
+			dueDate: parseDate(result.data.dueDate),
 		});
 
 		if (!created) {
@@ -103,6 +105,7 @@ export async function updateTask(
 		title: formData.get("title"),
 		description: formData.get("description"),
 		priority: formData.get("priority"),
+		startDate: formData.get("startDate"),
 		dueDate: formData.get("dueDate"),
 	});
 
@@ -120,7 +123,8 @@ export async function updateTask(
 			title: result.data.title,
 			description: result.data.description || null,
 			priority: result.data.priority,
-			dueDate: parseDueDate(result.data.dueDate),
+			startDate: parseDate(result.data.startDate),
+			dueDate: parseDate(result.data.dueDate),
 		});
 
 		if (!updated) {

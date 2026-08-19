@@ -10,6 +10,7 @@ export type TaskActionState = {
 		title?: string[];
 		description?: string[];
 		priority?: string[];
+		startDate?: string[];
 		dueDate?: string[];
 	};
 };

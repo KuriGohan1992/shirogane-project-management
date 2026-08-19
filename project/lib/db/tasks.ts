@@ -9,7 +9,7 @@ import { type NewTask, type Task, tasks } from "@/lib/db/schema";
 
 type TaskMutationData = Pick<
 	NewTask,
-	"title" | "description" | "priority" | "dueDate"
+	"title" | "description" | "priority" | "startDate" | "dueDate"
 >;
 
 type TaskMutationResult = {

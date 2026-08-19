@@ -79,6 +79,7 @@ function toEditableTask(task: Task): EditableTask {
 		title: task.title,
 		description: task.description ?? "",
 		priority: task.priority,
+		startDate: task.startDate?.toISOString().slice(0, 10) ?? "",
 		dueDate: task.dueDate?.toISOString().slice(0, 10) ?? "",
 	};
 }
@@ -190,20 +191,24 @@ export function TaskDetailsView({
 								</span>
 							</MetadataItem>
 
-							<MetadataItem
-								icon={<CalendarDays aria-hidden="true" size={14} />}
-								label="Due date"
-							>
-								{task.dueDate ? (
-									<time dateTime={task.dueDate.toISOString()}>
-										{formatDate(task.dueDate)}
-									</time>
-								) : (
-									<span className="font-normal text-muted-foreground">
-										No due date
-									</span>
-								)}
-							</MetadataItem>
+<MetadataItem
+	icon={<CalendarDays aria-hidden="true" size={14} />}
+	label="Schedule"
+>
+	{task.startDate && task.dueDate ? (
+		<span>
+			{formatDate(task.startDate)} – {formatDate(task.dueDate)}
+		</span>
+	) : task.startDate ? (
+		<span>Starts {formatDate(task.startDate)}</span>
+	) : task.dueDate ? (
+		<span>Due {formatDate(task.dueDate)}</span>
+	) : (
+		<span className="font-normal text-muted-foreground">
+			No dates
+		</span>
+	)}
+</MetadataItem>
 
 							<MetadataItem
 								icon={<Users aria-hidden="true" size={14} />}

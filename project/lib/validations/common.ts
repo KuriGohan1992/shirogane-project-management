@@ -21,6 +21,6 @@ function isValidDateValue(value: string) {
 export const optionalDateValueSchema = z
 	.string()
 	.trim()
-	.refine(isValidDateValue, "Enter a valid due date.");
+	.refine(isValidDateValue, "Enter a valid date.");
 
 export const uuidV4Schema = z.uuidv4();

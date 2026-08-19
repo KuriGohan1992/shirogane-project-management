@@ -169,10 +169,15 @@ export const tasks = pgTable(
 
 		priority: taskPriorityEnum("priority").default("medium").notNull(),
 
-		dueDate: timestamp("due_date", {
-			withTimezone: true,
-			mode: "date",
-		}),
+startDate: timestamp("start_date", {
+	withTimezone: true,
+	mode: "date",
+}),
+
+dueDate: timestamp("due_date", {
+	withTimezone: true,
+	mode: "date",
+}),
 
 		archivedAt: timestamp("archived_at", {
 			withTimezone: true,
