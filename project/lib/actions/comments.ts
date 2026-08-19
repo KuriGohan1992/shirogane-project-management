@@ -131,25 +131,43 @@ export async function updateComment(
 
 export async function deleteComment(
 	commentId: string,
+	_previousState: CommentActionState,
 	_formData: FormData,
-): Promise<void> {
+): Promise<CommentActionState> {
 	const commentIdResult = commentIdSchema.safeParse(commentId);
 
 	if (!commentIdResult.success) {
-		throw new Error(
-			"The comment could not be found or you do not have permission to delete it.",
-		);
+		return {
+			success: false,
+			message: "The selected comment is invalid.",
+		};
 	}
 
-	const user = await getCurrentDatabaseUser();
+	try {
+		const user = await getCurrentDatabaseUser();
 
-	const projectId = await deleteCommentForUser(commentIdResult.data, user.id);
+		const projectId = await deleteCommentForUser(commentIdResult.data, user.id);
 
-	if (!projectId) {
-		throw new Error(
-			"The comment could not be found or you do not have permission to delete it.",
-		);
+		if (!projectId) {
+			return {
+				success: false,
+				message:
+					"The comment could not be found or you do not have permission to delete it.",
+			};
+		}
+
+		revalidatePath(`/projects/${projectId}`, "layout");
+
+		return {
+			success: true,
+			message: "Comment deleted.",
+		};
+	} catch (error) {
+		console.error("Failed to delete comment:", error);
+
+		return {
+			success: false,
+			message: "Something went wrong while deleting the comment.",
+		};
 	}
-
-	revalidatePath(`/projects/${projectId}`, "layout");
 }

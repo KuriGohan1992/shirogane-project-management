@@ -1,4 +1,5 @@
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
 
 import { CharacterCount } from "@/components/character-count";
@@ -152,6 +153,8 @@ export function TaskCommentItem({
 	canManageComments,
 	isProjectOwner,
 }: TaskCommentItemProps) {
+	const router = useRouter();
+
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [isEditing, setIsEditing] = useState(false);
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -165,6 +168,20 @@ export function TaskCommentItem({
 	const wasEdited = comment.updatedAt.getTime() > comment.createdAt.getTime();
 
 	const deleteAction = deleteComment.bind(null, comment.id);
+
+	const [deleteState, deleteFormAction, deletePending] = useActionState(
+		deleteAction,
+		initialState,
+	);
+
+	useEffect(() => {
+		if (!deleteState.success) {
+			return;
+		}
+
+		setIsDeleteOpen(false);
+		router.refresh();
+	}, [deleteState.success, router]);
 
 	return (
 		<div className="flex gap-3 rounded-lg border border-border p-3">
@@ -257,15 +274,27 @@ export function TaskCommentItem({
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 
-					<form action={deleteAction}>
+					<form action={deleteFormAction}>
 						<AlertDialogFooter>
-							<AlertDialogCancel type="button">Cancel</AlertDialogCancel>
+							<AlertDialogCancel type="button" disabled={deletePending}>
+								Cancel
+							</AlertDialogCancel>
 
-							<Button type="submit" variant="destructive">
-								Delete comment
+							<Button
+								type="submit"
+								variant="destructive"
+								disabled={deletePending}
+							>
+								{deletePending ? "Deleting..." : "Delete comment"}
 							</Button>
 						</AlertDialogFooter>
 					</form>
+
+					{deleteState.message && !deleteState.success && (
+						<p aria-live="polite" className="text-sm text-destructive">
+							{deleteState.message}
+						</p>
+					)}
 				</AlertDialogContent>
 			</AlertDialog>
 		</div>
