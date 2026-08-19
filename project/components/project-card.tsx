@@ -1,55 +1,9 @@
-// TODO: Task 4.5 - Design and implement project cards and layouts
-
-/*
-TODO: Implementation Notes for Interns:
-
-This component should display:
-- Project name and description
-- Progress indicator
-- Team member count
-- Due date
-- Status badge
-- Actions menu (edit, delete, etc.)
-
-Props interface:
-interface ProjectCardProps {
-  project: {
-    id: string
-    name: string
-    description?: string
-    progress: number
-    memberCount: number
-    dueDate?: Date
-    status: 'active' | 'completed' | 'on-hold'
-  }
-  onEdit?: (id: string) => void
-  onDelete?: (id: string) => void
-}
-
-Features to implement:
-- Hover effects
-- Click to navigate to project board
-- Responsive design
-- Loading states
-- Error states
-
-export function ProjectCard() {
-  	return (
-    		<div className="bg-card p-6 rounded-lg border border-border">
-    			<p className="text-center text-muted-foreground">
-    				TODO: Implement ProjectCard component
-    			</p>
-    		</div>
-    	);
-    }
-    
-*/
-
-import { ArrowUpRight, CalendarDays, Clock3 } from "lucide-react";
+import { ArrowUpRight, CalendarRange, Clock3 } from "lucide-react";
 import Link from "next/link";
 
 import { ProjectActions } from "@/components/project-actions";
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
+import { getColorHex } from "@/lib/constants/colors";
 import type { Project } from "@/lib/db/schema";
 import type { EditableProject, ProjectWithAccess } from "@/types/project";
 
@@ -66,65 +20,92 @@ function formatDate(date: Date) {
 	}).format(date);
 }
 
+function formatProjectSchedule(project: Project) {
+	if (project.startDate && project.dueDate) {
+		return `${formatDate(project.startDate)} – ${formatDate(project.dueDate)}`;
+	}
+
+	if (project.startDate) {
+		return `Starts ${formatDate(project.startDate)}`;
+	}
+
+	if (project.dueDate) {
+		return `Due ${formatDate(project.dueDate)}`;
+	}
+
+	return "No project dates";
+}
+
 function toEditableProject(project: Project): EditableProject {
 	return {
 		id: project.id,
 		name: project.name,
 		description: project.description ?? "",
+		color: project.color,
+		startDate: project.startDate?.toISOString().slice(0, 10) ?? "",
 		dueDate: project.dueDate?.toISOString().slice(0, 10) ?? "",
 	};
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
 	const permissions = getProjectPermissions(project.accessRole);
+
 	return (
-		<article className="group flex h-full flex-col rounded-xl border border-border bg-card p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
-			<div className="mb-4 flex items-center justify-between">
-				<ProjectActions
-					project={toEditableProject(project)}
-					canEdit={permissions.canEditProject}
-					canDelete={permissions.canDeleteProject}
-					compact
-				/>
+		<article className="group relative flex h-full overflow-hidden rounded-xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
+			<div
+				aria-hidden="true"
+				className="absolute inset-x-0 top-0 h-1"
+				style={{
+					backgroundColor: getColorHex(project.color),
+				}}
+			/>
 
-				<span className="text-xs font-medium capitalize text-muted-foreground">
-					{project.accessRole}
-				</span>
-			</div>
+			<div className="flex w-full flex-col p-5 pt-6">
+				<div className="mb-4 flex items-center justify-between">
+					<ProjectActions
+						project={toEditableProject(project)}
+						canEdit={permissions.canEditProject}
+						canDelete={permissions.canDeleteProject}
+						compact
+					/>
 
-			<Link href={`/projects/${project.id}`} className="block">
-				<h2 className="text-lg font-semibold text-foreground transition-colors group-hover:text-primary">
-					{project.name}
-				</h2>
-
-				<p className="mt-2 line-clamp-2 min-h-10 text-sm leading-5 text-muted-foreground">
-					{project.description || "No description yet."}
-				</p>
-			</Link>
-
-			<div className="mt-5 space-y-2 border-t border-border pt-4 text-sm text-muted-foreground">
-				<div className="flex items-center gap-2">
-					<CalendarDays aria-hidden="true" size={16} />
-					<span>
-						{project.dueDate
-							? `Due ${formatDate(project.dueDate)}`
-							: "No due date"}
+					<span className="text-xs font-medium capitalize text-muted-foreground">
+						{project.accessRole}
 					</span>
 				</div>
 
-				<div className="flex items-center gap-2">
-					<Clock3 aria-hidden="true" size={16} />
-					<span>Updated {formatDate(project.updatedAt)}</span>
-				</div>
-			</div>
+				<Link href={`/projects/${project.id}`} className="block">
+					<h2 className="text-lg font-semibold text-foreground transition-colors group-hover:text-primary">
+						{project.name}
+					</h2>
 
-			<Link
-				href={`/projects/${project.id}`}
-				className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-brand-hover"
-			>
-				Open project
-				<ArrowUpRight aria-hidden="true" size={15} />
-			</Link>
+					<p className="mt-2 line-clamp-2 min-h-10 text-sm leading-5 text-muted-foreground">
+						{project.description || "No description yet."}
+					</p>
+				</Link>
+
+				<div className="mt-5 space-y-2 border-t border-border pt-4 text-sm text-muted-foreground">
+					<div className="flex items-center gap-2">
+						<CalendarRange aria-hidden="true" size={16} />
+
+						<span>{formatProjectSchedule(project)}</span>
+					</div>
+
+					<div className="flex items-center gap-2">
+						<Clock3 aria-hidden="true" size={16} />
+
+						<span>Updated {formatDate(project.updatedAt)}</span>
+					</div>
+				</div>
+
+				<Link
+					href={`/projects/${project.id}`}
+					className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-brand-hover"
+				>
+					Open project
+					<ArrowUpRight aria-hidden="true" size={15} />
+				</Link>
+			</div>
 		</article>
 	);
 }

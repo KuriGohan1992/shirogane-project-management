@@ -46,8 +46,9 @@ export function EditProjectModal({
 			<DialogContent className="sm:max-w-lg">
 				<DialogHeader>
 					<DialogTitle>Edit project</DialogTitle>
+
 					<DialogDescription>
-						Update the project's name, description, or due date.
+						Update the project's details and schedule.
 					</DialogDescription>
 				</DialogHeader>
 
@@ -58,6 +59,8 @@ export function EditProjectModal({
 						defaultValues={{
 							name: project.name,
 							description: project.description,
+							color: project.color,
+							startDate: project.startDate,
 							dueDate: project.dueDate,
 						}}
 					/>

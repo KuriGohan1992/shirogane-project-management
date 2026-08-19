@@ -13,7 +13,7 @@ import {
 import { projectFormSchema, projectIdSchema } from "@/lib/validations/project";
 import type { ProjectActionState } from "@/types/project";
 
-function parseDueDate(value: string): Date | null {
+function parseDate(value: string): Date | null {
 	if (!value) {
 		return null;
 	}
@@ -28,6 +28,8 @@ export async function createProject(
 	const result = projectFormSchema.safeParse({
 		name: formData.get("name"),
 		description: formData.get("description"),
+		color: formData.get("color"),
+		startDate: formData.get("startDate"),
 		dueDate: formData.get("dueDate"),
 	});
 
@@ -47,7 +49,9 @@ export async function createProject(
 			ownerId: user.id,
 			name: result.data.name,
 			description: result.data.description || null,
-			dueDate: parseDueDate(result.data.dueDate),
+			color: result.data.color,
+			startDate: parseDate(result.data.startDate),
+			dueDate: parseDate(result.data.dueDate),
 		});
 
 		projectId = project.id;
@@ -79,9 +83,12 @@ export async function updateProject(
 			message: "Project not found or you do not have permission to edit it.",
 		};
 	}
+
 	const result = projectFormSchema.safeParse({
 		name: formData.get("name"),
 		description: formData.get("description"),
+		color: formData.get("color"),
+		startDate: formData.get("startDate"),
 		dueDate: formData.get("dueDate"),
 	});
 
@@ -98,7 +105,9 @@ export async function updateProject(
 		const project = await updateProjectForUser(projectIdResult.data, user.id, {
 			name: result.data.name,
 			description: result.data.description || null,
-			dueDate: parseDueDate(result.data.dueDate),
+			color: result.data.color,
+			startDate: parseDate(result.data.startDate),
+			dueDate: parseDate(result.data.dueDate),
 		});
 
 		if (!project) {
@@ -137,6 +146,7 @@ export async function deleteProject(
 			"Project not found or user does not have permission to delete it.",
 		);
 	}
+
 	try {
 		const user = await getCurrentDatabaseUser();
 

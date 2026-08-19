@@ -8,6 +8,8 @@ export type ProjectActionState = {
 	errors?: {
 		name?: string[];
 		description?: string[];
+		color?: string[];
+		startDate?: string[];
 		dueDate?: string[];
 	};
 };

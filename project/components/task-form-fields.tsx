@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { CharacterCount } from "@/components/character-count";
-import { DueDatePicker } from "@/components/due-date-picker";
+import { DatePicker } from "@/components/date-picker";
 import { FormFieldError } from "@/components/form-field-error";
 import {
 	Select,
@@ -179,7 +179,8 @@ export function TaskFormFields({
 			<div>
 				<p className="mb-2 text-sm font-medium text-foreground">Due date</p>
 
-				<DueDatePicker
+				<DatePicker
+					name="dueDate"
 					defaultValue={defaultValues.dueDate}
 					disabled={pending}
 					invalid={Boolean(dueDateErrors)}

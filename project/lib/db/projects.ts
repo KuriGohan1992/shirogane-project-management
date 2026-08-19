@@ -36,10 +36,13 @@ export const DEFAULT_PROJECT_STAGES = [
 
 type CreateProjectData = Pick<
 	NewProject,
-	"ownerId" | "name" | "description" | "dueDate"
+	"ownerId" | "name" | "description" | "color" | "startDate" | "dueDate"
 >;
 
-type UpdateProjectData = Pick<NewProject, "name" | "description" | "dueDate">;
+type UpdateProjectData = Pick<
+	NewProject,
+	"name" | "description" | "color" | "startDate" | "dueDate"
+>;
 
 export async function createProjectWithDefaultStages(
 	data: CreateProjectData,

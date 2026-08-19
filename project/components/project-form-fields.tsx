@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+
 import { CharacterCount } from "@/components/character-count";
-import { DueDatePicker } from "@/components/due-date-picker";
+import { DatePicker } from "@/components/date-picker";
 import { FormFieldError } from "@/components/form-field-error";
 import { useFieldErrors } from "@/hooks/use-field-errors";
+import { COLOR_OPTIONS } from "@/lib/constants/colors";
 import { PROJECT_FIELD_LIMITS } from "@/lib/constants/form-limits";
 import { cn } from "@/lib/utils";
 import type { ProjectFormData } from "@/lib/validations/project";
@@ -28,8 +30,11 @@ export function ProjectFormFields({
 	const [descriptionLength, setDescriptionLength] = useState(
 		defaultValues.description.length,
 	);
+
 	const nameErrorId = "project-name-error";
 	const descriptionErrorId = "project-description-error";
+	const colorErrorId = "project-color-error";
+	const startDateErrorId = "project-start-date-error";
 	const dueDateErrorId = "project-due-date-error";
 
 	const { getFieldErrors, clearFieldError } = useFieldErrors<ProjectField>(
@@ -38,6 +43,8 @@ export function ProjectFormFields({
 
 	const nameErrors = getFieldErrors("name");
 	const descriptionErrors = getFieldErrors("description");
+	const colorErrors = getFieldErrors("color");
+	const startDateErrors = getFieldErrors("startDate");
 	const dueDateErrors = getFieldErrors("dueDate");
 
 	return (
@@ -100,6 +107,7 @@ export function ProjectFormFields({
 						max={PROJECT_FIELD_LIMITS.description}
 					/>
 				</div>
+
 				<textarea
 					id="project-description"
 					name="description"
@@ -124,18 +132,73 @@ export function ProjectFormFields({
 				<FormFieldError id={descriptionErrorId} messages={descriptionErrors} />
 			</div>
 
-			<div>
-				<p className="mb-2 text-sm font-medium text-foreground">Due date</p>
+			<fieldset disabled={pending}>
+				<legend className="mb-2 text-sm font-medium text-foreground">
+					Project color
+				</legend>
 
-				<DueDatePicker
-					defaultValue={defaultValues.dueDate}
-					disabled={pending}
-					invalid={Boolean(dueDateErrors)}
-					errorId={dueDateErrorId}
-					onValueChange={() => clearFieldError("dueDate")}
-				/>
+				<div className="flex flex-wrap gap-2">
+					{COLOR_OPTIONS.map((option) => (
+						<label
+							key={option.value}
+							className="cursor-pointer"
+							title={option.label}
+						>
+							<input
+								type="radio"
+								name="color"
+								value={option.value}
+								defaultChecked={defaultValues.color === option.value}
+								className="peer sr-only"
+								onChange={() => clearFieldError("color")}
+							/>
 
-				<FormFieldError id={dueDateErrorId} messages={dueDateErrors} />
+							<span
+								className="block size-7 rounded-full border-2 border-transparent transition-transform hover:scale-110 peer-checked:border-foreground peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ring"
+								style={{
+									backgroundColor: option.hex,
+								}}
+							>
+								<span className="sr-only">{option.label}</span>
+							</span>
+						</label>
+					))}
+				</div>
+
+				<FormFieldError id={colorErrorId} messages={colorErrors} />
+			</fieldset>
+
+			<div className="grid gap-4 sm:grid-cols-2">
+				<div>
+					<p className="mb-2 text-sm font-medium text-foreground">Start date</p>
+
+					<DatePicker
+						name="startDate"
+						defaultValue={defaultValues.startDate}
+						placeholder="Select a start date"
+						disabled={pending}
+						invalid={Boolean(startDateErrors)}
+						errorId={startDateErrorId}
+						onValueChange={() => clearFieldError("startDate")}
+					/>
+
+					<FormFieldError id={startDateErrorId} messages={startDateErrors} />
+				</div>
+
+				<div>
+					<p className="mb-2 text-sm font-medium text-foreground">Due date</p>
+
+					<DatePicker
+						name="dueDate"
+						defaultValue={defaultValues.dueDate}
+						disabled={pending}
+						invalid={Boolean(dueDateErrors)}
+						errorId={dueDateErrorId}
+						onValueChange={() => clearFieldError("dueDate")}
+					/>
+
+					<FormFieldError id={dueDateErrorId} messages={dueDateErrors} />
+				</div>
 			</div>
 		</div>
 	);

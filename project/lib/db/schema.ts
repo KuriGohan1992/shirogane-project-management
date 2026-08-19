@@ -1,4 +1,6 @@
 import { relations } from "drizzle-orm";
+import type { ColorValue } from "@/lib/constants/colors";
+import { DEFAULT_COLOR } from "@/lib/constants/colors";
 import {
 	index,
 	integer,
@@ -66,14 +68,24 @@ export const projects = pgTable(
 				onDelete: "cascade",
 			}),
 
-		name: text("name").notNull(),
+name: text("name").notNull(),
 
-		description: text("description"),
+description: text("description"),
 
-		dueDate: timestamp("due_date", {
-			withTimezone: true,
-			mode: "date",
-		}),
+color: text("color")
+	.$type<ColorValue>()
+	.default(DEFAULT_COLOR)
+	.notNull(),
+
+startDate: timestamp("start_date", {
+	withTimezone: true,
+	mode: "date",
+}),
+
+dueDate: timestamp("due_date", {
+	withTimezone: true,
+	mode: "date",
+}),
 
 		...timestamps,
 	},

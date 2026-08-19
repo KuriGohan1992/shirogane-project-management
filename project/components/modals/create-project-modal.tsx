@@ -11,6 +11,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { createProject } from "@/lib/actions/projects";
+import { DEFAULT_COLOR } from "@/lib/constants/colors";
 import type { ProjectActionState } from "@/types/project";
 
 type CreateProjectModalProps = {
@@ -34,11 +35,13 @@ export function CreateProjectModal({
 	const hasFieldErrors = Object.values(state.errors ?? {}).some((fieldErrors) =>
 		Boolean(fieldErrors?.length),
 	);
+
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="sm:max-w-lg">
 				<DialogHeader>
 					<DialogTitle>Create project</DialogTitle>
+
 					<DialogDescription>
 						Create a workspace for your tasks, stages, and collaborators.
 					</DialogDescription>
@@ -51,6 +54,8 @@ export function CreateProjectModal({
 						defaultValues={{
 							name: "",
 							description: "",
+							color: DEFAULT_COLOR,
+							startDate: "",
 							dueDate: "",
 						}}
 					/>
