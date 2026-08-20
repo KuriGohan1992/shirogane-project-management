@@ -1,6 +1,6 @@
 export const PROJECT_FIELD_LIMITS = {
-	name: 35,
-	description: 500,
+	name: 30,
+	description: 400,
 } as const;
 
 export const TASK_FIELD_LIMITS = {
