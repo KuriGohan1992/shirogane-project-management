@@ -1,6 +1,7 @@
 import { CalendarRange, Clock3 } from "lucide-react";
 import Link from "next/link";
 import type { CSSProperties } from "react";
+
 import { ProjectActions } from "@/components/project-actions";
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { getColorHex } from "@/lib/constants/colors";
@@ -49,12 +50,11 @@ function toEditableProject(project: Project): EditableProject {
 
 export function ProjectCard({ project }: ProjectCardProps) {
 	const permissions = getProjectPermissions(project.accessRole);
-
 	const color = getColorHex(project.color);
 
 	return (
 		<article
-			className="group relative flex h-full overflow-hidden rounded-xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-[var(--project-color)] hover:shadow-md"
+			className="group relative flex h-[18rem] overflow-hidden rounded-xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-[var(--project-color)] hover:shadow-md"
 			style={
 				{
 					"--project-color": color,
@@ -64,13 +64,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
 			<div
 				aria-hidden="true"
 				className="absolute inset-x-0 top-0 h-4"
-				style={{
-					backgroundColor: color,
-				}}
+				style={{ backgroundColor: color }}
 			/>
 
-			<div className="flex w-full flex-col p-5 pt-6">
-				<div className="mb-4 flex items-center justify-between">
+			<div className="flex min-h-0 w-full flex-col p-5 pt-6">
+				<div className="mb-4 flex items-center justify-between gap-3">
 					<ProjectActions
 						project={toEditableProject(project)}
 						canEdit={permissions.canEditProject}
@@ -78,39 +76,37 @@ export function ProjectCard({ project }: ProjectCardProps) {
 						compact
 					/>
 
-					<span className="text-xs font-medium capitalize text-muted-foreground">
+					<span className="shrink-0 text-xs font-medium capitalize text-muted-foreground">
 						{project.accessRole}
 					</span>
 				</div>
 
-				<Link href={`/projects/${project.id}`} className="block">
+				<Link href={`/projects/${project.id}`} className="min-h-0">
 					<h2
-						className="text-lg font-semibold text-foreground transition-colors group-hover:text-[var(--project-color)]"
-						style={
-							{
-								"--project-color": color,
-							} as CSSProperties
-						}
+						title={project.name}
+						className="line-clamp-2 min-h-14 text-lg font-semibold leading-7 text-foreground transition-colors group-hover:text-[var(--project-color)]"
 					>
 						{project.name}
 					</h2>
 
 					<p className="mt-2 line-clamp-2 min-h-10 text-sm leading-5 text-muted-foreground">
-						{project.description || "No description."}
+						{project.description || "No description yet."}
 					</p>
 				</Link>
 
-				<div className="mt-5 space-y-2 border-t border-border pt-4 text-sm text-muted-foreground">
+				<div className="mt-auto space-y-2 border-t border-border pt-4 text-sm text-muted-foreground">
 					<div className="flex items-center gap-2">
-						<CalendarRange aria-hidden="true" size={16} />
+						<CalendarRange aria-hidden="true" size={16} className="shrink-0" />
 
-						<span>{formatProjectSchedule(project)}</span>
+						<span className="truncate">{formatProjectSchedule(project)}</span>
 					</div>
 
 					<div className="flex items-center gap-2">
-						<Clock3 aria-hidden="true" size={16} />
+						<Clock3 aria-hidden="true" size={16} className="shrink-0" />
 
-						<span>Last activity {formatDate(project.lastActivityAt)}</span>
+						<span className="truncate">
+							Last activity {formatDate(project.lastActivityAt)}
+						</span>
 					</div>
 				</div>
 			</div>

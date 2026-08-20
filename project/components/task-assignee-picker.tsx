@@ -27,8 +27,9 @@ export function TaskAssigneePicker({
 	canManage,
 }: TaskAssigneePickerProps) {
 	const assignedUserIds = new Set(assignedUsers.map((user) => user.id));
+	const visibleAssignees = assignedUsers.slice(0, 5);
 
-	const visibleAssignees = assignedUsers.slice(0, 3);
+	const hiddenAssigneeCount = assignedUsers.length - visibleAssignees.length;
 
 	if (!canManage) {
 		if (assignedUsers.length === 0) {
@@ -65,7 +66,7 @@ export function TaskAssigneePicker({
 					type="button"
 					variant="ghost"
 					size="sm"
-					className="h-8 px-2"
+					className="h-7 px-2"
 					aria-label="Manage task assignees"
 				>
 					{visibleAssignees.length === 0 ? (
@@ -74,27 +75,22 @@ export function TaskAssigneePicker({
 							Assign
 						</>
 					) : (
-						<div className="flex items-center gap-1.5">
-							<div className="flex -space-x-2">
+						<div className="flex items-center">
+							<div className="flex -space-x-1.5">
 								{visibleAssignees.map((user) => (
 									<UserAvatar
 										key={user.id}
 										user={user}
-										className="size-6 border-2 border-card"
+										className="size-5 border-2 border-card"
 									/>
 								))}
 							</div>
 
-							{assignedUsers.length > 3 && (
-								<span className="text-xs text-muted-foreground">
-									+{assignedUsers.length - 3}
+							{hiddenAssigneeCount > 0 && (
+								<span className="ml-1 text-xs font-medium text-muted-foreground">
+									+{hiddenAssigneeCount}
 								</span>
 							)}
-
-							<UserPlus
-								aria-hidden="true"
-								className="size-3.5 text-muted-foreground"
-							/>
 						</div>
 					)}
 				</Button>

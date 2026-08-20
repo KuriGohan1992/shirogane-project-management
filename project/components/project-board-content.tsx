@@ -28,7 +28,6 @@ export async function ProjectBoardContent({
 
 	const [archivedTasks, activities] = await Promise.all([
 		getArchivedTasksForProject(projectId, currentUserId),
-
 		getProjectActivityForUser(projectId, currentUserId),
 	]);
 
@@ -43,7 +42,6 @@ export async function ProjectBoardContent({
 			...project.owner,
 			isOwner: true,
 		},
-
 		...project.members
 			.filter((member) => member.role === "member")
 			.map((member) => ({
@@ -57,6 +55,8 @@ export async function ProjectBoardContent({
 			<ProjectHeader
 				project={project}
 				permissions={permissions}
+				accessRole={project.accessRole}
+				owner={project.owner}
 				lastActivityAt={lastActivityAt}
 				headerActions={
 					<>

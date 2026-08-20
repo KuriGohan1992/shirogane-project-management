@@ -31,12 +31,17 @@ export function ProjectMembersButton({
 				type="button"
 				variant="outline"
 				size="sm"
+				className="h-9 gap-2"
 				onClick={() => setIsOpen(true)}
 			>
-				<Users aria-hidden="true" />
-				{memberCount} {memberCount === 1 ? "member" : "members"}
-			</Button>
+				<Users aria-hidden="true" className="size-4" />
 
+				<span>Members</span>
+
+				<span className="inline-flex min-w-5 items-center justify-center rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
+					{memberCount}
+				</span>
+			</Button>
 			{isOpen && (
 				<ProjectMembersModal
 					projectId={projectId}

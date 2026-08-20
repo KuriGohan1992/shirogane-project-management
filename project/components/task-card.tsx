@@ -1,18 +1,13 @@
 "use client";
 
 import { useSortable } from "@dnd-kit/react/sortable";
-import {
-	CalendarDays,
-	CircleAlert,
-	GripVertical,
-	MessageSquare,
-} from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import Link from "next/link";
 
 import { TaskActions } from "@/components/task-actions";
 import { TaskAssigneePicker } from "@/components/task-assignee-picker";
 import { TaskLabelBadge } from "@/components/task-label-badge";
-import { Button } from "@/components/ui/button";
+import { TaskPriorityBadge } from "@/components/task-priority-badge";
 import type { ProjectPermissions } from "@/lib/auth/project-permissions";
 import { BOARD_DND_TYPES, getTaskDndId } from "@/lib/board/dnd";
 import type { ProjectLabel, Task } from "@/lib/db/schema";
@@ -91,21 +86,6 @@ function formatTaskSchedule(task: Task) {
 
 	return null;
 }
-function getPriorityClasses(priority: Task["priority"]) {
-	switch (priority) {
-		case "low":
-			return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400";
-
-		case "medium":
-			return "bg-amber-500/10 text-amber-700 dark:text-amber-400";
-
-		case "high":
-			return "bg-orange-500/10 text-orange-700 dark:text-orange-400";
-
-		case "urgent":
-			return "bg-destructive/10 text-destructive";
-	}
-}
 
 function toEditableTask(task: Task): EditableTask {
 	return {
@@ -132,15 +112,20 @@ export function TaskCard({
 
 	const assignedLabels = task.labels
 		.map((taskLabel) => taskLabel.label)
-		.toSorted((a, b) => a.name.localeCompare(b.name));
+		.toSorted((left, right) => left.name.localeCompare(right.name));
 
 	const visibleLabels = assignedLabels.slice(0, 2);
+
+	const commentCount = task.comments.length;
 
 	const taskDragDisabled = !permissions.canManageTasks || dragDisabled;
 
 	const taskHref = getTaskHref(projectId, task.id, task.title);
 
 	const schedule = formatTaskSchedule(task);
+
+	const showFooter =
+		permissions.canAssignTasks || assignedUsers.length > 0 || commentCount > 0;
 
 	const sortable = useSortable({
 		id: getTaskDndId(task.id),
@@ -155,112 +140,112 @@ export function TaskCard({
 		<article
 			ref={sortable.ref}
 			className={cn(
-				"relative rounded-lg border border-border bg-card p-4 shadow-sm transition-shadow hover:shadow-md",
+				"relative overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm transition-[border-color,box-shadow,transform] hover:border-foreground/30 hover:shadow-md",
 				sortable.isDragging && "opacity-50",
 			)}
 		>
-			<Link
-				href={taskHref}
-				aria-label={`Open ${task.title}`}
-				className="absolute inset-0 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-			/>
-
-			<div className="pointer-events-none relative z-10 flex items-start gap-2">
-				{permissions.canManageTasks && (
-					<button
-						ref={sortable.handleRef}
-						type="button"
-						disabled={taskDragDisabled}
-						aria-label={`Drag ${task.title}`}
-						className="pointer-events-auto mt-0.5 flex size-6 shrink-0 touch-none cursor-grab items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50 active:cursor-grabbing"
-					>
-						<GripVertical aria-hidden="true" size={15} />
-					</button>
+			<div
+				ref={sortable.handleRef}
+				className={cn(
+					"relative",
+					!taskDragDisabled &&
+						"touch-none select-none cursor-grab active:cursor-grabbing",
 				)}
+			>
+				<Link
+					href={taskHref}
+					aria-label={`Open ${task.title}`}
+					className="block rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+				>
+					<h4
+						title={task.title}
+						className="line-clamp-2 break-words pr-8 text-sm font-semibold leading-5 text-foreground"
+					>
+						{task.title}
+					</h4>
 
-				<div className="min-w-0 flex-1">
-					<div className="flex items-start justify-between gap-3">
-						<div className="min-w-0 flex-1">
-							<h4 className="text-sm font-medium leading-5 text-foreground">
-								{task.title}
-							</h4>
-						</div>
-
-						{permissions.canManageTasks && (
-							<div className="pointer-events-auto">
-								<TaskActions
-									task={toEditableTask(task)}
-									labelCandidates={labelCandidates}
-									assignedLabels={assignedLabels}
-								/>
-							</div>
-						)}
-					</div>
+					{task.description && (
+						<p className="mt-2 line-clamp-2 text-xs leading-5 text-muted-foreground">
+							{task.description}
+						</p>
+					)}
 
 					{visibleLabels.length > 0 && (
-						<div className="mt-2 flex flex-wrap items-center gap-1.5">
+						<div className="mt-3 flex flex-wrap items-center gap-1.5">
 							{visibleLabels.map((label) => (
 								<TaskLabelBadge
 									key={label.id}
 									label={label}
-									className="max-w-32 py-0.5"
+									className="max-w-28 py-0.5"
 								/>
 							))}
 
 							{assignedLabels.length > visibleLabels.length && (
-								<span className="text-xs text-muted-foreground">
+								<span className="inline-flex items-center rounded-md border border-border bg-background px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
 									+{assignedLabels.length - visibleLabels.length}
 								</span>
 							)}
 						</div>
 					)}
 
-					{task.description && (
-						<p className="mt-2 line-clamp-3 text-xs leading-5 text-muted-foreground">
-							{task.description}
-						</p>
-					)}
+					{(task.priority || schedule) && (
+						<div className="mt-3 flex min-h-6 items-center gap-2">
+							{task.priority && (
+								<TaskPriorityBadge
+									priority={task.priority}
+									className="shrink-0"
+								/>
+							)}
 
-					<div className="mt-4 flex flex-wrap items-center gap-2">
-						<span
-							className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium capitalize ${getPriorityClasses(
-								task.priority,
-							)}`}
-						>
-							<CircleAlert aria-hidden="true" size={12} />
-							{task.priority}
-						</span>
-
-						{schedule && (
-							<span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-								<CalendarDays aria-hidden="true" size={13} />
-								{schedule}
-							</span>
-						)}
-
-						<div className="pointer-events-auto">
-							<TaskAssigneePicker
-								taskId={task.id}
-								candidates={assigneeCandidates}
-								assignedUsers={assignedUsers}
-								canManage={permissions.canAssignTasks}
-							/>
-						</div>
-
-						<div className="pointer-events-auto">
-							<Button asChild variant="ghost" size="xs">
-								<Link
-									href={taskHref}
-									aria-label={`${task.comments.length} comments on ${task.title}`}
+							{schedule && (
+								<span
+									className={cn(
+										"min-w-0 truncate text-xs font-medium text-muted-foreground",
+										task.priority && "ml-auto",
+									)}
 								>
-									<MessageSquare aria-hidden="true" size={13} />
-									{task.comments.length}
-								</Link>
-							</Button>
+									{schedule}
+								</span>
+							)}
 						</div>
-					</div>
-				</div>
+					)}
+				</Link>
 			</div>
+
+			{permissions.canManageTasks && (
+				<div className="absolute right-2.5 top-2.5 z-20">
+					<TaskActions
+						task={toEditableTask(task)}
+						labelCandidates={labelCandidates}
+						assignedLabels={assignedLabels}
+					/>
+				</div>
+			)}
+
+			{showFooter && (
+				<div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-2">
+					<div className="min-w-0">
+						<TaskAssigneePicker
+							taskId={task.id}
+							candidates={assigneeCandidates}
+							assignedUsers={assignedUsers}
+							canManage={permissions.canAssignTasks}
+						/>
+					</div>
+
+					<Link
+						href={taskHref}
+						aria-label={`${commentCount} ${
+							commentCount === 1 ? "comment" : "comments"
+						} on ${task.title}`}
+						className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+					>
+						<MessageSquare aria-hidden="true" className="size-4" />
+
+						{commentCount}
+					</Link>
+				</div>
+			)}
 		</article>
 	);
 }

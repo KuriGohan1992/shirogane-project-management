@@ -1,16 +1,20 @@
-import { ArrowLeft, CalendarRange, Clock3 } from "lucide-react";
-import Link from "next/link";
+import { CalendarRange, Clock3, ShieldCheck } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { ProjectActions } from "@/components/project-actions";
+import { UserAvatar } from "@/components/user-avatar";
 import type { ProjectPermissions } from "@/lib/auth/project-permissions";
 import { getColorHex } from "@/lib/constants/colors";
 import type { Project } from "@/lib/db/schema";
+import { cn } from "@/lib/utils";
 import type { EditableProject } from "@/types/project";
+import type { UserSummary } from "@/types/user";
 
 type ProjectHeaderProps = {
 	project: Project;
 	permissions: ProjectPermissions;
+	accessRole: "owner" | "member" | "viewer";
+	owner: UserSummary;
 	lastActivityAt: Date;
 	headerActions?: ReactNode;
 };
@@ -54,9 +58,16 @@ function toEditableProject(project: Project): EditableProject {
 export function ProjectHeader({
 	project,
 	permissions,
+	accessRole,
+	owner,
 	lastActivityAt,
 	headerActions,
 }: ProjectHeaderProps) {
+	const hasProjectAdminActions =
+		permissions.canEditProject || permissions.canDeleteProject;
+
+	const showOwner = accessRole !== "owner";
+
 	return (
 		<div className="relative overflow-hidden rounded-xl border border-border bg-card">
 			<div
@@ -68,58 +79,107 @@ export function ProjectHeader({
 			/>
 
 			<div className="p-6 pt-7">
-				<div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-					<div className="flex min-w-0 gap-3">
-						<Link
-							href="/projects"
-							aria-label="Back to projects"
-							className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-						>
-							<ArrowLeft aria-hidden="true" size={20} />
-						</Link>
+				<div className="flex min-w-0 items-start gap-4">
+					<h1
+						title={project.name}
+						className="min-w-0 flex-1 truncate text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
+					>
+						{project.name}
+					</h1>
+
+					{(headerActions || hasProjectAdminActions) && (
+						<div className="flex shrink-0 items-center gap-2">
+							{headerActions}
+
+							{headerActions && hasProjectAdminActions && (
+								<div aria-hidden="true" className="h-6 w-px bg-border" />
+							)}
+
+							<ProjectActions
+								project={toEditableProject(project)}
+								canEdit={permissions.canEditProject}
+								canDelete={permissions.canDeleteProject}
+							/>
+						</div>
+					)}
+				</div>
+
+				<p className="mt-3 max-w-5xl line-clamp-3 text-sm leading-6 text-muted-foreground">
+					{project.description || "No project description yet."}
+				</p>
+
+				<div
+					className={cn(
+						"mt-5 grid divide-x divide-border border-t border-border pt-4",
+						showOwner ? "grid-cols-4" : "grid-cols-3",
+					)}
+				>
+					<div className="flex min-w-0 items-center gap-3 pr-4">
+						<CalendarRange
+							aria-hidden="true"
+							className="size-[18px] shrink-0 text-muted-foreground"
+						/>
 
 						<div className="min-w-0">
-							<h1 className="truncate text-2xl font-bold text-foreground sm:text-3xl">
-								{project.name}
-							</h1>
-
-							<p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
-								{project.description || "No project description yet."}
+							<p className="text-xs font-medium text-muted-foreground">
+								Schedule
 							</p>
 
-							<div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
-								<div className="flex items-center gap-2">
-									<CalendarRange aria-hidden="true" size={16} />
-
-									<span>{formatProjectSchedule(project)}</span>
-								</div>
-
-								<div className="flex items-center gap-2">
-									<Clock3 aria-hidden="true" size={16} />
-
-									<span>Last activity {formatDate(lastActivityAt)}</span>
-								</div>
-							</div>
+							<p className="truncate text-sm font-medium text-foreground">
+								{formatProjectSchedule(project)}
+							</p>
 						</div>
 					</div>
 
-					<div className="flex flex-wrap items-center justify-end gap-2">
-						{headerActions}
-
-						{headerActions &&
-							(permissions.canEditProject || permissions.canDeleteProject) && (
-								<div
-									aria-hidden="true"
-									className="hidden h-6 w-px bg-border sm:block"
-								/>
-							)}
-
-						<ProjectActions
-							project={toEditableProject(project)}
-							canEdit={permissions.canEditProject}
-							canDelete={permissions.canDeleteProject}
+					<div className="flex min-w-0 items-center gap-3 px-4">
+						<Clock3
+							aria-hidden="true"
+							className="size-[18px] shrink-0 text-muted-foreground"
 						/>
+
+						<div className="min-w-0">
+							<p className="text-xs font-medium text-muted-foreground">
+								Last activity
+							</p>
+
+							<p className="truncate text-sm font-medium text-foreground">
+								{formatDate(lastActivityAt)}
+							</p>
+						</div>
 					</div>
+
+					<div className="flex min-w-0 items-center gap-3 px-4">
+						<ShieldCheck
+							aria-hidden="true"
+							className="size-[18px] shrink-0 text-muted-foreground"
+						/>
+
+						<div className="min-w-0">
+							<p className="text-xs font-medium text-muted-foreground">
+								Your role
+							</p>
+
+							<p className="truncate text-sm font-medium capitalize text-foreground">
+								{accessRole}
+							</p>
+						</div>
+					</div>
+
+					{showOwner && (
+						<div className="flex min-w-0 items-center gap-3 pl-4">
+							<UserAvatar user={owner} className="size-7 shrink-0" />
+
+							<div className="min-w-0">
+								<p className="text-xs font-medium text-muted-foreground">
+									Owner
+								</p>
+
+								<p className="truncate text-sm font-medium text-foreground">
+									{owner.name ?? owner.email}
+								</p>
+							</div>
+						</div>
+					)}
 				</div>
 			</div>
 		</div>

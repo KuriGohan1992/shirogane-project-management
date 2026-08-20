@@ -27,8 +27,6 @@ type TaskFilterControlsProps = {
 	filters: TaskFilters;
 	labelCandidates: ProjectLabel[];
 	assigneeCandidates: AssignmentCandidate[];
-	visibleTaskCount: number;
-	totalTaskCount: number;
 };
 
 type FilterOptionButtonProps = {
@@ -205,8 +203,6 @@ export function TaskFilterControls({
 	filters,
 	labelCandidates,
 	assigneeCandidates,
-	visibleTaskCount,
-	totalTaskCount,
 }: TaskFilterControlsProps) {
 	const filtersActive = hasTaskFilters(filters);
 
@@ -483,13 +479,6 @@ export function TaskFilterControls({
 					</Button>
 				</div>
 			</div>
-
-			{filtersActive && (
-				<p className="px-1 text-sm text-muted-foreground">
-					{visibleTaskCount} of {totalTaskCount}{" "}
-					{totalTaskCount === 1 ? "task" : "tasks"} shown
-				</p>
-			)}
 		</div>
 	);
 }

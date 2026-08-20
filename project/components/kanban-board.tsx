@@ -271,31 +271,27 @@ function KanbanBoardContent({
 	return (
 		<div className="space-y-3">
 			<div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-				<h2
+				{/* <h2
 					id="project-board-heading"
 					className="shrink-0 text-xl font-semibold"
 				>
 					Board
-				</h2>
+				</h2> */}
 
 				<div className="min-w-0 flex-1">
 					<TaskFilterControls
 						filters={filters}
 						labelCandidates={labelCandidates}
 						assigneeCandidates={assigneeCandidates}
-						visibleTaskCount={visibleTaskCount}
-						totalTaskCount={totalTaskCount}
 					/>
 				</div>
 			</div>
 
-			<div className="flex min-h-5 items-center px-1">
-				{boardError && (
-					<p aria-live="polite" className="text-xs text-destructive">
-						{boardError}
-					</p>
-				)}
-			</div>
+			{boardError && (
+				<p aria-live="polite" className="px-1 text-xs text-destructive">
+					{boardError}
+				</p>
+			)}
 
 			<DragDropProvider
 				plugins={(defaults) => [
@@ -519,28 +515,38 @@ function KanbanBoardContent({
 					});
 				}}
 			>
-				<div className="flex min-h-[calc(100vh-22rem)] items-start gap-4 overflow-x-auto pb-4">
-					{visibleStages.map((stage, index) => (
-						<StageColumn
-							key={stage.id}
-							stage={stage}
-							index={index}
-							labelCandidates={labelCandidates}
-							assigneeCandidates={assigneeCandidates}
-							permissions={permissions}
-							currentUserId={currentUserId}
-							isProjectOwner={isProjectOwner}
-							isBoardSavePending={isBoardSavePending}
-							isTaskFilteringActive={taskFiltersActive}
-							totalTaskCount={
-								totalTaskCountByStageId.get(stage.id) ?? stage.tasks.length
-							}
-						/>
-					))}
+				<div className="space-y-2">
+					<p className="px-1 text-sm text-muted-foreground">
+						{taskFiltersActive
+							? `${visibleTaskCount} of ${totalTaskCount} ${
+									totalTaskCount === 1 ? "task" : "tasks"
+								} shown`
+							: `${totalTaskCount} ${totalTaskCount === 1 ? "task" : "tasks"}`}
+					</p>
 
-					{permissions.canManageStages && (
-						<CreateStageButton projectId={projectId} />
-					)}
+					<div className="flex min-h-[calc(100vh-22rem)] items-start gap-4 overflow-x-auto pb-4">
+						{visibleStages.map((stage, index) => (
+							<StageColumn
+								key={stage.id}
+								stage={stage}
+								index={index}
+								labelCandidates={labelCandidates}
+								assigneeCandidates={assigneeCandidates}
+								permissions={permissions}
+								currentUserId={currentUserId}
+								isProjectOwner={isProjectOwner}
+								isBoardSavePending={isBoardSavePending}
+								isTaskFilteringActive={taskFiltersActive}
+								totalTaskCount={
+									totalTaskCountByStageId.get(stage.id) ?? stage.tasks.length
+								}
+							/>
+						))}
+
+						{permissions.canManageStages && (
+							<CreateStageButton projectId={projectId} />
+						)}
+					</div>
 				</div>
 			</DragDropProvider>
 		</div>

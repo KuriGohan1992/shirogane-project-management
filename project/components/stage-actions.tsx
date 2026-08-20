@@ -1,9 +1,7 @@
 "use client";
 
-import { Pencil, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Trash2 } from "lucide-react";
 
-import { EditStageModal } from "@/components/modals/edit-stage-modal";
 import { StageDeleteSubmitButton } from "@/components/stage-delete-submit-button";
 import {
 	AlertDialog,
@@ -32,70 +30,50 @@ export function StageActions({
 	stage,
 	isBoardSavePending,
 }: StageActionsProps) {
-	const [isEditOpen, setIsEditOpen] = useState(false);
-
 	const deleteAction = deleteStage.bind(null, projectId, stage.id);
 
 	return (
-		<>
-			<div className="flex items-center gap-0.5">
-				<Button
-					type="button"
-					variant="ghost"
-					size="icon-xs"
-					aria-label={`Rename ${stage.name}`}
-					disabled={isBoardSavePending}
-					onClick={() => setIsEditOpen(true)}
-				>
-					<Pencil aria-hidden="true" />
-				</Button>
+		<div
+			className="flex items-center"
+			onPointerDown={(event) => event.stopPropagation()}
+		>
+			<AlertDialog>
+				<AlertDialogTrigger asChild>
+					<Button
+						type="button"
+						variant="ghost"
+						size="icon-sm"
+						disabled={isBoardSavePending}
+						aria-label={`Delete ${stage.name}`}
+						className="text-muted-foreground hover:text-destructive"
+					>
+						<Trash2 aria-hidden="true" className="size-5" />
+					</Button>
+				</AlertDialogTrigger>
 
-				<AlertDialog>
-					<AlertDialogTrigger asChild>
-						<Button
-							type="button"
-							variant="ghost"
-							size="icon-xs"
-							disabled={isBoardSavePending}
-							aria-label={`Delete ${stage.name}`}
-							className="text-muted-foreground hover:text-destructive"
-						>
-							<Trash2 aria-hidden="true" />
-						</Button>
-					</AlertDialogTrigger>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Delete {stage.name}?</AlertDialogTitle>
 
-					<AlertDialogContent>
-						<AlertDialogHeader>
-							<AlertDialogTitle>Delete {stage.name}?</AlertDialogTitle>
+						<AlertDialogDescription>
+							This permanently deletes the stage and every task inside it. This
+							action cannot be undone.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
 
-							<AlertDialogDescription>
-								This permanently deletes the stage and every task inside it.
-								This action cannot be undone.
-							</AlertDialogDescription>
-						</AlertDialogHeader>
+					<form action={deleteAction}>
+						<AlertDialogFooter>
+							<AlertDialogCancel asChild>
+								<Button type="button" variant="outline">
+									Cancel
+								</Button>
+							</AlertDialogCancel>
 
-						<form action={deleteAction}>
-							<AlertDialogFooter>
-								<AlertDialogCancel asChild>
-									<Button type="button" variant="outline">
-										Cancel
-									</Button>
-								</AlertDialogCancel>
-
-								<StageDeleteSubmitButton disabled={isBoardSavePending} />
-							</AlertDialogFooter>
-						</form>
-					</AlertDialogContent>
-				</AlertDialog>
-			</div>
-
-			{isEditOpen && (
-				<EditStageModal
-					stage={stage}
-					open={isEditOpen}
-					onOpenChange={setIsEditOpen}
-				/>
-			)}
-		</>
+							<StageDeleteSubmitButton disabled={isBoardSavePending} />
+						</AlertDialogFooter>
+					</form>
+				</AlertDialogContent>
+			</AlertDialog>
+		</div>
 	);
 }

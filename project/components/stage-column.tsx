@@ -3,10 +3,10 @@
 import { CollisionPriority } from "@dnd-kit/abstract";
 import { useDroppable } from "@dnd-kit/react";
 import { useSortable } from "@dnd-kit/react/sortable";
-import { GripVertical } from "lucide-react";
 
 import { CreateTaskButton } from "@/components/create-task-button";
 import { StageActions } from "@/components/stage-actions";
+import { StageInlineName } from "@/components/stage-inline-name";
 import { TaskCard } from "@/components/task-card";
 import type { ProjectPermissions } from "@/lib/auth/project-permissions";
 import {
@@ -72,38 +72,43 @@ export function StageColumn({
 				stageSortable.isDragging && "opacity-60",
 			)}
 		>
-			<div className="flex items-center gap-2 border-b border-border px-4 py-3">
+			<div className="relative flex min-h-14 items-center border-b border-border px-4 py-3">
 				{permissions.canManageStages && (
-					<button
+					<div
 						ref={stageSortable.handleRef}
-						type="button"
-						disabled={stageDragDisabled}
-						aria-label={`Drag ${stage.name} stage`}
-						className="flex size-6 shrink-0 touch-none cursor-grab items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:pointer-events-none disabled:opacity-50 active:cursor-grabbing"
-					>
-						<GripVertical aria-hidden="true" size={15} />
-					</button>
+						aria-hidden="true"
+						className="absolute inset-0 z-0 touch-none select-none cursor-grab rounded-t-xl active:cursor-grabbing"
+					/>
 				)}
 
-				<h3 className="min-w-0 flex-1 truncate font-semibold text-foreground">
-					{stage.name}
-				</h3>
-
-				{/* <span className="shrink-0 rounded-full bg-background px-2 py-0.5 text-xs font-medium text-muted-foreground">
-					{isTaskFilteringActive
-						? `${stage.tasks.length}/${totalTaskCount}`
-						: stage.tasks.length}
-				</span> */}
-
-				{permissions.canManageStages && (
-					<StageActions
-						projectId={stage.projectId}
+				<div className="relative z-10 flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
+					<StageInlineName
 						stage={{
 							id: stage.id,
 							name: stage.name,
 						}}
-						isBoardSavePending={isBoardSavePending}
+						canManage={permissions.canManageStages}
+						disabled={isBoardSavePending}
 					/>
+
+					<span className="pointer-events-none shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
+						{isTaskFilteringActive
+							? `${stage.tasks.length}/${totalTaskCount}`
+							: stage.tasks.length}
+					</span>
+				</div>
+
+				{permissions.canManageStages && (
+					<div className="relative z-10 ml-3 shrink-0">
+						<StageActions
+							projectId={stage.projectId}
+							stage={{
+								id: stage.id,
+								name: stage.name,
+							}}
+							isBoardSavePending={isBoardSavePending}
+						/>
+					</div>
 				)}
 			</div>
 
@@ -111,7 +116,7 @@ export function StageColumn({
 				ref={taskDropZone.ref}
 				className={cn(
 					"space-y-3 p-3 transition-colors",
-					taskDropZone.isDropTarget && "bg-primary/5",
+					taskDropZone.isDropTarget && "bg-primary/10",
 				)}
 			>
 				{stage.tasks.length === 0 ? (
