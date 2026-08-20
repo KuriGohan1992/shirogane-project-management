@@ -20,4 +20,5 @@ export type EditableProject = ProjectFormData & {
 
 export type ProjectWithAccess = Project & {
 	accessRole: ProjectAccessRole;
+	lastActivityAt: Date;
 };

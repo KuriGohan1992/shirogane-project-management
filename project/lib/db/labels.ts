@@ -5,7 +5,7 @@ import { and, eq, ne } from "drizzle-orm";
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import type { ColorValue } from "@/lib/constants/colors";
 import { db } from "@/lib/db";
-import { recordTaskActivity } from "@/lib/db/activity";
+import { recordActivity, recordTaskActivity } from "@/lib/db/activity";
 import { getProjectAccess } from "@/lib/db/project-access";
 import { type ProjectLabel, projectLabels, taskLabels } from "@/lib/db/schema";
 
@@ -180,6 +180,17 @@ export async function createProjectLabelForUser(
 
 	const result = await createOrFindProjectLabel(projectId, data);
 
+	if (result.status === "created") {
+		await recordActivity({
+			projectId,
+			actorId: userId,
+			action: "label_created",
+			metadata: {
+				labelName: result.label.name,
+			},
+		});
+	}
+
 	return {
 		...result,
 		projectId,
@@ -200,7 +211,19 @@ export async function createProjectLabelForTask(
 	}
 
 	const projectId = task.stage.projectId;
+
 	const result = await createOrFindProjectLabel(projectId, data);
+
+	if (result.status === "created") {
+		await recordActivity({
+			projectId,
+			actorId: userId,
+			action: "label_created",
+			metadata: {
+				labelName: result.label.name,
+			},
+		});
+	}
 
 	const [assignment] = await db
 		.insert(taskLabels)
@@ -246,6 +269,7 @@ export async function assignLabelToTask(
 	}
 
 	const projectId = task.stage.projectId;
+
 	const label = await getProjectLabel(projectId, labelId);
 
 	if (!label) {
@@ -299,6 +323,7 @@ export async function unassignLabelFromTask(
 	}
 
 	const projectId = task.stage.projectId;
+
 	const label = await getProjectLabel(projectId, labelId);
 
 	if (!label) {
@@ -368,6 +393,16 @@ export async function updateProjectLabelForUser(
 		};
 	}
 
+	const changedFields: string[] = [];
+
+	if (label.name !== data.name) {
+		changedFields.push("name");
+	}
+
+	if (label.color !== data.color) {
+		changedFields.push("color");
+	}
+
 	await db
 		.update(projectLabels)
 		.set({
@@ -377,6 +412,19 @@ export async function updateProjectLabelForUser(
 			updatedAt: new Date(),
 		})
 		.where(eq(projectLabels.id, label.id));
+
+	if (changedFields.length > 0) {
+		await recordActivity({
+			projectId: label.projectId,
+			actorId: userId,
+			action: "label_updated",
+			metadata: {
+				labelName: data.name,
+				previousLabelName: label.name,
+				changedFields: changedFields.join(", "),
+			},
+		});
+	}
 
 	return {
 		status: "updated",
@@ -397,6 +445,15 @@ export async function deleteProjectLabelForUser(
 	}
 
 	await db.delete(projectLabels).where(eq(projectLabels.id, label.id));
+
+	await recordActivity({
+		projectId: label.projectId,
+		actorId: userId,
+		action: "label_deleted",
+		metadata: {
+			labelName: label.name,
+		},
+	});
 
 	return {
 		status: "deleted",

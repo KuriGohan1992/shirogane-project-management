@@ -34,6 +34,7 @@ export async function archiveTask(
 
 	revalidatePath(`/projects/${projectId}`, "layout");
 
+	revalidatePath("/projects");
 	if (redirectToProject) {
 		redirect(`/projects/${projectId}`);
 	}
@@ -63,6 +64,7 @@ export async function restoreArchivedTask(
 	}
 
 	revalidatePath(`/projects/${projectId}`, "layout");
+	revalidatePath("/projects");
 }
 
 export async function deleteArchivedTask(
@@ -86,4 +88,5 @@ export async function deleteArchivedTask(
 	}
 
 	revalidatePath(`/projects/${projectId}`, "layout");
+	revalidatePath("/projects");
 }

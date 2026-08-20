@@ -39,6 +39,7 @@ export async function assignTask(
 	}
 
 	revalidatePath(`/projects/${result.projectId}`, "layout");
+	revalidatePath("/projects");
 }
 
 export async function unassignTask(
@@ -69,4 +70,5 @@ export async function unassignTask(
 	}
 
 	revalidatePath(`/projects/${result.projectId}`, "layout");
+	revalidatePath("/projects");
 }

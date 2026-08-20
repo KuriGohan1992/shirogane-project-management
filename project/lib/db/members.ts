@@ -1,8 +1,10 @@
 import "server-only";
 
 import { and, eq, inArray, sql } from "drizzle-orm";
+
 import type { ProjectMemberRoleValue } from "@/lib/constants/project-roles";
 import { db } from "@/lib/db";
+import { recordActivity } from "@/lib/db/activity";
 import { getProjectAccess } from "@/lib/db/project-access";
 import { projectMembers, taskAssignees } from "@/lib/db/schema";
 
@@ -17,6 +19,10 @@ type UpdateProjectMemberRoleResult =
 	| "updated"
 	| "project_not_found"
 	| "member_not_found";
+
+function getDisplayName(user: { name: string | null; email: string }) {
+	return user.name ?? user.email;
+}
 
 export async function addProjectMemberByEmail(
 	projectId: string,
@@ -39,6 +45,8 @@ export async function addProjectMemberByEmail(
 	const targetUser = await db.query.users.findFirst({
 		columns: {
 			id: true,
+			name: true,
+			email: true,
 		},
 
 		where: (user) => sql`lower(${user.email}) = ${email}`,
@@ -68,6 +76,16 @@ export async function addProjectMemberByEmail(
 		return "already_member";
 	}
 
+	await recordActivity({
+		projectId,
+		actorId: ownerId,
+		action: "member_added",
+		metadata: {
+			memberName: getDisplayName(targetUser),
+			memberRole: "member",
+		},
+	});
+
 	return "added";
 }
 
@@ -87,35 +105,33 @@ export async function removeProjectMemberOwnedByUser(
 
 		where: (project, { and, eq }) =>
 			and(eq(project.id, projectId), eq(project.ownerId, ownerId)),
-
-		with: {
-			stages: {
-				columns: {
-					id: true,
-				},
-
-				with: {
-					tasks: {
-						columns: {
-							id: true,
-						},
-					},
-				},
-			},
-		},
 	});
 
 	if (!project) {
 		return undefined;
 	}
 
-	const taskIds = project.stages.flatMap((stage) =>
-		stage.tasks.map((task) => task.id),
-	);
+	const targetMember = await db.query.projectMembers.findFirst({
+		where: (member, { and, eq }) =>
+			and(eq(member.projectId, projectId), eq(member.userId, memberUserId)),
+
+		with: {
+			user: {
+				columns: {
+					name: true,
+					email: true,
+				},
+			},
+		},
+	});
+
+	if (!targetMember) {
+		return undefined;
+	}
 
 	await removeUserAssignmentsFromProject(projectId, memberUserId);
 
-	const deleteMembership = db
+	const [deletedMember] = await db
 		.delete(projectMembers)
 		.where(
 			and(
@@ -127,26 +143,21 @@ export async function removeProjectMemberOwnedByUser(
 			userId: projectMembers.userId,
 		});
 
-	if (taskIds.length === 0) {
-		const [deletedMember] = await deleteMembership;
-
-		return deletedMember ? project.id : undefined;
+	if (!deletedMember) {
+		return undefined;
 	}
 
-	const [, deletedMembers] = await db.batch([
-		db
-			.delete(taskAssignees)
-			.where(
-				and(
-					eq(taskAssignees.userId, memberUserId),
-					inArray(taskAssignees.taskId, taskIds),
-				),
-			),
+	await recordActivity({
+		projectId,
+		actorId: ownerId,
+		action: "member_removed",
+		metadata: {
+			memberName: getDisplayName(targetMember.user),
+			memberRole: targetMember.role,
+		},
+	});
 
-		deleteMembership,
-	]);
-
-	return deletedMembers[0] ? project.id : undefined;
+	return project.id;
 }
 
 async function removeUserAssignmentsFromProject(
@@ -218,6 +229,15 @@ export async function updateProjectMemberRoleOwnedByUser(
 
 		where: (member, { and, eq }) =>
 			and(eq(member.projectId, projectId), eq(member.userId, memberUserId)),
+
+		with: {
+			user: {
+				columns: {
+					name: true,
+					email: true,
+				},
+			},
+		},
 	});
 
 	if (!existingMember) {
@@ -239,6 +259,19 @@ export async function updateProjectMemberRoleOwnedByUser(
 				eq(projectMembers.userId, memberUserId),
 			),
 		);
+
+	if (existingMember.role !== role) {
+		await recordActivity({
+			projectId,
+			actorId: ownerId,
+			action: "member_role_updated",
+			metadata: {
+				memberName: getDisplayName(existingMember.user),
+				previousMemberRole: existingMember.role,
+				memberRole: role,
+			},
+		});
+	}
 
 	return "updated";
 }

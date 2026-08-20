@@ -94,7 +94,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
 					<div className="flex items-center gap-2">
 						<Clock3 aria-hidden="true" size={16} />
 
-						<span>Updated {formatDate(project.updatedAt)}</span>
+						<span>Last activity {formatDate(project.lastActivityAt)}</span>
 					</div>
 				</div>
 

@@ -88,6 +88,7 @@ export async function createTask(
 		}
 
 		revalidatePath(`/projects/${created.projectId}`);
+		revalidatePath("/projects");
 
 		return {
 			success: true,
@@ -153,6 +154,7 @@ export async function updateTask(
 		}
 
 		revalidatePath(`/projects/${updated.projectId}`);
+		revalidatePath("/projects");
 
 		return {
 			success: true,
@@ -192,6 +194,7 @@ export async function deleteTask(
 	}
 
 	revalidatePath(`/projects/${projectId}`, "layout");
+	revalidatePath("/projects");
 
 	if (redirectToProject) {
 		redirect(`/projects/${projectId}`);
@@ -242,6 +245,7 @@ export async function moveTaskOnBoard(
 		}
 
 		revalidatePath(`/projects/${projectId}`);
+		revalidatePath("/projects");
 
 		return {
 			success: true,

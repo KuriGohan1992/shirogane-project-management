@@ -55,6 +55,7 @@ export async function createComment(
 		}
 
 		revalidatePath(`/projects/${created.projectId}`, "layout");
+		revalidatePath("/projects");
 
 		return {
 			success: true,

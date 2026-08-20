@@ -6,6 +6,10 @@ import { eq } from "drizzle-orm";
 
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { db } from "@/lib/db";
+import {
+	getLatestProjectActivityDates,
+	recordActivity,
+} from "@/lib/db/activity";
 import { getProjectAccess } from "@/lib/db/project-access";
 import {
 	type NewProject,
@@ -44,6 +48,39 @@ type UpdateProjectData = Pick<
 	"name" | "description" | "color" | "startDate" | "dueDate"
 >;
 
+function datesMatch(
+	left: Date | null | undefined,
+	right: Date | null | undefined,
+) {
+	return left?.getTime() === right?.getTime();
+}
+
+function getChangedProjectFields(project: Project, data: UpdateProjectData) {
+	const changedFields: string[] = [];
+
+	if (project.name !== data.name) {
+		changedFields.push("name");
+	}
+
+	if (project.description !== data.description) {
+		changedFields.push("description");
+	}
+
+	if (project.color !== data.color) {
+		changedFields.push("color");
+	}
+
+	if (!datesMatch(project.startDate, data.startDate)) {
+		changedFields.push("start date");
+	}
+
+	if (!datesMatch(project.dueDate, data.dueDate)) {
+		changedFields.push("due date");
+	}
+
+	return changedFields;
+}
+
 export async function createProjectWithDefaultStages(
 	data: CreateProjectData,
 ): Promise<Project> {
@@ -73,6 +110,15 @@ export async function createProjectWithDefaultStages(
 		throw new Error("Failed to create project.");
 	}
 
+	await recordActivity({
+		projectId: project.id,
+		actorId: data.ownerId,
+		action: "project_created",
+		metadata: {
+			projectName: project.name,
+		},
+	});
+
 	return project;
 }
 
@@ -97,7 +143,7 @@ export async function getProjectsForUser(
 		}),
 	]);
 
-	const accessibleProjects: ProjectWithAccess[] = [
+	const accessibleProjects = [
 		...ownedProjects.map((project) => ({
 			...project,
 			accessRole: "owner" as const,
@@ -109,8 +155,28 @@ export async function getProjectsForUser(
 		})),
 	];
 
-	return accessibleProjects.sort(
-		(a, b) => b.updatedAt.getTime() - a.updatedAt.getTime(),
+	const latestActivities = await getLatestProjectActivityDates(
+		accessibleProjects.map((project) => project.id),
+	);
+
+	const latestActivityByProjectId = new Map(
+		latestActivities.map((activity) => [
+			activity.projectId,
+			activity.createdAt,
+		]),
+	);
+
+	const projectsWithActivity: ProjectWithAccess[] = accessibleProjects.map(
+		(project) => ({
+			...project,
+
+			lastActivityAt:
+				latestActivityByProjectId.get(project.id) ?? project.updatedAt,
+		}),
+	);
+
+	return projectsWithActivity.sort(
+		(a, b) => b.lastActivityAt.getTime() - a.lastActivityAt.getTime(),
 	);
 }
 
@@ -226,6 +292,16 @@ export async function updateProjectForUser(
 		return undefined;
 	}
 
+	const existingProject = await db.query.projects.findFirst({
+		where: (project, { eq }) => eq(project.id, projectId),
+	});
+
+	if (!existingProject) {
+		return undefined;
+	}
+
+	const changedFields = getChangedProjectFields(existingProject, data);
+
 	const [project] = await db
 		.update(projects)
 		.set({
@@ -234,6 +310,22 @@ export async function updateProjectForUser(
 		})
 		.where(eq(projects.id, projectId))
 		.returning();
+
+	if (!project) {
+		return undefined;
+	}
+
+	if (changedFields.length > 0) {
+		await recordActivity({
+			projectId,
+			actorId: userId,
+			action: "project_updated",
+			metadata: {
+				projectName: project.name,
+				changedFields: changedFields.join(", "),
+			},
+		});
+	}
 
 	return project;
 }

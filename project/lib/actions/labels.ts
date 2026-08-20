@@ -61,6 +61,7 @@ export async function createProjectLabel(
 		}
 
 		revalidatePath(`/projects/${mutation.projectId}`, "layout");
+		revalidatePath("/projects");
 
 		return {
 			success: true,
@@ -128,6 +129,7 @@ export async function createTaskLabel(
 		}
 
 		revalidatePath(`/projects/${mutation.projectId}`, "layout");
+		revalidatePath("/projects");
 
 		return {
 			success: true,
@@ -199,7 +201,7 @@ export async function updateProjectLabel(
 		}
 
 		revalidatePath(`/projects/${mutation.projectId}`, "layout");
-
+		revalidatePath("/projects");
 		return {
 			success: true,
 			message: "Label updated.",
@@ -235,6 +237,7 @@ export async function deleteProjectLabel(
 	}
 
 	revalidatePath(`/projects/${mutation.projectId}`, "layout");
+	revalidatePath("/projects");
 }
 
 export async function assignTaskLabel(
@@ -268,6 +271,7 @@ export async function assignTaskLabel(
 	}
 
 	revalidatePath(`/projects/${mutation.projectId}`, "layout");
+	revalidatePath("/projects");
 }
 
 export async function unassignTaskLabel(
@@ -301,4 +305,5 @@ export async function unassignTaskLabel(
 	}
 
 	revalidatePath(`/projects/${mutation.projectId}`, "layout");
+	revalidatePath("/projects");
 }

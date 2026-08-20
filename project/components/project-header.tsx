@@ -10,6 +10,7 @@ import type { EditableProject } from "@/types/project";
 type ProjectHeaderProps = {
 	project: Project;
 	permissions: ProjectPermissions;
+	lastActivityAt: Date;
 };
 
 function formatDate(date: Date) {
@@ -48,7 +49,11 @@ function toEditableProject(project: Project): EditableProject {
 	};
 }
 
-export function ProjectHeader({ project, permissions }: ProjectHeaderProps) {
+export function ProjectHeader({
+	project,
+	permissions,
+	lastActivityAt,
+}: ProjectHeaderProps) {
 	return (
 		<div className="relative overflow-hidden rounded-xl border border-border bg-card">
 			<div
@@ -89,7 +94,7 @@ export function ProjectHeader({ project, permissions }: ProjectHeaderProps) {
 								<div className="flex items-center gap-2">
 									<Clock3 aria-hidden="true" size={16} />
 
-									<span>Updated {formatDate(project.updatedAt)}</span>
+									<span>Last activity {formatDate(lastActivityAt)}</span>
 								</div>
 							</div>
 						</div>

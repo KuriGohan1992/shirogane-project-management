@@ -1,13 +1,15 @@
 import { notFound } from "next/navigation";
 
+import { ArchivedTasksButton } from "@/components/archived-tasks-button";
 import { KanbanBoard } from "@/components/kanban-board";
+import { ProjectActivityButton } from "@/components/project-activity-button";
 import { ProjectHeader } from "@/components/project-header";
 import { ProjectMembersButton } from "@/components/project-members-button";
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
+import { getProjectActivityForUser } from "@/lib/db/activity";
 import { getProjectForUser } from "@/lib/db/projects";
 import { getArchivedTasksForProject } from "@/lib/db/task-archive";
 import type { AssignmentCandidate } from "@/types/member";
-import { ArchivedTasksButton } from "./archived-tasks-button";
 
 type ProjectBoardContentProps = {
 	projectId: string;
@@ -24,10 +26,15 @@ export async function ProjectBoardContent({
 		notFound();
 	}
 
-	const archivedTasks = await getArchivedTasksForProject(
-		projectId,
-		currentUserId,
-	);
+	const [archivedTasks, activities] = await Promise.all([
+		getArchivedTasksForProject(projectId, currentUserId),
+
+		getProjectActivityForUser(projectId, currentUserId),
+	]);
+
+	const projectActivities = activities ?? [];
+
+	const lastActivityAt = projectActivities[0]?.createdAt ?? project.updatedAt;
 
 	const permissions = getProjectPermissions(project.accessRole);
 
@@ -47,7 +54,11 @@ export async function ProjectBoardContent({
 
 	return (
 		<div className="space-y-6">
-			<ProjectHeader project={project} permissions={permissions} />
+			<ProjectHeader
+				project={project}
+				permissions={permissions}
+				lastActivityAt={lastActivityAt}
+			/>
 
 			<section aria-labelledby="project-board-heading">
 				<div className="flex items-center justify-between gap-4">
@@ -55,7 +66,9 @@ export async function ProjectBoardContent({
 						Board
 					</h2>
 
-					<div className="flex items-center gap-2">
+					<div className="flex flex-wrap items-center justify-end gap-2">
+						<ProjectActivityButton activities={projectActivities} />
+
 						<ArchivedTasksButton
 							tasks={archivedTasks}
 							canManage={permissions.canManageTasks}

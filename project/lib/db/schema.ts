@@ -1,4 +1,5 @@
 import { relations } from "drizzle-orm";
+
 import {
 	index,
 	integer,
@@ -12,8 +13,8 @@ import {
 	uuid,
 } from "drizzle-orm/pg-core";
 import type {
-	TaskActivityAction,
-	TaskActivityMetadata,
+	ActivityAction,
+	ActivityMetadata,
 } from "@/lib/constants/activity";
 import type { ColorValue } from "@/lib/constants/colors";
 import { DEFAULT_COLOR } from "@/lib/constants/colors";
@@ -330,9 +331,9 @@ export const activityLogs = pgTable(
 			onDelete: "set null",
 		}),
 
-		action: text("action").$type<TaskActivityAction>().notNull(),
+		action: text("action").$type<ActivityAction>().notNull(),
 
-		metadata: jsonb("metadata").$type<TaskActivityMetadata>().notNull(),
+		metadata: jsonb("metadata").$type<ActivityMetadata>().notNull(),
 
 		createdAt: timestamp("created_at", {
 			withTimezone: true,

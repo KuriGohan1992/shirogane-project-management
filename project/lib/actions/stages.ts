@@ -57,6 +57,8 @@ export async function createStage(
 
 		revalidatePath(`/projects/${created.projectId}`);
 
+		revalidatePath("/projects");
+
 		return {
 			success: true,
 			message: "Stage created.",
@@ -113,6 +115,7 @@ export async function renameStage(
 		}
 
 		revalidatePath(`/projects/${renamed.projectId}`);
+		revalidatePath("/projects");
 
 		return {
 			success: true,
@@ -157,6 +160,7 @@ export async function deleteStage(
 	}
 
 	revalidatePath(`/projects/${result.projectId}`);
+	revalidatePath("/projects");
 }
 
 export async function moveStage(
@@ -190,6 +194,7 @@ export async function moveStage(
 	}
 
 	revalidatePath(`/projects/${projectId}`);
+	revalidatePath("/projects");
 }
 export async function reorderStage(
 	stageId: string,
@@ -227,6 +232,7 @@ export async function reorderStage(
 		}
 
 		revalidatePath(`/projects/${projectId}`);
+		revalidatePath("/projects");
 
 		return {
 			success: true,
