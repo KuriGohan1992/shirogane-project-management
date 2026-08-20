@@ -1,5 +1,6 @@
 import { ArrowLeft, CalendarRange, Clock3 } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 
 import { ProjectActions } from "@/components/project-actions";
 import type { ProjectPermissions } from "@/lib/auth/project-permissions";
@@ -11,6 +12,7 @@ type ProjectHeaderProps = {
 	project: Project;
 	permissions: ProjectPermissions;
 	lastActivityAt: Date;
+	headerActions?: ReactNode;
 };
 
 function formatDate(date: Date) {
@@ -53,6 +55,7 @@ export function ProjectHeader({
 	project,
 	permissions,
 	lastActivityAt,
+	headerActions,
 }: ProjectHeaderProps) {
 	return (
 		<div className="relative overflow-hidden rounded-xl border border-border bg-card">
@@ -100,11 +103,23 @@ export function ProjectHeader({
 						</div>
 					</div>
 
-					<ProjectActions
-						project={toEditableProject(project)}
-						canEdit={permissions.canEditProject}
-						canDelete={permissions.canDeleteProject}
-					/>
+					<div className="flex flex-wrap items-center justify-end gap-2">
+						{headerActions}
+
+						{headerActions &&
+							(permissions.canEditProject || permissions.canDeleteProject) && (
+								<div
+									aria-hidden="true"
+									className="hidden h-6 w-px bg-border sm:block"
+								/>
+							)}
+
+						<ProjectActions
+							project={toEditableProject(project)}
+							canEdit={permissions.canEditProject}
+							canDelete={permissions.canDeleteProject}
+						/>
+					</div>
 				</div>
 			</div>
 		</div>

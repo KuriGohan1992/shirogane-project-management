@@ -28,6 +28,8 @@ type StageColumnProps = {
 	currentUserId: string;
 	isProjectOwner: boolean;
 	isBoardSavePending: boolean;
+	isTaskFilteringActive: boolean;
+	totalTaskCount: number;
 };
 
 export function StageColumn({
@@ -39,10 +41,12 @@ export function StageColumn({
 	currentUserId,
 	isProjectOwner,
 	isBoardSavePending,
+	isTaskFilteringActive,
+	totalTaskCount,
 }: StageColumnProps) {
 	const stageDragDisabled = !permissions.canManageStages;
 
-	const taskDragDisabled = !permissions.canManageTasks;
+	const taskDragDisabled = !permissions.canManageTasks || isTaskFilteringActive;
 
 	const stageSortable = useSortable({
 		id: getStageDndId(stage.id),
@@ -85,9 +89,11 @@ export function StageColumn({
 					{stage.name}
 				</h3>
 
-				<span className="shrink-0 rounded-full bg-background px-2 py-0.5 text-xs font-medium text-muted-foreground">
-					{stage.tasks.length}
-				</span>
+				{/* <span className="shrink-0 rounded-full bg-background px-2 py-0.5 text-xs font-medium text-muted-foreground">
+					{isTaskFilteringActive
+						? `${stage.tasks.length}/${totalTaskCount}`
+						: stage.tasks.length}
+				</span> */}
 
 				{permissions.canManageStages && (
 					<StageActions
@@ -111,7 +117,9 @@ export function StageColumn({
 				{stage.tasks.length === 0 ? (
 					<div className="flex min-h-32 items-center justify-center rounded-lg border border-dashed border-border px-4 text-center">
 						<p className="text-xs text-muted-foreground">
-							No tasks in this stage.
+							{isTaskFilteringActive && totalTaskCount > 0
+								? "No tasks match the current filters."
+								: "No tasks in this stage."}
 						</p>
 					</div>
 				) : (
@@ -127,6 +135,7 @@ export function StageColumn({
 							permissions={permissions}
 							currentUserId={currentUserId}
 							isProjectOwner={isProjectOwner}
+							dragDisabled={taskDragDisabled}
 						/>
 					))
 				)}

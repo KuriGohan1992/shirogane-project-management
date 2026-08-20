@@ -31,6 +31,7 @@ type TaskCardProps = {
 	permissions: ProjectPermissions;
 	currentUserId: string;
 	isProjectOwner: boolean;
+	dragDisabled?: boolean;
 };
 
 function formatMonthDay(date: Date) {
@@ -125,6 +126,7 @@ export function TaskCard({
 	labelCandidates,
 	assigneeCandidates,
 	permissions,
+	dragDisabled = false,
 }: TaskCardProps) {
 	const assignedUsers = task.assignees.map((assignee) => assignee.user);
 
@@ -134,7 +136,7 @@ export function TaskCard({
 
 	const visibleLabels = assignedLabels.slice(0, 2);
 
-	const taskDragDisabled = !permissions.canManageTasks;
+	const taskDragDisabled = !permissions.canManageTasks || dragDisabled;
 
 	const taskHref = getTaskHref(projectId, task.id, task.title);
 
@@ -221,7 +223,7 @@ export function TaskCard({
 
 					<div className="mt-4 flex flex-wrap items-center gap-2">
 						<span
-							className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium capitalize ${getPriorityClasses(
+							className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium capitalize ${getPriorityClasses(
 								task.priority,
 							)}`}
 						>

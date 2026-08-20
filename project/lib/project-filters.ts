@@ -91,6 +91,11 @@ function compareProjectNames(
 function getUtcDayValue(date: Date) {
 	return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
 }
+function getLocalTodayValue() {
+	const now = new Date();
+
+	return Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+}
 
 export function getDefaultProjectSortDirection(sort: ProjectSortOption) {
 	return PROJECT_SORT_DEFAULT_DIRECTION[sort];
@@ -140,7 +145,7 @@ export function parseProjectSortDirection(
 export function matchesProjectScheduleFilter(
 	project: ProjectWithAccess,
 	filter: ProjectScheduleFilter,
-	today = getUtcDayValue(new Date()),
+	today = getLocalTodayValue(),
 ) {
 	if (filter === "all") {
 		return true;

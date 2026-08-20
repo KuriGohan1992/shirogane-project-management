@@ -58,15 +58,8 @@ export async function ProjectBoardContent({
 				project={project}
 				permissions={permissions}
 				lastActivityAt={lastActivityAt}
-			/>
-
-			<section aria-labelledby="project-board-heading">
-				<div className="flex items-center justify-between gap-4">
-					<h2 id="project-board-heading" className="text-xl font-semibold">
-						Board
-					</h2>
-
-					<div className="flex flex-wrap items-center justify-end gap-2">
+				headerActions={
+					<>
 						<ProjectActivityButton activities={projectActivities} />
 
 						<ArchivedTasksButton
@@ -80,9 +73,11 @@ export async function ProjectBoardContent({
 							members={project.members}
 							canManageMembers={permissions.canManageMembers}
 						/>
-					</div>
-				</div>
+					</>
+				}
+			/>
 
+			<section aria-labelledby="project-board-heading">
 				<KanbanBoard
 					projectId={project.id}
 					stages={project.stages}

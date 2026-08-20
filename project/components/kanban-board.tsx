@@ -3,8 +3,8 @@
 import { Feedback } from "@dnd-kit/dom";
 import { DragDropProvider } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
-import { useRouter } from "next/navigation";
-import { useOptimistic, useRef, useState, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useOptimistic, useRef, useState, useTransition } from "react";
 
 import {
 	BoardStoreProvider,
@@ -12,6 +12,7 @@ import {
 } from "@/components/board-store-provider";
 import { CreateStageButton } from "@/components/create-stage-button";
 import { StageColumn } from "@/components/stage-column";
+import { TaskFilterControls } from "@/components/task-filter-controls";
 import { reorderStage } from "@/lib/actions/stages";
 import { moveTaskOnBoard } from "@/lib/actions/tasks";
 import type { ProjectPermissions } from "@/lib/auth/project-permissions";
@@ -23,6 +24,11 @@ import {
 	getTaskIdFromDndId,
 } from "@/lib/board/dnd";
 import type { ProjectLabel } from "@/lib/db/schema";
+import {
+	hasTaskFilters,
+	matchesTaskFilters,
+	parseTaskFilters,
+} from "@/lib/task-filters";
 import type { BoardMutationResult } from "@/types/board";
 import type { AssignmentCandidate } from "@/types/member";
 import type { StageWithTasks } from "@/types/stage";
@@ -92,6 +98,8 @@ function KanbanBoardContent({
 }: KanbanBoardContentProps) {
 	const router = useRouter();
 
+	const searchParams = useSearchParams();
+
 	const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
 
 	const queueGenerationRef = useRef(0);
@@ -121,9 +129,58 @@ function KanbanBoardContent({
 
 	const renderedStages = dragPreviewStages ?? optimisticStages;
 
+	const filters = useMemo(
+		() =>
+			parseTaskFilters(
+				searchParams,
+
+				labelCandidates.map((label) => label.id),
+
+				assigneeCandidates.map((assignee) => assignee.id),
+			),
+
+		[searchParams, labelCandidates, assigneeCandidates],
+	);
+
+	const taskFiltersActive = hasTaskFilters(filters);
+
+	const totalTaskCount = useMemo(
+		() =>
+			renderedStages.reduce((total, stage) => total + stage.tasks.length, 0),
+
+		[renderedStages],
+	);
+
+	const visibleStages = useMemo(() => {
+		if (!taskFiltersActive) {
+			return renderedStages;
+		}
+
+		return renderedStages.map((stage) => ({
+			...stage,
+
+			tasks: stage.tasks.filter((task) => matchesTaskFilters(task, filters)),
+		}));
+	}, [renderedStages, filters, taskFiltersActive]);
+
+	const visibleTaskCount = useMemo(
+		() => visibleStages.reduce((total, stage) => total + stage.tasks.length, 0),
+
+		[visibleStages],
+	);
+
+	const totalTaskCountByStageId = useMemo(
+		() =>
+			new Map(renderedStages.map((stage) => [stage.id, stage.tasks.length])),
+
+		[renderedStages],
+	);
+
 	function clearTaskDragPreview() {
 		dragPreviewRef.current = null;
+
 		dragSnapshotRef.current = null;
+
 		lastOverIdRef.current = null;
 
 		setDragPreviewStages(null);
@@ -212,7 +269,26 @@ function KanbanBoardContent({
 	}
 
 	return (
-		<div className="space-y-2">
+		<div className="space-y-3">
+			<div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+				<h2
+					id="project-board-heading"
+					className="shrink-0 text-xl font-semibold"
+				>
+					Board
+				</h2>
+
+				<div className="min-w-0 flex-1">
+					<TaskFilterControls
+						filters={filters}
+						labelCandidates={labelCandidates}
+						assigneeCandidates={assigneeCandidates}
+						visibleTaskCount={visibleTaskCount}
+						totalTaskCount={totalTaskCount}
+					/>
+				</div>
+			</div>
+
 			<div className="flex min-h-5 items-center px-1">
 				{boardError && (
 					<p aria-live="polite" className="text-xs text-destructive">
@@ -224,12 +300,17 @@ function KanbanBoardContent({
 			<DragDropProvider
 				plugins={(defaults) => [
 					...defaults,
+
 					Feedback.configure({
 						dropAnimation: null,
 					}),
 				]}
 				onDragStart={(event) => {
 					const { source } = event.operation;
+
+					if (taskFiltersActive && source?.type === BOARD_DND_TYPES.task) {
+						return;
+					}
 
 					if (source?.type !== BOARD_DND_TYPES.task) {
 						return;
@@ -246,7 +327,11 @@ function KanbanBoardContent({
 				onDragOver={(event) => {
 					const { source, target } = event.operation;
 
-					if (source?.type !== BOARD_DND_TYPES.task || !target) {
+					if (
+						taskFiltersActive ||
+						source?.type !== BOARD_DND_TYPES.task ||
+						!target
+					) {
 						return;
 					}
 
@@ -337,6 +422,7 @@ function KanbanBoardContent({
 
 					if (!source) {
 						clearTaskDragPreview();
+
 						return;
 					}
 
@@ -372,6 +458,13 @@ function KanbanBoardContent({
 
 					if (source.type !== BOARD_DND_TYPES.task) {
 						clearTaskDragPreview();
+
+						return;
+					}
+
+					if (taskFiltersActive) {
+						clearTaskDragPreview();
+
 						return;
 					}
 
@@ -379,11 +472,13 @@ function KanbanBoardContent({
 
 					if (!taskId) {
 						clearTaskDragPreview();
+
 						return;
 					}
 
 					if (event.canceled) {
 						clearTaskDragPreview();
+
 						return;
 					}
 
@@ -397,6 +492,7 @@ function KanbanBoardContent({
 
 					if (!originalLocation || !finalLocation) {
 						clearTaskDragPreview();
+
 						return;
 					}
 
@@ -406,6 +502,7 @@ function KanbanBoardContent({
 
 					if (!didMove) {
 						clearTaskDragPreview();
+
 						return;
 					}
 
@@ -423,7 +520,7 @@ function KanbanBoardContent({
 				}}
 			>
 				<div className="flex min-h-[calc(100vh-22rem)] items-start gap-4 overflow-x-auto pb-4">
-					{renderedStages.map((stage, index) => (
+					{visibleStages.map((stage, index) => (
 						<StageColumn
 							key={stage.id}
 							stage={stage}
@@ -434,6 +531,10 @@ function KanbanBoardContent({
 							currentUserId={currentUserId}
 							isProjectOwner={isProjectOwner}
 							isBoardSavePending={isBoardSavePending}
+							isTaskFilteringActive={taskFiltersActive}
+							totalTaskCount={
+								totalTaskCountByStageId.get(stage.id) ?? stage.tasks.length
+							}
 						/>
 					))}
 

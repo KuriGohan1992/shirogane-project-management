@@ -96,7 +96,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
 					</h2>
 
 					<p className="mt-2 line-clamp-2 min-h-10 text-sm leading-5 text-muted-foreground">
-						{project.description || "No description yet."}
+						{project.description || "No description."}
 					</p>
 				</Link>
 

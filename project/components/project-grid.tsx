@@ -246,176 +246,174 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 
 	return (
 		<div className="space-y-4">
-			<div className="rounded-xl border border-border bg-card p-3">
-				<div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-					<div className="relative min-w-0 flex-1 xl:max-w-sm">
-						<Search
-							aria-hidden="true"
-							size={16}
-							className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-						/>
+			<div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+				<div className="relative min-w-0 flex-1 xl:max-w-sm">
+					<Search
+						aria-hidden="true"
+						size={16}
+						className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+					/>
 
-						<input
-							type="search"
-							value={queryInput}
-							maxLength={SEARCH_LIMITS.maxQueryLength}
-							onChange={(event) => setQueryInput(event.target.value)}
-							aria-label="Filter projects by name or description"
-							placeholder="Filter projects..."
-							className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-9 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-						/>
+					<input
+						type="search"
+						value={queryInput}
+						maxLength={SEARCH_LIMITS.maxQueryLength}
+						onChange={(event) => setQueryInput(event.target.value)}
+						aria-label="Filter projects by name or description"
+						placeholder="Filter projects..."
+						className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-9 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+					/>
 
-						{queryInput.length > 0 && (
-							<button
-								type="button"
-								onClick={() => setQueryInput("")}
-								aria-label="Clear project keyword filter"
-								className="absolute right-2 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-							>
-								<X aria-hidden="true" size={14} />
-							</button>
-						)}
-					</div>
-
-					<div className="flex flex-wrap items-center gap-2">
-						<Select
-							value={accessFilter}
-							onValueChange={(value) =>
-								updateProjectFilterParam(
-									PROJECT_FILTER_PARAMS.access,
-									value,
-									PROJECT_FILTER_DEFAULTS.access,
-								)
-							}
+					{queryInput.length > 0 && (
+						<button
+							type="button"
+							onClick={() => setQueryInput("")}
+							aria-label="Clear project keyword filter"
+							className="absolute right-2 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
 						>
-							<SelectTrigger size="sm" aria-label="Filter projects by access">
-								<SelectValue />
-							</SelectTrigger>
+							<X aria-hidden="true" size={14} />
+						</button>
+					)}
+				</div>
 
-							<SelectContent>
-								<SelectItem value="all">All access</SelectItem>
+				<div className="flex flex-wrap items-center gap-2">
+					<Select
+						value={accessFilter}
+						onValueChange={(value) =>
+							updateProjectFilterParam(
+								PROJECT_FILTER_PARAMS.access,
+								value,
+								PROJECT_FILTER_DEFAULTS.access,
+							)
+						}
+					>
+						<SelectTrigger size="sm" aria-label="Filter projects by access">
+							<SelectValue />
+						</SelectTrigger>
 
-								<SelectItem value="owner">Owner</SelectItem>
+						<SelectContent>
+							<SelectItem value="all">All access</SelectItem>
 
-								<SelectItem value="member">Member</SelectItem>
+							<SelectItem value="owner">Owner</SelectItem>
 
-								<SelectItem value="viewer">Viewer</SelectItem>
-							</SelectContent>
-						</Select>
+							<SelectItem value="member">Member</SelectItem>
 
-						<Select
-							value={colorFilter}
-							onValueChange={(value) =>
-								updateProjectFilterParam(
-									PROJECT_FILTER_PARAMS.color,
-									value,
-									PROJECT_FILTER_DEFAULTS.color,
-								)
-							}
-						>
-							<SelectTrigger size="sm" aria-label="Filter projects by color">
-								<SelectValue />
-							</SelectTrigger>
+							<SelectItem value="viewer">Viewer</SelectItem>
+						</SelectContent>
+					</Select>
 
-							<SelectContent>
-								<SelectItem value="all">All colors</SelectItem>
+					<Select
+						value={colorFilter}
+						onValueChange={(value) =>
+							updateProjectFilterParam(
+								PROJECT_FILTER_PARAMS.color,
+								value,
+								PROJECT_FILTER_DEFAULTS.color,
+							)
+						}
+					>
+						<SelectTrigger size="sm" aria-label="Filter projects by color">
+							<SelectValue />
+						</SelectTrigger>
 
-								{COLOR_OPTIONS.map((option) => (
-									<SelectItem key={option.value} value={option.value}>
-										<span
-											aria-hidden="true"
-											className="size-2.5 rounded-full"
-											style={{
-												backgroundColor: option.hex,
-											}}
-										/>
+						<SelectContent>
+							<SelectItem value="all">All colors</SelectItem>
 
-										{option.label}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
+							{COLOR_OPTIONS.map((option) => (
+								<SelectItem key={option.value} value={option.value}>
+									<span
+										aria-hidden="true"
+										className="size-2.5 rounded-full"
+										style={{
+											backgroundColor: option.hex,
+										}}
+									/>
 
-						<Select
-							value={scheduleFilter}
-							onValueChange={(value) =>
-								updateProjectFilterParam(
-									PROJECT_FILTER_PARAMS.dates,
-									value,
-									PROJECT_FILTER_DEFAULTS.dates,
-								)
-							}
-						>
-							<SelectTrigger size="sm" aria-label="Filter projects by dates">
-								<SelectValue />
-							</SelectTrigger>
-
-							<SelectContent>
-								<SelectItem value="all">All dates</SelectItem>
-
-								<SelectItem value="no-dates">No project dates</SelectItem>
-
-								<SelectItem value="overdue">Overdue</SelectItem>
-
-								<SelectItem value="due-next-7-days">
-									Due in next 7 days
+									{option.label}
 								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+
+					<Select
+						value={scheduleFilter}
+						onValueChange={(value) =>
+							updateProjectFilterParam(
+								PROJECT_FILTER_PARAMS.dates,
+								value,
+								PROJECT_FILTER_DEFAULTS.dates,
+							)
+						}
+					>
+						<SelectTrigger size="sm" aria-label="Filter projects by dates">
+							<SelectValue />
+						</SelectTrigger>
+
+						<SelectContent>
+							<SelectItem value="all">All dates</SelectItem>
+
+							<SelectItem value="no-dates">No project dates</SelectItem>
+
+							<SelectItem value="overdue">Overdue</SelectItem>
+
+							<SelectItem value="due-next-7-days">
+								Due in next 7 days
+							</SelectItem>
+						</SelectContent>
+					</Select>
+
+					<div className="flex items-center gap-1">
+						<Select
+							value={sort}
+							onValueChange={(value) =>
+								handleSortChange(parseProjectSortOption(value))
+							}
+						>
+							<SelectTrigger size="sm" aria-label="Sort projects by">
+								<SlidersHorizontal aria-hidden="true" size={14} />
+
+								<SelectValue />
+							</SelectTrigger>
+
+							<SelectContent>
+								<SelectItem value="last-activity">Last activity</SelectItem>
+
+								<SelectItem value="date-created">Date created</SelectItem>
+
+								<SelectItem value="due-date">Due date</SelectItem>
+
+								<SelectItem value="name">Name</SelectItem>
+
+								<SelectItem value="color">Color</SelectItem>
 							</SelectContent>
 						</Select>
-
-						<div className="flex items-center gap-1">
-							<Select
-								value={sort}
-								onValueChange={(value) =>
-									handleSortChange(parseProjectSortOption(value))
-								}
-							>
-								<SelectTrigger size="sm" aria-label="Sort projects by">
-									<SlidersHorizontal aria-hidden="true" size={14} />
-
-									<SelectValue />
-								</SelectTrigger>
-
-								<SelectContent>
-									<SelectItem value="last-activity">Last activity</SelectItem>
-
-									<SelectItem value="date-created">Date created</SelectItem>
-
-									<SelectItem value="due-date">Due date</SelectItem>
-
-									<SelectItem value="name">Name</SelectItem>
-
-									<SelectItem value="color">Color</SelectItem>
-								</SelectContent>
-							</Select>
-
-							<Button
-								type="button"
-								variant="outline"
-								size="sm"
-								className="w-9 px-0"
-								onClick={toggleSortDirection}
-								aria-label={
-									sortDirection === "asc" ? "Sort descending" : "Sort ascending"
-								}
-								title={
-									sortDirection === "asc" ? "Sort descending" : "Sort ascending"
-								}
-							>
-								<ArrowUpDown aria-hidden="true" size={15} />
-							</Button>
-						</div>
 
 						<Button
 							type="button"
-							variant="ghost"
+							variant="outline"
 							size="sm"
-							disabled={!hasFilters}
-							onClick={clearFilters}
+							className="w-9 px-0"
+							onClick={toggleSortDirection}
+							aria-label={
+								sortDirection === "asc" ? "Sort descending" : "Sort ascending"
+							}
+							title={
+								sortDirection === "asc" ? "Sort descending" : "Sort ascending"
+							}
 						>
-							Clear filters
+							<ArrowUpDown aria-hidden="true" size={15} />
 						</Button>
 					</div>
+
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						disabled={!hasFilters}
+						onClick={clearFilters}
+					>
+						Clear filters
+					</Button>
 				</div>
 			</div>
 
