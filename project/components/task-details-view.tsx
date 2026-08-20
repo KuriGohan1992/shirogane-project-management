@@ -161,7 +161,7 @@ export function TaskDetailsView({
 							labelCandidates={labelCandidates}
 							assignedLabels={assignedLabels}
 							showCopyLink
-							redirectAfterArchive
+							redirectAfterRemoval
 						/>
 					) : (
 						<Button

@@ -29,7 +29,7 @@ type TaskActionsProps = {
 	labelCandidates: ProjectLabel[];
 	assignedLabels: ProjectLabel[];
 	showCopyLink?: boolean;
-	redirectAfterArchive?: boolean;
+	redirectAfterRemoval?: boolean;
 };
 
 export function TaskActions({
@@ -37,15 +37,15 @@ export function TaskActions({
 	labelCandidates,
 	assignedLabels,
 	showCopyLink = false,
-	redirectAfterArchive = false,
+	redirectAfterRemoval = false,
 }: TaskActionsProps) {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [isEditOpen, setIsEditOpen] = useState(false);
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-	const archiveAction = archiveTask.bind(null, task.id, redirectAfterArchive);
+	const archiveAction = archiveTask.bind(null, task.id, redirectAfterRemoval);
 
-	const deleteAction = deleteTask.bind(null, task.id);
+	const deleteAction = deleteTask.bind(null, task.id, redirectAfterRemoval);
 
 	function copyTaskLink() {
 		void navigator.clipboard.writeText(window.location.href);

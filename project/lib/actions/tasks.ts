@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
-
 import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import {
 	createTaskInStage,
@@ -170,6 +170,7 @@ export async function updateTask(
 
 export async function deleteTask(
 	taskId: string,
+	redirectToProject: boolean,
 	_formData: FormData,
 ): Promise<void> {
 	const taskIdResult = taskIdSchema.safeParse(taskId);
@@ -190,7 +191,11 @@ export async function deleteTask(
 		);
 	}
 
-	revalidatePath(`/projects/${projectId}`);
+	revalidatePath(`/projects/${projectId}`, "layout");
+
+	if (redirectToProject) {
+		redirect(`/projects/${projectId}`);
+	}
 }
 
 export async function moveTaskOnBoard(
