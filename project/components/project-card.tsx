@@ -1,6 +1,6 @@
 import { ArrowUpRight, CalendarRange, Clock3 } from "lucide-react";
 import Link from "next/link";
-
+import type { CSSProperties } from "react";
 import { ProjectActions } from "@/components/project-actions";
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { getColorHex } from "@/lib/constants/colors";
@@ -50,13 +50,22 @@ function toEditableProject(project: Project): EditableProject {
 export function ProjectCard({ project }: ProjectCardProps) {
 	const permissions = getProjectPermissions(project.accessRole);
 
+	const color = getColorHex(project.color);
+
 	return (
-		<article className="group relative flex h-full overflow-hidden rounded-xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md">
+		<article
+			className="group relative flex h-full overflow-hidden rounded-xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-[var(--project-color)] hover:shadow-md"
+			style={
+				{
+					"--project-color": color,
+				} as CSSProperties
+			}
+		>
 			<div
 				aria-hidden="true"
 				className="absolute inset-x-0 top-0 h-4"
 				style={{
-					backgroundColor: getColorHex(project.color),
+					backgroundColor: color,
 				}}
 			/>
 
@@ -75,7 +84,14 @@ export function ProjectCard({ project }: ProjectCardProps) {
 				</div>
 
 				<Link href={`/projects/${project.id}`} className="block">
-					<h2 className="text-lg font-semibold text-foreground transition-colors group-hover:text-primary">
+					<h2
+						className="text-lg font-semibold text-foreground transition-colors group-hover:text-[var(--project-color)]"
+						style={
+							{
+								"--project-color": color,
+							} as CSSProperties
+						}
+					>
 						{project.name}
 					</h2>
 

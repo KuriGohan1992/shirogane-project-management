@@ -1,8 +1,10 @@
 import "server-only";
 
 import { and, eq } from "drizzle-orm";
+
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { db } from "@/lib/db";
+import { recordActivity } from "@/lib/db/activity";
 import { getProjectAccess } from "@/lib/db/project-access";
 import { type NewStage, type Stage, stages } from "@/lib/db/schema";
 
@@ -56,6 +58,15 @@ export async function createStageInProject(
 		throw new Error("Failed to create stage.");
 	}
 
+	await recordActivity({
+		projectId,
+		actorId: userId,
+		action: "stage_created",
+		metadata: {
+			stageName: stage.name,
+		},
+	});
+
 	return {
 		stage,
 		projectId,
@@ -64,10 +75,10 @@ export async function createStageInProject(
 
 export async function renameStageForUser(
 	stageId: string,
-	ownerId: string,
+	userId: string,
 	data: StageMutationData,
 ): Promise<StageMutationResult | undefined> {
-	const existingStage = await getEditableStage(stageId, ownerId);
+	const existingStage = await getEditableStage(stageId, userId);
 
 	if (!existingStage) {
 		return undefined;
@@ -89,6 +100,18 @@ export async function renameStageForUser(
 
 	if (!stage) {
 		return undefined;
+	}
+
+	if (existingStage.name !== stage.name) {
+		await recordActivity({
+			projectId: existingStage.projectId,
+			actorId: userId,
+			action: "stage_renamed",
+			metadata: {
+				previousStageName: existingStage.name,
+				stageName: stage.name,
+			},
+		});
 	}
 
 	return {
@@ -115,7 +138,19 @@ export async function deleteStageForUser(
 		.where(and(eq(stages.id, stageId), eq(stages.projectId, projectId)))
 		.returning({
 			id: stages.id,
+			name: stages.name,
 		});
+
+	if (deletedStage) {
+		await recordActivity({
+			projectId,
+			actorId: userId,
+			action: "stage_deleted",
+			metadata: {
+				stageName: deletedStage.name,
+			},
+		});
+	}
 
 	return {
 		status: deletedStage ? "deleted" : "already_deleted",
@@ -190,15 +225,24 @@ export async function reorderStageForUser(
 		await db.batch([firstUpdate, ...remainingUpdates]);
 	}
 
+	await recordActivity({
+		projectId: currentStage.projectId,
+		actorId: userId,
+		action: "stage_reordered",
+		metadata: {
+			stageName: movedStage.name,
+		},
+	});
+
 	return currentStage.projectId;
 }
 
 export async function moveStageForUser(
 	stageId: string,
-	ownerId: string,
+	userId: string,
 	direction: StageMoveDirection,
 ): Promise<string | undefined> {
-	const currentStage = await getEditableStage(stageId, ownerId);
+	const currentStage = await getEditableStage(stageId, userId);
 
 	if (!currentStage) {
 		return undefined;
@@ -257,6 +301,15 @@ export async function moveStageForUser(
 			),
 	]);
 
+	await recordActivity({
+		projectId: currentStage.projectId,
+		actorId: userId,
+		action: "stage_reordered",
+		metadata: {
+			stageName: currentStage.name,
+		},
+	});
+
 	return currentStage.projectId;
 }
 
@@ -266,6 +319,7 @@ async function getEditableStage(stageId: string, userId: string) {
 			id: true,
 			projectId: true,
 			position: true,
+			name: true,
 		},
 
 		where: (stage, { eq }) => eq(stage.id, stageId),

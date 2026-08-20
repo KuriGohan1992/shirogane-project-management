@@ -8,7 +8,6 @@ import {
 	FolderOpen,
 	Home,
 	Menu,
-	Search,
 	Settings,
 	Users,
 	X,
@@ -17,6 +16,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { GlobalSearch } from "@/components/global-search";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 const navigation = [
@@ -113,20 +113,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
 					<div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
 						<div className="flex flex-1 items-center">
-							<div className="relative w-full max-w-md">
-								<Search
-									aria-hidden="true"
-									className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-									size={16}
-								/>
-
-								<input
-									type="search"
-									aria-label="Search projects and tasks"
-									placeholder="Search projects and tasks..."
-									className="w-full rounded-lg border border-input bg-background py-2 pl-10 pr-4 text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring"
-								/>
-							</div>
+							<GlobalSearch />
 						</div>
 
 						<div className="flex items-center gap-x-4 lg:gap-x-6">
