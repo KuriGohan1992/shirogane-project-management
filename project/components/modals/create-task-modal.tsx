@@ -15,6 +15,7 @@ import type { ProjectLabel } from "@/lib/db/schema";
 import type { TaskActionState } from "@/types/task";
 
 type CreateTaskModalProps = {
+	projectId: string;
 	stageId: string;
 	stageName: string;
 	labelCandidates: ProjectLabel[];
@@ -27,6 +28,7 @@ const initialState: TaskActionState = {
 };
 
 export function CreateTaskModal({
+	projectId,
 	stageId,
 	stageName,
 	labelCandidates,
@@ -75,6 +77,7 @@ export function CreateTaskModal({
 					}}
 					labels={{
 						mode: "create",
+						projectId,
 						candidates: labelCandidates,
 					}}
 				/>

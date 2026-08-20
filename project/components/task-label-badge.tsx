@@ -1,9 +1,9 @@
 import { getColorHex } from "@/lib/constants/colors";
-import type { ProjectLabel } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
+import type { LabelOption } from "@/types/label";
 
 type TaskLabelBadgeProps = {
-	label: ProjectLabel;
+	label: LabelOption;
 	className?: string;
 };
 

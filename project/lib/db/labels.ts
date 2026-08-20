@@ -13,6 +13,16 @@ type LabelData = {
 	color: ColorValue;
 };
 
+type ProjectLabelCreateResult =
+	| {
+			status: "project_not_found";
+	  }
+	| {
+			status: "created" | "existing";
+			projectId: string;
+			label: ProjectLabel;
+	  };
+
 type TaskLabelMutationResult =
 	| {
 			status: "task_not_found";
@@ -39,6 +49,14 @@ function normalizeLabelName(name: string) {
 	return name.trim().toLocaleLowerCase("en-US");
 }
 
+async function canManageProjectTasks(projectId: string, userId: string) {
+	const accessRole = await getProjectAccess(projectId, userId);
+
+	return Boolean(
+		accessRole && getProjectPermissions(accessRole).canManageTasks,
+	);
+}
+
 async function getManageableTask(taskId: string, userId: string) {
 	const task = await db.query.tasks.findFirst({
 		columns: {
@@ -61,9 +79,7 @@ async function getManageableTask(taskId: string, userId: string) {
 		return undefined;
 	}
 
-	const accessRole = await getProjectAccess(task.stage.projectId, userId);
-
-	if (!accessRole || !getProjectPermissions(accessRole).canManageTasks) {
+	if (!(await canManageProjectTasks(task.stage.projectId, userId))) {
 		return undefined;
 	}
 
@@ -79,9 +95,7 @@ async function getManageableProjectLabel(labelId: string, userId: string) {
 		return undefined;
 	}
 
-	const accessRole = await getProjectAccess(label.projectId, userId);
-
-	if (!accessRole || !getProjectPermissions(accessRole).canManageTasks) {
+	if (!(await canManageProjectTasks(label.projectId, userId))) {
 		return undefined;
 	}
 
@@ -93,6 +107,81 @@ async function getProjectLabel(projectId: string, labelId: string) {
 		where: (label, { and, eq }) =>
 			and(eq(label.id, labelId), eq(label.projectId, projectId)),
 	});
+}
+
+async function createOrFindProjectLabel(projectId: string, data: LabelData) {
+	const normalizedName = normalizeLabelName(data.name);
+
+	const existingLabel = await db.query.projectLabels.findFirst({
+		where: (label, { and, eq }) =>
+			and(
+				eq(label.projectId, projectId),
+				eq(label.normalizedName, normalizedName),
+			),
+	});
+
+	if (existingLabel) {
+		return {
+			status: "existing" as const,
+			label: existingLabel,
+		};
+	}
+
+	const [createdLabel] = await db
+		.insert(projectLabels)
+		.values({
+			projectId,
+			name: data.name,
+			normalizedName,
+			color: data.color,
+		})
+		.onConflictDoNothing({
+			target: [projectLabels.projectId, projectLabels.normalizedName],
+		})
+		.returning();
+
+	if (createdLabel) {
+		return {
+			status: "created" as const,
+			label: createdLabel,
+		};
+	}
+
+	const concurrentLabel = await db.query.projectLabels.findFirst({
+		where: (label, { and, eq }) =>
+			and(
+				eq(label.projectId, projectId),
+				eq(label.normalizedName, normalizedName),
+			),
+	});
+
+	if (!concurrentLabel) {
+		throw new Error("Failed to create or find the project label.");
+	}
+
+	return {
+		status: "existing" as const,
+		label: concurrentLabel,
+	};
+}
+
+export async function createProjectLabelForUser(
+	projectId: string,
+	userId: string,
+	data: LabelData,
+): Promise<ProjectLabelCreateResult> {
+	if (!(await canManageProjectTasks(projectId, userId))) {
+		return {
+			status: "project_not_found",
+		};
+	}
+
+	const result = await createOrFindProjectLabel(projectId, data);
+
+	return {
+		...result,
+		projectId,
+	};
 }
 
 export async function createProjectLabelForTask(
@@ -109,60 +198,19 @@ export async function createProjectLabelForTask(
 	}
 
 	const projectId = task.stage.projectId;
-	const normalizedName = normalizeLabelName(data.name);
 
-	const existingLabel = await db.query.projectLabels.findFirst({
-		where: (label, { and, eq }) =>
-			and(
-				eq(label.projectId, projectId),
-				eq(label.normalizedName, normalizedName),
-			),
-	});
-
-	let label: ProjectLabel | undefined = existingLabel;
-	let wasCreated = false;
-
-	if (!label) {
-		const [createdLabel] = await db
-			.insert(projectLabels)
-			.values({
-				projectId,
-				name: data.name,
-				normalizedName,
-				color: data.color,
-			})
-			.onConflictDoNothing({
-				target: [projectLabels.projectId, projectLabels.normalizedName],
-			})
-			.returning();
-
-		wasCreated = Boolean(createdLabel);
-
-		label =
-			createdLabel ??
-			(await db.query.projectLabels.findFirst({
-				where: (projectLabel, { and, eq }) =>
-					and(
-						eq(projectLabel.projectId, projectId),
-						eq(projectLabel.normalizedName, normalizedName),
-					),
-			}));
-	}
-
-	if (!label) {
-		throw new Error("Failed to create or find the project label.");
-	}
+	const result = await createOrFindProjectLabel(projectId, data);
 
 	await db
 		.insert(taskLabels)
 		.values({
 			taskId,
-			labelId: label.id,
+			labelId: result.label.id,
 		})
 		.onConflictDoNothing();
 
 	return {
-		status: wasCreated ? "created" : "existing",
+		status: result.status,
 		projectId,
 	};
 }
@@ -256,6 +304,7 @@ export async function updateProjectLabelForUser(
 		columns: {
 			id: true,
 		},
+
 		where: and(
 			eq(projectLabels.projectId, label.projectId),
 			eq(projectLabels.normalizedName, normalizedName),

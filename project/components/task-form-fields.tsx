@@ -24,6 +24,7 @@ import type { TaskActionState } from "@/types/task";
 type TaskLabelFieldConfig =
 	| {
 			mode: "create";
+			projectId: string;
 			candidates: ProjectLabel[];
 	  }
 	| {
@@ -253,6 +254,7 @@ export function TaskFormFields({
 
 				{labels.mode === "create" ? (
 					<CreateTaskLabelsField
+						projectId={labels.projectId}
 						formId={formId}
 						labels={labels.candidates}
 						pending={pending}

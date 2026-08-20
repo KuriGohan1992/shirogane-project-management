@@ -8,12 +8,14 @@ import { Button } from "@/components/ui/button";
 import type { ProjectLabel } from "@/lib/db/schema";
 
 type CreateTaskButtonProps = {
+	projectId: string;
 	stageId: string;
 	stageName: string;
 	labelCandidates: ProjectLabel[];
 };
 
 export function CreateTaskButton({
+	projectId,
 	stageId,
 	stageName,
 	labelCandidates,
@@ -34,6 +36,7 @@ export function CreateTaskButton({
 
 			{isOpen && (
 				<CreateTaskModal
+					projectId={projectId}
 					stageId={stageId}
 					stageName={stageName}
 					labelCandidates={labelCandidates}

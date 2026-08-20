@@ -135,6 +135,7 @@ export function StageColumn({
 
 				{permissions.canManageTasks && (
 					<CreateTaskButton
+						projectId={stage.projectId}
 						stageId={stage.id}
 						stageName={stage.name}
 						labelCandidates={labelCandidates}

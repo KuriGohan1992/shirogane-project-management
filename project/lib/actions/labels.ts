@@ -7,13 +7,82 @@ import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import {
 	assignLabelToTask,
 	createProjectLabelForTask,
+	createProjectLabelForUser,
 	deleteProjectLabelForUser,
 	unassignLabelFromTask,
 	updateProjectLabelForUser,
 } from "@/lib/db/labels";
 import { labelFormSchema, labelIdSchema } from "@/lib/validations/label";
+import { projectIdSchema } from "@/lib/validations/project";
 import { taskIdSchema } from "@/lib/validations/task";
 import type { LabelActionState } from "@/types/label";
+
+export async function createProjectLabel(
+	projectId: string,
+	_previousState: LabelActionState,
+	formData: FormData,
+): Promise<LabelActionState> {
+	const projectIdResult = projectIdSchema.safeParse(projectId);
+
+	if (!projectIdResult.success) {
+		return {
+			success: false,
+			message: "The selected project is invalid.",
+		};
+	}
+
+	const result = labelFormSchema.safeParse({
+		name: formData.get("name"),
+		color: formData.get("color"),
+	});
+
+	if (!result.success) {
+		return {
+			success: false,
+			errors: z.flattenError(result.error).fieldErrors,
+		};
+	}
+
+	try {
+		const user = await getCurrentDatabaseUser();
+
+		const mutation = await createProjectLabelForUser(
+			projectIdResult.data,
+			user.id,
+			result.data,
+		);
+
+		if (mutation.status === "project_not_found") {
+			return {
+				success: false,
+				message:
+					"The project could not be found or you do not have permission to create labels.",
+			};
+		}
+
+		revalidatePath(`/projects/${mutation.projectId}`, "layout");
+
+		return {
+			success: true,
+			message:
+				mutation.status === "existing"
+					? "Existing project label selected."
+					: "Project label created.",
+			label: {
+				id: mutation.label.id,
+				name: mutation.label.name,
+				color: mutation.label.color,
+			},
+		};
+	} catch (error) {
+		console.error("Failed to create project label:", error);
+
+		return {
+			success: false,
+			message: "Something went wrong while creating the label.",
+		};
+	}
+}
 
 export async function createTaskLabel(
 	taskId: string,
@@ -43,6 +112,7 @@ export async function createTaskLabel(
 
 	try {
 		const user = await getCurrentDatabaseUser();
+
 		const mutation = await createProjectLabelForTask(
 			taskIdResult.data,
 			user.id,
@@ -104,6 +174,7 @@ export async function updateProjectLabel(
 
 	try {
 		const user = await getCurrentDatabaseUser();
+
 		const mutation = await updateProjectLabelForUser(
 			labelIdResult.data,
 			user.id,
@@ -154,6 +225,7 @@ export async function deleteProjectLabel(
 	}
 
 	const user = await getCurrentDatabaseUser();
+
 	const mutation = await deleteProjectLabelForUser(labelIdResult.data, user.id);
 
 	if (mutation.status !== "deleted") {
@@ -178,6 +250,7 @@ export async function assignTaskLabel(
 	}
 
 	const user = await getCurrentDatabaseUser();
+
 	const mutation = await assignLabelToTask(
 		taskIdResult.data,
 		labelIdResult.data,
@@ -210,6 +283,7 @@ export async function unassignTaskLabel(
 	}
 
 	const user = await getCurrentDatabaseUser();
+
 	const mutation = await unassignLabelFromTask(
 		taskIdResult.data,
 		labelIdResult.data,
