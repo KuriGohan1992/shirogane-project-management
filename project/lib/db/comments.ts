@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { db } from "@/lib/db";
+import { recordTaskActivity } from "@/lib/db/activity";
 import { getProjectAccess } from "@/lib/db/project-access";
 import type { TaskComment } from "@/lib/db/schema";
 import { taskComments } from "@/lib/db/schema";
@@ -17,6 +18,7 @@ async function getCommentableTask(taskId: string, userId: string) {
 	const task = await db.query.tasks.findFirst({
 		columns: {
 			id: true,
+			title: true,
 		},
 
 		where: (task, { and, eq, isNull }) =>
@@ -94,6 +96,14 @@ export async function createCommentForTask(
 	if (!comment) {
 		throw new Error("Failed to create comment.");
 	}
+
+	await recordTaskActivity({
+		projectId: task.stage.projectId,
+		taskId: task.id,
+		actorId: userId,
+		action: "comment_added",
+		taskTitle: task.title,
+	});
 
 	return {
 		comment,

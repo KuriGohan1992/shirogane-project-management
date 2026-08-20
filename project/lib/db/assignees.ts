@@ -1,8 +1,10 @@
 import "server-only";
 
 import { and, eq } from "drizzle-orm";
+
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { db } from "@/lib/db";
+import { recordTaskActivity } from "@/lib/db/activity";
 import { getProjectAccess } from "@/lib/db/project-access";
 import { taskAssignees } from "@/lib/db/schema";
 
@@ -28,9 +30,11 @@ async function getAssignableTask(taskId: string, userId: string) {
 	const task = await db.query.tasks.findFirst({
 		columns: {
 			id: true,
+			title: true,
 		},
 
-		where: (task, { eq }) => eq(task.id, taskId),
+		where: (task, { and, eq, isNull }) =>
+			and(eq(task.id, taskId), isNull(task.archivedAt)),
 
 		with: {
 			stage: {
@@ -65,13 +69,27 @@ async function getAssignableTask(taskId: string, userId: string) {
 	return task;
 }
 
-async function isAssignableProjectUser(
+async function getAssignableProjectUser(
 	projectId: string,
 	projectOwnerId: string,
 	userId: string,
 ) {
-	if (userId === projectOwnerId) {
-		return true;
+	const user = await db.query.users.findFirst({
+		columns: {
+			id: true,
+			name: true,
+			email: true,
+		},
+
+		where: (candidate, { eq }) => eq(candidate.id, userId),
+	});
+
+	if (!user) {
+		return undefined;
+	}
+
+	if (user.id === projectOwnerId) {
+		return user;
 	}
 
 	const member = await db.query.projectMembers.findFirst({
@@ -82,12 +100,16 @@ async function isAssignableProjectUser(
 		where: (member, { and, eq }) =>
 			and(
 				eq(member.projectId, projectId),
-				eq(member.userId, userId),
+				eq(member.userId, user.id),
 				eq(member.role, "member"),
 			),
 	});
 
-	return Boolean(member);
+	return member ? user : undefined;
+}
+
+function getUserDisplayName(user: { name: string | null; email: string }) {
+	return user.name ?? user.email;
 }
 
 export async function assignUserToTask(
@@ -103,18 +125,18 @@ export async function assignUserToTask(
 		};
 	}
 
-	const projectId = task.stage.project.id;
+	const project = task.stage.project;
 
-	const canBeAssigned = await isAssignableProjectUser(
-		projectId,
-		userId,
+	const assignee = await getAssignableProjectUser(
+		project.id,
+		project.ownerId,
 		assigneeUserId,
 	);
 
-	if (!canBeAssigned) {
+	if (!assignee) {
 		return {
 			status: "assignee_not_project_member",
-			projectId,
+			projectId: project.id,
 		};
 	}
 
@@ -129,9 +151,22 @@ export async function assignUserToTask(
 			userId: taskAssignees.userId,
 		});
 
+	if (assignment) {
+		await recordTaskActivity({
+			projectId: project.id,
+			taskId: task.id,
+			actorId: userId,
+			action: "assignee_added",
+			taskTitle: task.title,
+			metadata: {
+				assigneeName: getUserDisplayName(assignee),
+			},
+		});
+	}
+
 	return {
 		status: assignment ? "assigned" : "already_assigned",
-		projectId,
+		projectId: project.id,
 	};
 }
 
@@ -148,6 +183,15 @@ export async function unassignUserFromTask(
 		};
 	}
 
+	const assignee = await db.query.users.findFirst({
+		columns: {
+			name: true,
+			email: true,
+		},
+
+		where: (candidate, { eq }) => eq(candidate.id, assigneeUserId),
+	});
+
 	const [assignment] = await db
 		.delete(taskAssignees)
 		.where(
@@ -159,6 +203,21 @@ export async function unassignUserFromTask(
 		.returning({
 			userId: taskAssignees.userId,
 		});
+
+	if (assignment) {
+		await recordTaskActivity({
+			projectId: task.stage.project.id,
+			taskId: task.id,
+			actorId: userId,
+			action: "assignee_removed",
+			taskTitle: task.title,
+			metadata: {
+				assigneeName: assignee
+					? getUserDisplayName(assignee)
+					: "a project member",
+			},
+		});
+	}
 
 	return {
 		status: assignment ? "unassigned" : "not_assigned",

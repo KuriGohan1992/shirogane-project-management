@@ -130,6 +130,21 @@ export async function getTaskDetailsForUser(
 					},
 				},
 			},
+
+			activities: {
+				orderBy: (activity, { desc }) => [desc(activity.createdAt)],
+
+				with: {
+					actor: {
+						columns: {
+							id: true,
+							name: true,
+							email: true,
+							imageUrl: true,
+						},
+					},
+				},
+			},
 		},
 	});
 

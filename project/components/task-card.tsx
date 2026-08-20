@@ -19,10 +19,10 @@ import type { ProjectLabel, Task } from "@/lib/db/schema";
 import { getTaskHref } from "@/lib/task-route";
 import { cn } from "@/lib/utils";
 import type { AssignmentCandidate } from "@/types/member";
-import type { EditableTask, TaskWithDetails } from "@/types/task";
+import type { EditableTask, TaskWithBoardDetails } from "@/types/task";
 
 type TaskCardProps = {
-	task: TaskWithDetails;
+	task: TaskWithBoardDetails;
 	index: number;
 	stageId: string;
 	projectId: string;

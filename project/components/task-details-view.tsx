@@ -17,6 +17,7 @@ import { useActionState, useEffect, useState } from "react";
 import { CharacterCount } from "@/components/character-count";
 import { FormFieldError } from "@/components/form-field-error";
 import { TaskActions } from "@/components/task-actions";
+import { TaskActivityList } from "@/components/task-activity-list";
 import { TaskAssigneePicker } from "@/components/task-assignee-picker";
 import { TaskCommentItem } from "@/components/task-comment-item";
 import { TaskLabelBadge } from "@/components/task-label-badge";
@@ -286,6 +287,8 @@ export function TaskDetailsView({
 								</p>
 							)}
 						</section>
+
+						<TaskActivityList activities={task.activities} />
 					</div>
 				</main>
 

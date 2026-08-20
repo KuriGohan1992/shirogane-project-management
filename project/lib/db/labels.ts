@@ -5,6 +5,7 @@ import { and, eq, ne } from "drizzle-orm";
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import type { ColorValue } from "@/lib/constants/colors";
 import { db } from "@/lib/db";
+import { recordTaskActivity } from "@/lib/db/activity";
 import { getProjectAccess } from "@/lib/db/project-access";
 import { type ProjectLabel, projectLabels, taskLabels } from "@/lib/db/schema";
 
@@ -61,6 +62,7 @@ async function getManageableTask(taskId: string, userId: string) {
 	const task = await db.query.tasks.findFirst({
 		columns: {
 			id: true,
+			title: true,
 		},
 
 		where: (task, { and, eq, isNull }) =>
@@ -198,16 +200,31 @@ export async function createProjectLabelForTask(
 	}
 
 	const projectId = task.stage.projectId;
-
 	const result = await createOrFindProjectLabel(projectId, data);
 
-	await db
+	const [assignment] = await db
 		.insert(taskLabels)
 		.values({
 			taskId,
 			labelId: result.label.id,
 		})
-		.onConflictDoNothing();
+		.onConflictDoNothing()
+		.returning({
+			labelId: taskLabels.labelId,
+		});
+
+	if (assignment) {
+		await recordTaskActivity({
+			projectId,
+			taskId: task.id,
+			actorId: userId,
+			action: "label_added",
+			taskTitle: task.title,
+			metadata: {
+				labelName: result.label.name,
+			},
+		});
+	}
 
 	return {
 		status: result.status,
@@ -238,13 +255,29 @@ export async function assignLabelToTask(
 		};
 	}
 
-	await db
+	const [assignment] = await db
 		.insert(taskLabels)
 		.values({
 			taskId,
 			labelId,
 		})
-		.onConflictDoNothing();
+		.onConflictDoNothing()
+		.returning({
+			labelId: taskLabels.labelId,
+		});
+
+	if (assignment) {
+		await recordTaskActivity({
+			projectId,
+			taskId: task.id,
+			actorId: userId,
+			action: "label_added",
+			taskTitle: task.title,
+			metadata: {
+				labelName: label.name,
+			},
+		});
+	}
 
 	return {
 		status: "assigned",
@@ -275,9 +308,25 @@ export async function unassignLabelFromTask(
 		};
 	}
 
-	await db
+	const [assignment] = await db
 		.delete(taskLabels)
-		.where(and(eq(taskLabels.taskId, taskId), eq(taskLabels.labelId, labelId)));
+		.where(and(eq(taskLabels.taskId, taskId), eq(taskLabels.labelId, labelId)))
+		.returning({
+			labelId: taskLabels.labelId,
+		});
+
+	if (assignment) {
+		await recordTaskActivity({
+			projectId,
+			taskId: task.id,
+			actorId: userId,
+			action: "label_removed",
+			taskTitle: task.title,
+			metadata: {
+				labelName: label.name,
+			},
+		});
+	}
 
 	return {
 		status: "unassigned",

@@ -7,6 +7,18 @@ import {
 } from "@/lib/validations/common";
 import { PROJECT_FIELD_LIMITS } from "../constants/form-limits";
 
+const projectDescriptionSchema = z.preprocess(
+	(value) =>
+		typeof value === "string" ? value.replace(/\r\n?/g, "\n") : value,
+	z
+		.string()
+		.trim()
+		.max(
+			PROJECT_FIELD_LIMITS.description,
+			`Description must be ${PROJECT_FIELD_LIMITS.description} characters or fewer.`,
+		),
+);
+
 export const projectFormSchema = z
 	.object({
 		name: z
@@ -18,13 +30,7 @@ export const projectFormSchema = z
 				`Project name must be ${PROJECT_FIELD_LIMITS.name} characters or fewer.`,
 			),
 
-		description: z
-			.string()
-			.trim()
-			.max(
-				PROJECT_FIELD_LIMITS.description,
-				`Description must be ${PROJECT_FIELD_LIMITS.description} characters or fewer.`,
-			),
+		description: projectDescriptionSchema,
 
 		color: z.enum(COLOR_VALUES),
 

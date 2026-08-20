@@ -4,6 +4,7 @@ import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
 
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { db } from "@/lib/db";
+import { recordTaskActivity } from "@/lib/db/activity";
 import { getProjectAccess } from "@/lib/db/project-access";
 import { stages, tasks } from "@/lib/db/schema";
 import type { ArchivedTaskSummary } from "@/types/task";
@@ -13,6 +14,7 @@ async function getManageableTaskArchiveContext(taskId: string, userId: string) {
 		columns: {
 			id: true,
 			stageId: true,
+			title: true,
 			archivedAt: true,
 		},
 
@@ -22,6 +24,7 @@ async function getManageableTaskArchiveContext(taskId: string, userId: string) {
 			stage: {
 				columns: {
 					projectId: true,
+					name: true,
 				},
 			},
 		},
@@ -102,6 +105,17 @@ export async function archiveTaskForUser(
 		return undefined;
 	}
 
+	await recordTaskActivity({
+		projectId: task.stage.projectId,
+		taskId: task.id,
+		actorId: userId,
+		action: "task_archived",
+		taskTitle: task.title,
+		metadata: {
+			stageName: task.stage.name,
+		},
+	});
+
 	return task.stage.projectId;
 }
 
@@ -146,6 +160,17 @@ export async function restoreArchivedTaskForUser(
 		return undefined;
 	}
 
+	await recordTaskActivity({
+		projectId: task.stage.projectId,
+		taskId: task.id,
+		actorId: userId,
+		action: "task_restored",
+		taskTitle: task.title,
+		metadata: {
+			stageName: task.stage.name,
+		},
+	});
+
 	return task.stage.projectId;
 }
 
@@ -169,6 +194,17 @@ export async function deleteArchivedTaskForUser(
 	if (!deletedTask) {
 		return undefined;
 	}
+
+	await recordTaskActivity({
+		projectId: task.stage.projectId,
+		taskId: null,
+		actorId: userId,
+		action: "task_deleted",
+		taskTitle: task.title,
+		metadata: {
+			stageName: task.stage.name,
+		},
+	});
 
 	return task.stage.projectId;
 }
