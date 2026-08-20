@@ -109,7 +109,7 @@ function KanbanBoardContent({
 		StageWithTasks[] | null
 	>(null);
 
-	const [, startBoardTransition] = useTransition();
+	const [isBoardSavePending, startBoardTransition] = useTransition();
 
 	const [boardError, setBoardError] = useState<string>();
 
@@ -428,13 +428,12 @@ function KanbanBoardContent({
 							key={stage.id}
 							stage={stage}
 							index={index}
-							canMoveLeft={index > 0}
-							canMoveRight={index < renderedStages.length - 1}
 							labelCandidates={labelCandidates}
 							assigneeCandidates={assigneeCandidates}
 							permissions={permissions}
 							currentUserId={currentUserId}
 							isProjectOwner={isProjectOwner}
+							isBoardSavePending={isBoardSavePending}
 						/>
 					))}
 

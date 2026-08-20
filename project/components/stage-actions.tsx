@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { EditStageModal } from "@/components/modals/edit-stage-modal";
+import { StageDeleteSubmitButton } from "@/components/stage-delete-submit-button";
 import {
 	AlertDialog,
 	AlertDialogCancel,
@@ -15,62 +16,35 @@ import {
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { deleteStage, moveStage } from "@/lib/actions/stages";
-import type { EditableStage } from "@/types/stage";
+import { deleteStage } from "@/lib/actions/stages";
 
 type StageActionsProps = {
-	stage: EditableStage;
-	canMoveLeft: boolean;
-	canMoveRight: boolean;
+	projectId: string;
+	stage: {
+		id: string;
+		name: string;
+	};
+	isBoardSavePending: boolean;
 };
 
 export function StageActions({
+	projectId,
 	stage,
-	canMoveLeft,
-	canMoveRight,
+	isBoardSavePending,
 }: StageActionsProps) {
 	const [isEditOpen, setIsEditOpen] = useState(false);
 
-	const moveLeftAction = moveStage.bind(null, stage.id, "left");
-
-	const moveRightAction = moveStage.bind(null, stage.id, "right");
-
-	const deleteAction = deleteStage.bind(null, stage.id);
+	const deleteAction = deleteStage.bind(null, projectId, stage.id);
 
 	return (
 		<>
 			<div className="flex items-center gap-0.5">
-				<form action={moveLeftAction}>
-					<Button
-						type="submit"
-						variant="ghost"
-						size="icon-xs"
-						disabled={!canMoveLeft}
-						aria-label={`Move ${stage.name} left`}
-						className="text-muted-foreground"
-					>
-						<ChevronLeft aria-hidden="true" />
-					</Button>
-				</form>
-
-				<form action={moveRightAction}>
-					<Button
-						type="submit"
-						variant="ghost"
-						size="icon-xs"
-						disabled={!canMoveRight}
-						aria-label={`Move ${stage.name} right`}
-						className="text-muted-foreground"
-					>
-						<ChevronRight aria-hidden="true" />
-					</Button>
-				</form>
-
 				<Button
 					type="button"
 					variant="ghost"
 					size="icon-xs"
 					aria-label={`Rename ${stage.name}`}
+					disabled={isBoardSavePending}
 					onClick={() => setIsEditOpen(true)}
 				>
 					<Pencil aria-hidden="true" />
@@ -82,6 +56,7 @@ export function StageActions({
 							type="button"
 							variant="ghost"
 							size="icon-xs"
+							disabled={isBoardSavePending}
 							aria-label={`Delete ${stage.name}`}
 							className="text-muted-foreground hover:text-destructive"
 						>
@@ -107,9 +82,7 @@ export function StageActions({
 									</Button>
 								</AlertDialogCancel>
 
-								<Button type="submit" variant="destructive">
-									Delete stage
-								</Button>
+								<StageDeleteSubmitButton disabled={isBoardSavePending} />
 							</AlertDialogFooter>
 						</form>
 					</AlertDialogContent>

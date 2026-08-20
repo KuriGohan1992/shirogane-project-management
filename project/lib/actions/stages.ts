@@ -129,12 +129,14 @@ export async function renameStage(
 }
 
 export async function deleteStage(
+	projectId: string,
 	stageId: string,
 	_formData: FormData,
 ): Promise<void> {
+	const projectIdResult = projectIdSchema.safeParse(projectId);
 	const stageIdResult = stageIdSchema.safeParse(stageId);
 
-	if (!stageIdResult.success) {
+	if (!projectIdResult.success || !stageIdResult.success) {
 		throw new Error(
 			"The stage could not be found or you do not have permission to delete it.",
 		);
@@ -142,15 +144,19 @@ export async function deleteStage(
 
 	const user = await getCurrentDatabaseUser();
 
-	const projectId = await deleteStageForUser(stageIdResult.data, user.id);
+	const result = await deleteStageForUser(
+		projectIdResult.data,
+		stageIdResult.data,
+		user.id,
+	);
 
-	if (!projectId) {
+	if (result.status === "forbidden") {
 		throw new Error(
 			"The stage could not be found or you do not have permission to delete it.",
 		);
 	}
 
-	revalidatePath(`/projects/${projectId}`);
+	revalidatePath(`/projects/${result.projectId}`);
 }
 
 export async function moveStage(

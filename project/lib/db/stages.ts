@@ -13,6 +13,15 @@ type StageMutationResult = {
 	projectId: string;
 };
 
+type DeleteStageResult =
+	| {
+			status: "forbidden";
+	  }
+	| {
+			status: "deleted" | "already_deleted";
+			projectId: string;
+	  };
+
 type StageMoveDirection = "left" | "right";
 
 export async function createStageInProject(
@@ -89,32 +98,29 @@ export async function renameStageForUser(
 }
 
 export async function deleteStageForUser(
+	projectId: string,
 	stageId: string,
-	ownerId: string,
-): Promise<string | undefined> {
-	const existingStage = await getEditableStage(stageId, ownerId);
+	userId: string,
+): Promise<DeleteStageResult> {
+	const accessRole = await getProjectAccess(projectId, userId);
 
-	if (!existingStage) {
-		return undefined;
+	if (!accessRole || !getProjectPermissions(accessRole).canManageStages) {
+		return {
+			status: "forbidden",
+		};
 	}
 
 	const [deletedStage] = await db
 		.delete(stages)
-		.where(
-			and(
-				eq(stages.id, stageId),
-				eq(stages.projectId, existingStage.projectId),
-			),
-		)
+		.where(and(eq(stages.id, stageId), eq(stages.projectId, projectId)))
 		.returning({
 			id: stages.id,
 		});
 
-	if (!deletedStage) {
-		return undefined;
-	}
-
-	return existingStage.projectId;
+	return {
+		status: deletedStage ? "deleted" : "already_deleted",
+		projectId,
+	};
 }
 
 export async function reorderStageForUser(

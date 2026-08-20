@@ -22,25 +22,23 @@ import type { StageWithTasks } from "@/types/stage";
 type StageColumnProps = {
 	stage: StageWithTasks;
 	index: number;
-	canMoveLeft: boolean;
-	canMoveRight: boolean;
 	labelCandidates: ProjectLabel[];
 	assigneeCandidates: AssignmentCandidate[];
 	permissions: ProjectPermissions;
 	currentUserId: string;
 	isProjectOwner: boolean;
+	isBoardSavePending: boolean;
 };
 
 export function StageColumn({
 	stage,
 	index,
-	canMoveLeft,
-	canMoveRight,
 	labelCandidates,
 	assigneeCandidates,
 	permissions,
 	currentUserId,
 	isProjectOwner,
+	isBoardSavePending,
 }: StageColumnProps) {
 	const stageDragDisabled = !permissions.canManageStages;
 
@@ -93,12 +91,12 @@ export function StageColumn({
 
 				{permissions.canManageStages && (
 					<StageActions
+						projectId={stage.projectId}
 						stage={{
 							id: stage.id,
 							name: stage.name,
 						}}
-						canMoveLeft={canMoveLeft}
-						canMoveRight={canMoveRight}
+						isBoardSavePending={isBoardSavePending}
 					/>
 				)}
 			</div>
