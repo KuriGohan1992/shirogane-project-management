@@ -10,7 +10,13 @@ export const TASK_FILTER_PARAMS = {
 	due: "due",
 } as const;
 
+export const NO_PRIORITY_TASK_FILTER_VALUE = "no-priority";
+
 export const TASK_PRIORITY_FILTER_OPTIONS = [
+	{
+		value: NO_PRIORITY_TASK_FILTER_VALUE,
+		label: "No priority",
+	},
 	{
 		value: "low",
 		label: "Low",
@@ -27,10 +33,7 @@ export const TASK_PRIORITY_FILTER_OPTIONS = [
 		value: "urgent",
 		label: "Urgent",
 	},
-] as const satisfies ReadonlyArray<{
-	value: Task["priority"];
-	label: string;
-}>;
+] as const;
 
 export const TASK_DUE_FILTER_OPTIONS = [
 	{
@@ -57,11 +60,17 @@ export const TASK_DUE_FILTER_OPTIONS = [
 
 export const UNASSIGNED_TASK_FILTER_VALUE = "unassigned";
 
+type TaskPriority = NonNullable<Task["priority"]>;
+
+export type TaskPriorityFilter =
+	| TaskPriority
+	| typeof NO_PRIORITY_TASK_FILTER_VALUE;
+
 export type TaskDueFilter = (typeof TASK_DUE_FILTER_OPTIONS)[number]["value"];
 
 export type TaskFilters = {
 	query: string;
-	priorities: Task["priority"][];
+	priorities: TaskPriorityFilter[];
 	labelIds: string[];
 	assigneeIds: string[];
 	dueDates: TaskDueFilter[];
@@ -69,6 +78,7 @@ export type TaskFilters = {
 
 type SearchParamsReader = {
 	get: (name: string) => string | null;
+
 	getAll: (name: string) => string[];
 };
 
@@ -82,7 +92,7 @@ const TASK_DUE_FILTER_VALUES = TASK_DUE_FILTER_OPTIONS.map(
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
-function isTaskPriority(value: string): value is Task["priority"] {
+function isTaskPriorityFilter(value: string): value is TaskPriorityFilter {
 	return TASK_PRIORITY_FILTER_VALUES.some((priority) => priority === value);
 }
 
@@ -134,6 +144,17 @@ function matchesDueDateFilter(
 	}
 }
 
+function matchesPriorityFilter(
+	task: TaskWithBoardDetails,
+	filter: TaskPriorityFilter,
+) {
+	if (filter === NO_PRIORITY_TASK_FILTER_VALUE) {
+		return task.priority === null;
+	}
+
+	return task.priority === filter;
+}
+
 export function parseTaskFilters(
 	searchParams: SearchParamsReader,
 	allowedLabelIds: string[],
@@ -145,7 +166,7 @@ export function parseTaskFilters(
 
 	const priorities = getUniqueValues(
 		searchParams.getAll(TASK_FILTER_PARAMS.priority),
-	).filter(isTaskPriority);
+	).filter(isTaskPriorityFilter);
 
 	const labelIds = getUniqueValues(
 		searchParams.getAll(TASK_FILTER_PARAMS.label),
@@ -211,7 +232,7 @@ export function matchesTaskFilters(
 
 	const matchesPriority =
 		filters.priorities.length === 0 ||
-		filters.priorities.includes(task.priority);
+		filters.priorities.some((filter) => matchesPriorityFilter(task, filter));
 
 	const matchesLabel =
 		filters.labelIds.length === 0 ||

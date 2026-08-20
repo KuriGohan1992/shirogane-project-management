@@ -6,6 +6,23 @@ import {
 	uuidV4Schema,
 } from "@/lib/validations/common";
 
+const taskDescriptionSchema = z.preprocess(
+	(value) =>
+		typeof value === "string" ? value.replace(/\r\n?/g, "\n") : value,
+	z
+		.string()
+		.trim()
+		.max(
+			TASK_FIELD_LIMITS.description,
+			`Description must be ${TASK_FIELD_LIMITS.description} characters or fewer.`,
+		),
+);
+
+const taskPrioritySchema = z.preprocess(
+	(value) => (value === "" || value === null ? null : value),
+	z.enum(["low", "medium", "high", "urgent"]).nullable(),
+);
+
 export const taskFormSchema = z
 	.object({
 		title: z
@@ -17,15 +34,9 @@ export const taskFormSchema = z
 				`Task title must be ${TASK_FIELD_LIMITS.title} characters or fewer.`,
 			),
 
-		description: z
-			.string()
-			.trim()
-			.max(
-				TASK_FIELD_LIMITS.description,
-				`Description must be ${TASK_FIELD_LIMITS.description} characters or fewer.`,
-			),
+		description: taskDescriptionSchema,
 
-		priority: z.enum(["low", "medium", "high", "urgent"]),
+		priority: taskPrioritySchema,
 
 		startDate: optionalDateValueSchema,
 

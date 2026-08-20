@@ -200,8 +200,7 @@ export const tasks = pgTable(
 
 		position: integer("position").notNull(),
 
-		priority: taskPriorityEnum("priority").default("medium").notNull(),
-
+		priority: taskPriorityEnum("priority"),
 		startDate: timestamp("start_date", {
 			withTimezone: true,
 			mode: "date",

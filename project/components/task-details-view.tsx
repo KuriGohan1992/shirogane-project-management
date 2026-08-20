@@ -21,12 +21,12 @@ import { TaskActivityList } from "@/components/task-activity-list";
 import { TaskAssigneePicker } from "@/components/task-assignee-picker";
 import { TaskCommentItem } from "@/components/task-comment-item";
 import { TaskLabelBadge } from "@/components/task-label-badge";
+import { TaskPriorityBadge } from "@/components/task-priority-badge";
 import { Button } from "@/components/ui/button";
 import { createComment } from "@/lib/actions/comments";
 import type { ProjectPermissions } from "@/lib/auth/project-permissions";
 import { COMMENT_FIELD_LIMITS } from "@/lib/constants/form-limits";
 import type { ProjectLabel, Task } from "@/lib/db/schema";
-import { cn } from "@/lib/utils";
 import type { CommentActionState } from "@/types/comment";
 import type { AssignmentCandidate } from "@/types/member";
 import type { EditableTask, TaskWithDetails } from "@/types/task";
@@ -59,22 +59,6 @@ function formatDate(date: Date) {
 		year: "numeric",
 		timeZone: "UTC",
 	}).format(date);
-}
-
-function getPriorityClasses(priority: Task["priority"]) {
-	switch (priority) {
-		case "low":
-			return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300";
-
-		case "medium":
-			return "bg-amber-500/10 text-amber-700 dark:text-amber-300";
-
-		case "high":
-			return "bg-orange-500/10 text-orange-700 dark:text-orange-300";
-
-		case "urgent":
-			return "bg-destructive/10 text-destructive";
-	}
 }
 
 function toEditableTask(task: Task): EditableTask {
@@ -196,14 +180,13 @@ export function TaskDetailsView({
 								icon={<CircleAlert aria-hidden="true" size={14} />}
 								label="Priority"
 							>
-								<span
-									className={cn(
-										"inline-flex rounded-md px-2 py-1 text-xs font-medium capitalize",
-										getPriorityClasses(task.priority),
-									)}
-								>
-									{task.priority}
-								</span>
+								{task.priority ? (
+									<TaskPriorityBadge priority={task.priority} />
+								) : (
+									<span className="font-normal text-muted-foreground">
+										No priority
+									</span>
+								)}
 							</MetadataItem>
 
 							<MetadataItem

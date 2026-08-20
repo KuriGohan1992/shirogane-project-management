@@ -36,6 +36,13 @@
 			"when": 1787234179638,
 			"tag": "0004_naive_marten_broadcloak",
 			"breakpoints": true
+		},
+		{
+			"idx": 5,
+			"version": "7",
+			"when": 1787261925401,
+			"tag": "0005_cooing_kronos",
+			"breakpoints": true
 		}
 	]
 }

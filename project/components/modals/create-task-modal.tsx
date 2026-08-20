@@ -71,7 +71,7 @@ export function CreateTaskModal({
 					defaultValues={{
 						title: "",
 						description: "",
-						priority: "medium",
+						priority: null,
 						startDate: "",
 						dueDate: "",
 					}}

@@ -43,13 +43,29 @@ type TaskFormFieldsProps = {
 	labels: TaskLabelFieldConfig;
 };
 
+type TaskPriority = NonNullable<TaskFormData["priority"]>;
+
+type PrioritySelection = TaskPriority | "none";
+
 const TASK_PRIORITY_OPTIONS = [
-	{ value: "low", label: "Low" },
-	{ value: "medium", label: "Medium" },
-	{ value: "high", label: "High" },
-	{ value: "urgent", label: "Urgent" },
-] satisfies ReadonlyArray<{
-	value: TaskFormData["priority"];
+	{
+		value: "low",
+		label: "Low",
+	},
+	{
+		value: "medium",
+		label: "Medium",
+	},
+	{
+		value: "high",
+		label: "High",
+	},
+	{
+		value: "urgent",
+		label: "Urgent",
+	},
+] as const satisfies ReadonlyArray<{
+	value: TaskPriority;
 	label: string;
 }>;
 
@@ -63,15 +79,23 @@ export function TaskFormFields({
 	labels,
 }: TaskFormFieldsProps) {
 	const [titleLength, setTitleLength] = useState(defaultValues.title.length);
+
 	const [descriptionLength, setDescriptionLength] = useState(
 		defaultValues.description.length,
 	);
-	const [priority, setPriority] = useState(defaultValues.priority);
+
+	const [priority, setPriority] = useState<PrioritySelection>(
+		defaultValues.priority ?? "none",
+	);
 
 	const titleErrorId = "task-title-error";
+
 	const descriptionErrorId = "task-description-error";
+
 	const priorityErrorId = "task-priority-error";
+
 	const startDateErrorId = "task-start-date-error";
+
 	const dueDateErrorId = "task-due-date-error";
 
 	const { getFieldErrors, clearFieldError } = useFieldErrors<TaskField>(
@@ -79,9 +103,13 @@ export function TaskFormFields({
 	);
 
 	const titleErrors = getFieldErrors("title");
+
 	const descriptionErrors = getFieldErrors("description");
+
 	const priorityErrors = getFieldErrors("priority");
+
 	const startDateErrors = getFieldErrors("startDate");
+
 	const dueDateErrors = getFieldErrors("dueDate");
 
 	return (
@@ -174,13 +202,16 @@ export function TaskFormFields({
 					className="mb-2 block text-sm font-medium text-foreground"
 				>
 					Priority
+					<span className="ml-1 font-normal text-muted-foreground">
+						(optional)
+					</span>
 				</label>
 
 				<input
 					type="hidden"
 					name="priority"
 					form={formId}
-					value={priority}
+					value={priority === "none" ? "" : priority}
 					readOnly
 				/>
 
@@ -188,7 +219,8 @@ export function TaskFormFields({
 					value={priority}
 					disabled={pending}
 					onValueChange={(value) => {
-						setPriority(value as TaskFormData["priority"]);
+						setPriority(value as PrioritySelection);
+
 						clearFieldError("priority");
 					}}
 				>
@@ -198,10 +230,12 @@ export function TaskFormFields({
 						aria-describedby={priorityErrors ? priorityErrorId : undefined}
 						className={cn("w-full", priorityErrors && "border-destructive")}
 					>
-						<SelectValue placeholder="Select priority" />
+						<SelectValue />
 					</SelectTrigger>
 
 					<SelectContent>
+						<SelectItem value="none">No priority</SelectItem>
+
 						{TASK_PRIORITY_OPTIONS.map((option) => (
 							<SelectItem key={option.value} value={option.value}>
 								{option.label}
@@ -254,8 +288,8 @@ export function TaskFormFields({
 
 				{labels.mode === "create" ? (
 					<CreateTaskLabelsField
-						projectId={labels.projectId}
 						formId={formId}
+						projectId={labels.projectId}
 						labels={labels.candidates}
 						pending={pending}
 					/>

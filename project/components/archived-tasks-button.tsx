@@ -47,14 +47,14 @@ export function ArchivedTasksButton({
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
-				<Button type="button" variant="outline" size="sm">
-					<Archive aria-hidden="true" size={14} />
-					Archived
-					{tasks.length > 0 && (
-						<span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold leading-none text-muted-foreground">
-							{tasks.length}
-						</span>
-					)}
+				<Button type="button" variant="outline" size="sm" className="h-9 gap-2">
+					<Archive aria-hidden="true" className="size-4" />
+
+					<span>Archived</span>
+
+					<span className="inline-flex min-w-5 items-center justify-center rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
+						{tasks.length}
+					</span>
 				</Button>
 			</DialogTrigger>
 
@@ -102,7 +102,9 @@ export function ArchivedTasksButton({
 
 											<span aria-hidden="true">•</span>
 
-											<span className="capitalize">{task.priority}</span>
+											<span className="capitalize">
+												{task.priority ?? "No priority"}
+											</span>
 
 											<span aria-hidden="true">•</span>
 
