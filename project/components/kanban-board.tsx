@@ -4,7 +4,14 @@ import { Feedback } from "@dnd-kit/dom";
 import { DragDropProvider } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useOptimistic, useRef, useState, useTransition } from "react";
+import {
+	useEffect,
+	useMemo,
+	useOptimistic,
+	useRef,
+	useState,
+	useTransition,
+} from "react";
 
 import {
 	BoardStoreProvider,
@@ -12,6 +19,7 @@ import {
 } from "@/components/board-store-provider";
 import { CreateStageButton } from "@/components/create-stage-button";
 import { StageColumn } from "@/components/stage-column";
+import { TaskBulkToolbar } from "@/components/task-bulk-toolbar";
 import { TaskFilterControls } from "@/components/task-filter-controls";
 import { reorderStage } from "@/lib/actions/stages";
 import { moveTaskOnBoard } from "@/lib/actions/tasks";
@@ -121,6 +129,12 @@ function KanbanBoardContent({
 
 	const [boardError, setBoardError] = useState<string>();
 
+	const [selectionMode, setSelectionMode] = useState(false);
+
+	const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(
+		() => new Set(),
+	);
+
 	const dragSnapshotRef = useRef<StageWithTasks[] | null>(null);
 
 	const dragPreviewRef = useRef<StageWithTasks[] | null>(null);
@@ -175,6 +189,79 @@ function KanbanBoardContent({
 
 		[renderedStages],
 	);
+
+	const visibleTaskIds = useMemo(
+		() => visibleStages.flatMap((stage) => stage.tasks.map((task) => task.id)),
+
+		[visibleStages],
+	);
+
+	const selectedTaskIdsInBoardOrder = useMemo(
+		() =>
+			renderedStages.flatMap((stage) =>
+				stage.tasks
+					.filter((task) => selectedTaskIds.has(task.id))
+					.map((task) => task.id),
+			),
+
+		[renderedStages, selectedTaskIds],
+	);
+
+	useEffect(() => {
+		const visibleTaskIdSet = new Set(visibleTaskIds);
+
+		setSelectedTaskIds((current) => {
+			const next = new Set(
+				[...current].filter((taskId) => visibleTaskIdSet.has(taskId)),
+			);
+
+			if (next.size === current.size) {
+				return current;
+			}
+
+			return next;
+		});
+	}, [visibleTaskIds]);
+
+	function toggleSelectionMode() {
+		setSelectionMode((current) => {
+			if (current) {
+				setSelectedTaskIds(new Set());
+			}
+
+			return !current;
+		});
+	}
+
+	function toggleTaskSelection(taskId: string) {
+		setSelectedTaskIds((current) => {
+			const next = new Set(current);
+
+			if (next.has(taskId)) {
+				next.delete(taskId);
+			} else {
+				next.add(taskId);
+			}
+
+			return next;
+		});
+	}
+
+	function selectVisibleTasks() {
+		setSelectedTaskIds((current) => {
+			const next = new Set(current);
+
+			for (const taskId of visibleTaskIds) {
+				next.add(taskId);
+			}
+
+			return next;
+		});
+	}
+
+	function clearSelection() {
+		setSelectedTaskIds(new Set());
+	}
 
 	function clearTaskDragPreview() {
 		dragPreviewRef.current = null;
@@ -271,18 +358,14 @@ function KanbanBoardContent({
 	return (
 		<div className="space-y-3">
 			<div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-				{/* <h2
-					id="project-board-heading"
-					className="shrink-0 text-xl font-semibold"
-				>
-					Board
-				</h2> */}
-
 				<div className="min-w-0 flex-1">
 					<TaskFilterControls
 						filters={filters}
 						labelCandidates={labelCandidates}
 						assigneeCandidates={assigneeCandidates}
+						canManageTasks={permissions.canManageTasks}
+						selectionMode={selectionMode}
+						onToggleSelectionMode={toggleSelectionMode}
 					/>
 				</div>
 			</div>
@@ -304,7 +387,10 @@ function KanbanBoardContent({
 				onDragStart={(event) => {
 					const { source } = event.operation;
 
-					if (taskFiltersActive && source?.type === BOARD_DND_TYPES.task) {
+					if (
+						(taskFiltersActive || selectionMode) &&
+						source?.type === BOARD_DND_TYPES.task
+					) {
 						return;
 					}
 
@@ -325,6 +411,7 @@ function KanbanBoardContent({
 
 					if (
 						taskFiltersActive ||
+						selectionMode ||
 						source?.type !== BOARD_DND_TYPES.task ||
 						!target
 					) {
@@ -458,7 +545,7 @@ function KanbanBoardContent({
 						return;
 					}
 
-					if (taskFiltersActive) {
+					if (taskFiltersActive || selectionMode) {
 						clearTaskDragPreview();
 
 						return;
@@ -524,6 +611,22 @@ function KanbanBoardContent({
 							: `${totalTaskCount} ${totalTaskCount === 1 ? "task" : "tasks"}`}
 					</p>
 
+					{selectionMode && (
+						<TaskBulkToolbar
+							projectId={projectId}
+							stages={renderedStages.map((stage) => ({
+								id: stage.id,
+								name: stage.name,
+							}))}
+							labelCandidates={labelCandidates}
+							assigneeCandidates={assigneeCandidates}
+							selectedTaskIds={selectedTaskIdsInBoardOrder}
+							visibleTaskIds={visibleTaskIds}
+							onSelectVisible={selectVisibleTasks}
+							onClearSelection={clearSelection}
+						/>
+					)}
+
 					<div className="flex min-h-[calc(100vh-22rem)] items-start gap-4 overflow-x-auto pb-4">
 						{visibleStages.map((stage, index) => (
 							<StageColumn
@@ -540,6 +643,9 @@ function KanbanBoardContent({
 								totalTaskCount={
 									totalTaskCountByStageId.get(stage.id) ?? stage.tasks.length
 								}
+								selectionMode={selectionMode}
+								selectedTaskIds={selectedTaskIds}
+								onToggleTaskSelection={toggleTaskSelection}
 							/>
 						))}
 

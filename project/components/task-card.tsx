@@ -1,7 +1,5 @@
-"use client";
-
 import { useSortable } from "@dnd-kit/react/sortable";
-import { MessageSquare } from "lucide-react";
+import { Check, MessageSquare } from "lucide-react";
 import Link from "next/link";
 
 import { TaskActions } from "@/components/task-actions";
@@ -27,6 +25,9 @@ type TaskCardProps = {
 	currentUserId: string;
 	isProjectOwner: boolean;
 	dragDisabled?: boolean;
+	selectionMode?: boolean;
+	selected?: boolean;
+	onToggleSelection?: (taskId: string) => void;
 };
 
 function formatMonthDay(date: Date) {
@@ -51,6 +52,7 @@ function formatTaskSchedule(task: Task) {
 
 	if (task.startDate && task.dueDate) {
 		const startYear = task.startDate.getUTCFullYear();
+
 		const dueYear = task.dueDate.getUTCFullYear();
 
 		const formattedStart =
@@ -107,6 +109,9 @@ export function TaskCard({
 	assigneeCandidates,
 	permissions,
 	dragDisabled = false,
+	selectionMode = false,
+	selected = false,
+	onToggleSelection,
 }: TaskCardProps) {
 	const assignedUsers = task.assignees.map((assignee) => assignee.user);
 
@@ -118,7 +123,8 @@ export function TaskCard({
 
 	const commentCount = task.comments.length;
 
-	const taskDragDisabled = !permissions.canManageTasks || dragDisabled;
+	const taskDragDisabled =
+		!permissions.canManageTasks || dragDisabled || selectionMode;
 
 	const taskHref = getTaskHref(projectId, task.id, task.title);
 
@@ -142,6 +148,7 @@ export function TaskCard({
 			className={cn(
 				"relative overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm transition-[border-color,box-shadow,transform] hover:border-foreground/30 hover:shadow-md",
 				sortable.isDragging && "opacity-50",
+				selected && "border-primary ring-2 ring-primary/15",
 			)}
 		>
 			<div
@@ -154,7 +161,20 @@ export function TaskCard({
 			>
 				<Link
 					href={taskHref}
-					aria-label={`Open ${task.title}`}
+					aria-label={
+						selectionMode
+							? `${selected ? "Deselect" : "Select"} ${task.title}`
+							: `Open ${task.title}`
+					}
+					onClick={(event) => {
+						if (!selectionMode) {
+							return;
+						}
+
+						event.preventDefault();
+
+						onToggleSelection?.(task.id);
+					}}
 					className="block rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 				>
 					<h4
@@ -212,14 +232,34 @@ export function TaskCard({
 				</Link>
 			</div>
 
-			{permissions.canManageTasks && (
-				<div className="absolute right-2.5 top-2.5 z-20">
-					<TaskActions
-						task={toEditableTask(task)}
-						labelCandidates={labelCandidates}
-						assignedLabels={assignedLabels}
-					/>
-				</div>
+			{selectionMode ? (
+				<button
+					type="button"
+					aria-pressed={selected}
+					aria-label={`${selected ? "Deselect" : "Select"} ${task.title}`}
+					onClick={() => onToggleSelection?.(task.id)}
+					className="absolute right-2.5 top-2.5 z-20 flex size-7 items-center justify-center rounded-md transition-colors hover:bg-muted"
+				>
+					<span
+						aria-hidden="true"
+						className={cn(
+							"flex size-4 items-center justify-center rounded border border-input bg-background",
+							selected && "border-primary bg-primary text-primary-foreground",
+						)}
+					>
+						{selected && <Check aria-hidden="true" className="size-3" />}
+					</span>
+				</button>
+			) : (
+				permissions.canManageTasks && (
+					<div className="absolute right-2.5 top-2.5 z-20">
+						<TaskActions
+							task={toEditableTask(task)}
+							labelCandidates={labelCandidates}
+							assignedLabels={assignedLabels}
+						/>
+					</div>
+				)
 			)}
 
 			{showFooter && (

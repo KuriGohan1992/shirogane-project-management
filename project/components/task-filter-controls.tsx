@@ -1,6 +1,11 @@
-"use client";
-
-import { Check, ChevronDown, Search, UserRound, X } from "lucide-react";
+import {
+	Check,
+	ChevronDown,
+	Search,
+	SquareCheckBig,
+	UserRound,
+	X,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +32,9 @@ type TaskFilterControlsProps = {
 	filters: TaskFilters;
 	labelCandidates: ProjectLabel[];
 	assigneeCandidates: AssignmentCandidate[];
+	canManageTasks: boolean;
+	selectionMode: boolean;
+	onToggleSelectionMode: () => void;
 };
 
 type FilterOptionButtonProps = {
@@ -123,7 +131,7 @@ function FilterOptionButton({
 
 function getPriorityLabel(filters: TaskFilters) {
 	if (filters.priorities.length === 0) {
-		return "All priorities";
+		return "Priority";
 	}
 
 	if (filters.priorities.length === 1) {
@@ -143,7 +151,7 @@ function getLabelFilterLabel(
 	labelCandidates: ProjectLabel[],
 ) {
 	if (filters.labelIds.length === 0) {
-		return "All labels";
+		return "Label";
 	}
 
 	if (filters.labelIds.length === 1) {
@@ -162,7 +170,7 @@ function getAssigneeFilterLabel(
 	assigneeCandidates: AssignmentCandidate[],
 ) {
 	if (filters.assigneeIds.length === 0) {
-		return "All assignees";
+		return "Assignee";
 	}
 
 	if (filters.assigneeIds.length === 1) {
@@ -184,7 +192,7 @@ function getAssigneeFilterLabel(
 
 function getDueDateFilterLabel(filters: TaskFilters) {
 	if (filters.dueDates.length === 0) {
-		return "All dates";
+		return "Due date";
 	}
 
 	if (filters.dueDates.length === 1) {
@@ -203,6 +211,9 @@ export function TaskFilterControls({
 	filters,
 	labelCandidates,
 	assigneeCandidates,
+	canManageTasks,
+	selectionMode,
+	onToggleSelectionMode,
 }: TaskFilterControlsProps) {
 	const filtersActive = hasTaskFilters(filters);
 
@@ -256,7 +267,7 @@ export function TaskFilterControls({
 					)}
 				</div>
 
-				<div className="flex flex-wrap items-center gap-2">
+				<div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
 					<Popover>
 						<PopoverTrigger asChild>
 							<Button
@@ -278,10 +289,6 @@ export function TaskFilterControls({
 						</PopoverTrigger>
 
 						<PopoverContent align="start" className="w-56 p-2">
-							<p className="px-2 pb-1 pt-1 text-xs font-semibold text-muted-foreground">
-								Priority
-							</p>
-
 							{TASK_PRIORITY_FILTER_OPTIONS.map((option) => (
 								<FilterOptionButton
 									key={option.value}
@@ -320,10 +327,6 @@ export function TaskFilterControls({
 						</PopoverTrigger>
 
 						<PopoverContent align="start" className="w-64 p-2">
-							<p className="px-2 pb-1 pt-1 text-xs font-semibold text-muted-foreground">
-								Labels
-							</p>
-
 							{labelCandidates.length === 0 ? (
 								<p className="px-2 py-3 text-sm text-muted-foreground">
 									No project labels yet.
@@ -378,10 +381,6 @@ export function TaskFilterControls({
 						</PopoverTrigger>
 
 						<PopoverContent align="start" className="w-72 p-2">
-							<p className="px-2 pb-1 pt-1 text-xs font-semibold text-muted-foreground">
-								Assignees
-							</p>
-
 							<div className="max-h-72 overflow-y-auto">
 								<FilterOptionButton
 									selected={filters.assigneeIds.includes(
@@ -450,10 +449,6 @@ export function TaskFilterControls({
 						</PopoverTrigger>
 
 						<PopoverContent align="start" className="w-64 p-2">
-							<p className="px-2 pb-1 pt-1 text-xs font-semibold text-muted-foreground">
-								Due date
-							</p>
-
 							{TASK_DUE_FILTER_OPTIONS.map((option) => (
 								<FilterOptionButton
 									key={option.value}
@@ -468,15 +463,29 @@ export function TaskFilterControls({
 						</PopoverContent>
 					</Popover>
 
-					<Button
-						type="button"
-						variant="ghost"
-						size="sm"
-						disabled={!filtersActive}
-						onClick={clearTaskFilters}
-					>
-						Clear filters
-					</Button>
+					{filtersActive && (
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							onClick={clearTaskFilters}
+						>
+							Clear filters
+						</Button>
+					)}
+					{canManageTasks && (
+						<Button
+							type="button"
+							variant={selectionMode ? "secondary" : "outline"}
+							size="sm"
+							onClick={onToggleSelectionMode}
+							className="ml-auto"
+						>
+							<SquareCheckBig aria-hidden="true" className="size-4" />
+
+							{selectionMode ? "Done selecting" : "Select tasks"}
+						</Button>
+					)}
 				</div>
 			</div>
 		</div>

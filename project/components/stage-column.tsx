@@ -1,5 +1,3 @@
-"use client";
-
 import { CollisionPriority } from "@dnd-kit/abstract";
 import { useDroppable } from "@dnd-kit/react";
 import { useSortable } from "@dnd-kit/react/sortable";
@@ -30,6 +28,9 @@ type StageColumnProps = {
 	isBoardSavePending: boolean;
 	isTaskFilteringActive: boolean;
 	totalTaskCount: number;
+	selectionMode: boolean;
+	selectedTaskIds: ReadonlySet<string>;
+	onToggleTaskSelection: (taskId: string) => void;
 };
 
 export function StageColumn({
@@ -43,10 +44,14 @@ export function StageColumn({
 	isBoardSavePending,
 	isTaskFilteringActive,
 	totalTaskCount,
+	selectionMode,
+	selectedTaskIds,
+	onToggleTaskSelection,
 }: StageColumnProps) {
 	const stageDragDisabled = !permissions.canManageStages;
 
-	const taskDragDisabled = !permissions.canManageTasks || isTaskFilteringActive;
+	const taskDragDisabled =
+		!permissions.canManageTasks || isTaskFilteringActive || selectionMode;
 
 	const stageSortable = useSortable({
 		id: getStageDndId(stage.id),
@@ -141,6 +146,9 @@ export function StageColumn({
 							currentUserId={currentUserId}
 							isProjectOwner={isProjectOwner}
 							dragDisabled={taskDragDisabled}
+							selectionMode={selectionMode}
+							selected={selectedTaskIds.has(task.id)}
+							onToggleSelection={onToggleTaskSelection}
 						/>
 					))
 				)}
