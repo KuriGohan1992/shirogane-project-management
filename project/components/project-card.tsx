@@ -1,4 +1,4 @@
-import { ArrowUpRight, CalendarRange, Clock3 } from "lucide-react";
+import { CalendarRange, Clock3 } from "lucide-react";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { ProjectActions } from "@/components/project-actions";
@@ -113,14 +113,6 @@ export function ProjectCard({ project }: ProjectCardProps) {
 						<span>Last activity {formatDate(project.lastActivityAt)}</span>
 					</div>
 				</div>
-
-				<Link
-					href={`/projects/${project.id}`}
-					className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-brand-hover"
-				>
-					Open project
-					<ArrowUpRight aria-hidden="true" size={15} />
-				</Link>
 			</div>
 		</article>
 	);

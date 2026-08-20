@@ -1,14 +1,186 @@
-import { FolderPlus } from "lucide-react";
+"use client";
+
+import {
+	FolderPlus,
+	Search,
+	SearchX,
+	SlidersHorizontal,
+	X,
+} from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 import { CreateProjectButton } from "@/components/create-project-button";
 import { ProjectCard } from "@/components/project-card";
+import { Button } from "@/components/ui/button";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { COLOR_OPTIONS } from "@/lib/constants/colors";
+import { SEARCH_LIMITS } from "@/lib/constants/search";
+import {
+	matchesProjectScheduleFilter,
+	PROJECT_FILTER_DEFAULTS,
+	PROJECT_FILTER_PARAMS,
+	parseProjectAccessFilter,
+	parseProjectColorFilter,
+	parseProjectScheduleFilter,
+	parseProjectSortOption,
+	sortProjects,
+} from "@/lib/project-filters";
 import type { ProjectWithAccess } from "@/types/project";
 
 type ProjectGridProps = {
 	projects: ProjectWithAccess[];
 };
 
+function replaceProjectFilterUrl(params: URLSearchParams) {
+	const queryString = params.toString();
+
+	const nextUrl = `${window.location.pathname}${
+		queryString ? `?${queryString}` : ""
+	}${window.location.hash}`;
+
+	window.history.replaceState(null, "", nextUrl);
+}
+
+function updateProjectFilterParam(
+	key: string,
+	value: string,
+	defaultValue: string,
+) {
+	const params = new URLSearchParams(window.location.search);
+
+	if (value === defaultValue) {
+		params.delete(key);
+	} else {
+		params.set(key, value);
+	}
+
+	replaceProjectFilterUrl(params);
+}
+
 export function ProjectGrid({ projects }: ProjectGridProps) {
+	const searchParams = useSearchParams();
+
+	const urlQuery =
+		searchParams
+			.get(PROJECT_FILTER_PARAMS.query)
+			?.slice(0, SEARCH_LIMITS.maxQueryLength) ?? "";
+
+	const accessFilter = parseProjectAccessFilter(
+		searchParams.get(PROJECT_FILTER_PARAMS.access),
+	);
+
+	const colorFilter = parseProjectColorFilter(
+		searchParams.get(PROJECT_FILTER_PARAMS.color),
+	);
+
+	const scheduleFilter = parseProjectScheduleFilter(
+		searchParams.get(PROJECT_FILTER_PARAMS.dates),
+	);
+
+	const sort = parseProjectSortOption(
+		searchParams.get(PROJECT_FILTER_PARAMS.sort),
+	);
+
+	const [queryInput, setQueryInput] = useState(urlQuery);
+
+	const normalizedQuery = queryInput.trim().toLocaleLowerCase("en-US");
+
+	const hasFilters =
+		normalizedQuery.length > 0 ||
+		accessFilter !== PROJECT_FILTER_DEFAULTS.access ||
+		colorFilter !== PROJECT_FILTER_DEFAULTS.color ||
+		scheduleFilter !== PROJECT_FILTER_DEFAULTS.dates;
+
+	// Keep the controlled input synchronized with bookmarked or shared URLs.
+	useEffect(() => {
+		setQueryInput(urlQuery);
+	}, [urlQuery]);
+
+	// Keep keyword filtering instant while writing the shareable URL after typing settles.
+	useEffect(() => {
+		if (queryInput === urlQuery) {
+			return;
+		}
+
+		const timeoutId = window.setTimeout(() => {
+			const params = new URLSearchParams(window.location.search);
+
+			const query = queryInput.trim();
+
+			if (query.length === 0) {
+				params.delete(PROJECT_FILTER_PARAMS.query);
+			} else {
+				params.set(PROJECT_FILTER_PARAMS.query, query);
+			}
+
+			replaceProjectFilterUrl(params);
+		}, SEARCH_LIMITS.debounceMs);
+
+		return () => {
+			window.clearTimeout(timeoutId);
+		};
+	}, [queryInput, urlQuery]);
+
+	const visibleProjects = useMemo(() => {
+		const filteredProjects = projects.filter((project) => {
+			const description = project.description?.toLocaleLowerCase("en-US") ?? "";
+
+			const name = project.name.toLocaleLowerCase("en-US");
+
+			const matchesQuery =
+				normalizedQuery.length === 0 ||
+				name.includes(normalizedQuery) ||
+				description.includes(normalizedQuery);
+
+			const matchesAccess =
+				accessFilter === PROJECT_FILTER_DEFAULTS.access ||
+				project.accessRole === accessFilter;
+
+			const matchesColor =
+				colorFilter === PROJECT_FILTER_DEFAULTS.color ||
+				project.color === colorFilter;
+
+			return (
+				matchesQuery &&
+				matchesAccess &&
+				matchesColor &&
+				matchesProjectScheduleFilter(project, scheduleFilter)
+			);
+		});
+
+		return sortProjects(filteredProjects, sort);
+	}, [
+		projects,
+		normalizedQuery,
+		accessFilter,
+		colorFilter,
+		scheduleFilter,
+		sort,
+	]);
+
+	function clearFilters() {
+		const params = new URLSearchParams(window.location.search);
+
+		params.delete(PROJECT_FILTER_PARAMS.query);
+
+		params.delete(PROJECT_FILTER_PARAMS.access);
+
+		params.delete(PROJECT_FILTER_PARAMS.color);
+
+		params.delete(PROJECT_FILTER_PARAMS.dates);
+
+		setQueryInput("");
+
+		replaceProjectFilterUrl(params);
+	}
+
 	if (projects.length === 0) {
 		return (
 			<div className="flex min-h-80 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 text-center">
@@ -32,10 +204,203 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 	}
 
 	return (
-		<div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-			{projects.map((project) => (
-				<ProjectCard key={project.id} project={project} />
-			))}
+		<div className="space-y-4">
+			<div className="rounded-xl border border-border bg-card p-3">
+				<div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+					<div className="relative min-w-0 flex-1 xl:max-w-sm">
+						<Search
+							aria-hidden="true"
+							size={16}
+							className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+						/>
+
+						<input
+							type="search"
+							value={queryInput}
+							maxLength={SEARCH_LIMITS.maxQueryLength}
+							onChange={(event) => setQueryInput(event.target.value)}
+							aria-label="Filter projects by name or description"
+							placeholder="Filter projects..."
+							className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-9 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+						/>
+
+						{queryInput.length > 0 && (
+							<button
+								type="button"
+								onClick={() => setQueryInput("")}
+								aria-label="Clear project keyword filter"
+								className="absolute right-2 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+							>
+								<X aria-hidden="true" size={14} />
+							</button>
+						)}
+					</div>
+
+					<div className="flex flex-wrap items-center gap-2">
+						<Select
+							value={accessFilter}
+							onValueChange={(value) =>
+								updateProjectFilterParam(
+									PROJECT_FILTER_PARAMS.access,
+									value,
+									PROJECT_FILTER_DEFAULTS.access,
+								)
+							}
+						>
+							<SelectTrigger size="sm" aria-label="Filter projects by access">
+								<SelectValue />
+							</SelectTrigger>
+
+							<SelectContent>
+								<SelectItem value="all">All access</SelectItem>
+
+								<SelectItem value="owner">Owner</SelectItem>
+
+								<SelectItem value="member">Member</SelectItem>
+
+								<SelectItem value="viewer">Viewer</SelectItem>
+							</SelectContent>
+						</Select>
+
+						<Select
+							value={colorFilter}
+							onValueChange={(value) =>
+								updateProjectFilterParam(
+									PROJECT_FILTER_PARAMS.color,
+									value,
+									PROJECT_FILTER_DEFAULTS.color,
+								)
+							}
+						>
+							<SelectTrigger size="sm" aria-label="Filter projects by color">
+								<SelectValue />
+							</SelectTrigger>
+
+							<SelectContent>
+								<SelectItem value="all">All colors</SelectItem>
+
+								{COLOR_OPTIONS.map((option) => (
+									<SelectItem key={option.value} value={option.value}>
+										<span
+											aria-hidden="true"
+											className="size-2.5 rounded-full"
+											style={{
+												backgroundColor: option.hex,
+											}}
+										/>
+
+										{option.label}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+
+						<Select
+							value={scheduleFilter}
+							onValueChange={(value) =>
+								updateProjectFilterParam(
+									PROJECT_FILTER_PARAMS.dates,
+									value,
+									PROJECT_FILTER_DEFAULTS.dates,
+								)
+							}
+						>
+							<SelectTrigger size="sm" aria-label="Filter projects by dates">
+								<SelectValue />
+							</SelectTrigger>
+
+							<SelectContent>
+								<SelectItem value="all">All dates</SelectItem>
+
+								<SelectItem value="no-dates">No project dates</SelectItem>
+
+								<SelectItem value="overdue">Overdue</SelectItem>
+
+								<SelectItem value="due-next-7-days">
+									Due in next 7 days
+								</SelectItem>
+							</SelectContent>
+						</Select>
+
+						<Select
+							value={sort}
+							onValueChange={(value) =>
+								updateProjectFilterParam(
+									PROJECT_FILTER_PARAMS.sort,
+									value,
+									PROJECT_FILTER_DEFAULTS.sort,
+								)
+							}
+						>
+							<SelectTrigger size="sm" aria-label="Sort projects">
+								<SlidersHorizontal aria-hidden="true" size={14} />
+
+								<SelectValue />
+							</SelectTrigger>
+
+							<SelectContent>
+								<SelectItem value="last-activity">Last activity</SelectItem>
+
+								<SelectItem value="created-newest">Newest created</SelectItem>
+
+								<SelectItem value="created-oldest">Oldest created</SelectItem>
+
+								<SelectItem value="due-date">Due date</SelectItem>
+
+								<SelectItem value="name">Name A–Z</SelectItem>
+							</SelectContent>
+						</Select>
+
+						<Button
+							type="button"
+							variant="ghost"
+							size="sm"
+							disabled={!hasFilters}
+							onClick={clearFilters}
+						>
+							Clear filters
+						</Button>
+					</div>
+				</div>
+			</div>
+
+			{hasFilters && (
+				<p className="text-sm text-muted-foreground">
+					{visibleProjects.length} of {projects.length} projects shown
+				</p>
+			)}
+
+			{visibleProjects.length === 0 ? (
+				<div className="flex min-h-64 flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card px-6 text-center">
+					<div className="mb-4 flex size-11 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+						<SearchX aria-hidden="true" size={21} />
+					</div>
+
+					<h2 className="text-base font-semibold text-foreground">
+						No projects match these filters
+					</h2>
+
+					<p className="mt-2 max-w-sm text-sm text-muted-foreground">
+						Try changing the keyword, access, color, or date filters.
+					</p>
+
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						className="mt-4"
+						onClick={clearFilters}
+					>
+						Clear filters
+					</Button>
+				</div>
+			) : (
+				<div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+					{visibleProjects.map((project) => (
+						<ProjectCard key={project.id} project={project} />
+					))}
+				</div>
+			)}
 		</div>
 	);
 }
