@@ -1,4 +1,8 @@
-import { COLOR_VALUES, type ColorValue } from "@/lib/constants/colors";
+import {
+	COLOR_OPTIONS,
+	COLOR_VALUES,
+	type ColorValue,
+} from "@/lib/constants/colors";
 import type { ProjectWithAccess } from "@/types/project";
 
 export const PROJECT_FILTER_PARAMS = {
@@ -7,6 +11,7 @@ export const PROJECT_FILTER_PARAMS = {
 	color: "color",
 	dates: "dates",
 	sort: "sort",
+	order: "order",
 } as const;
 
 export const PROJECT_FILTER_DEFAULTS = {
@@ -26,11 +31,13 @@ const SCHEDULE_FILTER_VALUES = [
 
 const SORT_VALUES = [
 	"last-activity",
-	"created-newest",
-	"created-oldest",
+	"date-created",
 	"due-date",
 	"name",
+	"color",
 ] as const;
+
+const SORT_DIRECTION_VALUES = ["asc", "desc"] as const;
 
 export type ProjectAccessFilter =
 	| typeof PROJECT_FILTER_DEFAULTS.access
@@ -45,6 +52,23 @@ export type ProjectScheduleFilter =
 	| (typeof SCHEDULE_FILTER_VALUES)[number];
 
 export type ProjectSortOption = (typeof SORT_VALUES)[number];
+
+export type ProjectSortDirection = (typeof SORT_DIRECTION_VALUES)[number];
+
+const PROJECT_SORT_DEFAULT_DIRECTION: Record<
+	ProjectSortOption,
+	ProjectSortDirection
+> = {
+	"last-activity": "desc",
+	"date-created": "desc",
+	"due-date": "asc",
+	name: "asc",
+	color: "asc",
+};
+
+const COLOR_SORT_ORDER = new Map<ColorValue, number>(
+	COLOR_OPTIONS.map((option, index) => [option.value, index]),
+);
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
@@ -66,6 +90,10 @@ function compareProjectNames(
 
 function getUtcDayValue(date: Date) {
 	return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+}
+
+export function getDefaultProjectSortDirection(sort: ProjectSortOption) {
+	return PROJECT_SORT_DEFAULT_DIRECTION[sort];
 }
 
 export function parseProjectAccessFilter(
@@ -100,6 +128,15 @@ export function parseProjectSortOption(
 		: PROJECT_FILTER_DEFAULTS.sort;
 }
 
+export function parseProjectSortDirection(
+	value: string | null,
+	sort: ProjectSortOption,
+): ProjectSortDirection {
+	return includesValue(SORT_DIRECTION_VALUES, value)
+		? value
+		: getDefaultProjectSortDirection(sort);
+}
+
 export function matchesProjectScheduleFilter(
 	project: ProjectWithAccess,
 	filter: ProjectScheduleFilter,
@@ -129,24 +166,33 @@ export function matchesProjectScheduleFilter(
 export function sortProjects(
 	projects: ProjectWithAccess[],
 	sort: ProjectSortOption,
+	direction: ProjectSortDirection,
 ) {
+	const directionMultiplier = direction === "asc" ? 1 : -1;
+
 	return [...projects].sort((left, right) => {
 		switch (sort) {
-			case "created-newest": {
-				const difference = right.createdAt.getTime() - left.createdAt.getTime();
+			case "last-activity": {
+				const difference =
+					left.lastActivityAt.getTime() - right.lastActivityAt.getTime();
 
-				return difference || compareProjectNames(left, right);
+				return (
+					(difference || compareProjectNames(left, right)) * directionMultiplier
+				);
 			}
 
-			case "created-oldest": {
+			case "date-created": {
 				const difference = left.createdAt.getTime() - right.createdAt.getTime();
 
-				return difference || compareProjectNames(left, right);
+				return (
+					(difference || compareProjectNames(left, right)) * directionMultiplier
+				);
 			}
 
 			case "due-date": {
+				// Projects without due dates stay last regardless of direction.
 				if (!left.dueDate && !right.dueDate) {
-					return compareProjectNames(left, right);
+					return compareProjectNames(left, right) * directionMultiplier;
 				}
 
 				if (!left.dueDate) {
@@ -159,17 +205,26 @@ export function sortProjects(
 
 				const difference = left.dueDate.getTime() - right.dueDate.getTime();
 
-				return difference || compareProjectNames(left, right);
+				return (
+					(difference || compareProjectNames(left, right)) * directionMultiplier
+				);
 			}
 
 			case "name":
-				return compareProjectNames(left, right);
+				return compareProjectNames(left, right) * directionMultiplier;
 
-			case "last-activity": {
-				const difference =
-					right.lastActivityAt.getTime() - left.lastActivityAt.getTime();
+			case "color": {
+				const leftColor =
+					COLOR_SORT_ORDER.get(left.color) ?? Number.MAX_SAFE_INTEGER;
 
-				return difference || compareProjectNames(left, right);
+				const rightColor =
+					COLOR_SORT_ORDER.get(right.color) ?? Number.MAX_SAFE_INTEGER;
+
+				const difference = leftColor - rightColor;
+
+				return (
+					(difference || compareProjectNames(left, right)) * directionMultiplier
+				);
 			}
 		}
 

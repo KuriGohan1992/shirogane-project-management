@@ -1,6 +1,7 @@
 "use client";
 
 import {
+	ArrowUpDown,
 	FolderPlus,
 	Search,
 	SearchX,
@@ -23,12 +24,15 @@ import {
 import { COLOR_OPTIONS } from "@/lib/constants/colors";
 import { SEARCH_LIMITS } from "@/lib/constants/search";
 import {
+	getDefaultProjectSortDirection,
 	matchesProjectScheduleFilter,
 	PROJECT_FILTER_DEFAULTS,
 	PROJECT_FILTER_PARAMS,
+	type ProjectSortOption,
 	parseProjectAccessFilter,
 	parseProjectColorFilter,
 	parseProjectScheduleFilter,
+	parseProjectSortDirection,
 	parseProjectSortOption,
 	sortProjects,
 } from "@/lib/project-filters";
@@ -88,6 +92,11 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 		searchParams.get(PROJECT_FILTER_PARAMS.sort),
 	);
 
+	const sortDirection = parseProjectSortDirection(
+		searchParams.get(PROJECT_FILTER_PARAMS.order),
+		sort,
+	);
+
 	const [queryInput, setQueryInput] = useState(urlQuery);
 
 	const normalizedQuery = queryInput.trim().toLocaleLowerCase("en-US");
@@ -103,7 +112,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 		setQueryInput(urlQuery);
 	}, [urlQuery]);
 
-	// Keep keyword filtering instant while writing the shareable URL after typing settles.
+	// Keep filtering instant while writing the shareable keyword to the URL after typing settles.
 	useEffect(() => {
 		if (queryInput === urlQuery) {
 			return;
@@ -155,7 +164,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 			);
 		});
 
-		return sortProjects(filteredProjects, sort);
+		return sortProjects(filteredProjects, sort, sortDirection);
 	}, [
 		projects,
 		normalizedQuery,
@@ -163,7 +172,39 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 		colorFilter,
 		scheduleFilter,
 		sort,
+		sortDirection,
 	]);
+
+	function handleSortChange(nextSort: ProjectSortOption) {
+		const params = new URLSearchParams(window.location.search);
+
+		if (nextSort === PROJECT_FILTER_DEFAULTS.sort) {
+			params.delete(PROJECT_FILTER_PARAMS.sort);
+		} else {
+			params.set(PROJECT_FILTER_PARAMS.sort, nextSort);
+		}
+
+		// Each sort type starts with the direction that makes the most sense for it.
+		params.delete(PROJECT_FILTER_PARAMS.order);
+
+		replaceProjectFilterUrl(params);
+	}
+
+	function toggleSortDirection() {
+		const nextDirection = sortDirection === "asc" ? "desc" : "asc";
+
+		const defaultDirection = getDefaultProjectSortDirection(sort);
+
+		const params = new URLSearchParams(window.location.search);
+
+		if (nextDirection === defaultDirection) {
+			params.delete(PROJECT_FILTER_PARAMS.order);
+		} else {
+			params.set(PROJECT_FILTER_PARAMS.order, nextDirection);
+		}
+
+		replaceProjectFilterUrl(params);
+	}
 
 	function clearFilters() {
 		const params = new URLSearchParams(window.location.search);
@@ -322,34 +363,48 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 							</SelectContent>
 						</Select>
 
-						<Select
-							value={sort}
-							onValueChange={(value) =>
-								updateProjectFilterParam(
-									PROJECT_FILTER_PARAMS.sort,
-									value,
-									PROJECT_FILTER_DEFAULTS.sort,
-								)
-							}
-						>
-							<SelectTrigger size="sm" aria-label="Sort projects">
-								<SlidersHorizontal aria-hidden="true" size={14} />
+						<div className="flex items-center gap-1">
+							<Select
+								value={sort}
+								onValueChange={(value) =>
+									handleSortChange(parseProjectSortOption(value))
+								}
+							>
+								<SelectTrigger size="sm" aria-label="Sort projects by">
+									<SlidersHorizontal aria-hidden="true" size={14} />
 
-								<SelectValue />
-							</SelectTrigger>
+									<SelectValue />
+								</SelectTrigger>
 
-							<SelectContent>
-								<SelectItem value="last-activity">Last activity</SelectItem>
+								<SelectContent>
+									<SelectItem value="last-activity">Last activity</SelectItem>
 
-								<SelectItem value="created-newest">Newest created</SelectItem>
+									<SelectItem value="date-created">Date created</SelectItem>
 
-								<SelectItem value="created-oldest">Oldest created</SelectItem>
+									<SelectItem value="due-date">Due date</SelectItem>
 
-								<SelectItem value="due-date">Due date</SelectItem>
+									<SelectItem value="name">Name</SelectItem>
 
-								<SelectItem value="name">Name A–Z</SelectItem>
-							</SelectContent>
-						</Select>
+									<SelectItem value="color">Color</SelectItem>
+								</SelectContent>
+							</Select>
+
+							<Button
+								type="button"
+								variant="outline"
+								size="sm"
+								className="w-9 px-0"
+								onClick={toggleSortDirection}
+								aria-label={
+									sortDirection === "asc" ? "Sort descending" : "Sort ascending"
+								}
+								title={
+									sortDirection === "asc" ? "Sort descending" : "Sort ascending"
+								}
+							>
+								<ArrowUpDown aria-hidden="true" size={15} />
+							</Button>
+						</div>
 
 						<Button
 							type="button"
