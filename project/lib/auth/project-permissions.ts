@@ -21,7 +21,7 @@ const OWNER_PERMISSIONS: ProjectPermissions = {
 };
 
 const MEMBER_PERMISSIONS: ProjectPermissions = {
-	canEditProject: true,
+	canEditProject: false,
 	canDeleteProject: false,
 	canManageMembers: false,
 	canManageStages: true,
