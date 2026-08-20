@@ -20,6 +20,11 @@ export type EditableTask = TaskFormData & {
 	id: string;
 };
 
+export type ArchivedTaskSummary = Pick<Task, "id" | "title" | "priority"> & {
+	stageName: string;
+	archivedAt: Date;
+};
+
 export type TaskAssigneeWithUser = TaskAssignee & {
 	user: UserSummary;
 };

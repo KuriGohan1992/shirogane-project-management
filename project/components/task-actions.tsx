@@ -1,6 +1,6 @@
 "use client";
 
-import { Link2, MoreVertical, Pencil, Trash2 } from "lucide-react";
+import { Archive, Link2, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { EditTaskModal } from "@/components/modals/edit-task-modal";
@@ -19,6 +19,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
+import { archiveTask } from "@/lib/actions/task-archive";
 import { deleteTask } from "@/lib/actions/tasks";
 import type { ProjectLabel } from "@/lib/db/schema";
 import type { EditableTask } from "@/types/task";
@@ -28,6 +29,7 @@ type TaskActionsProps = {
 	labelCandidates: ProjectLabel[];
 	assignedLabels: ProjectLabel[];
 	showCopyLink?: boolean;
+	redirectAfterArchive?: boolean;
 };
 
 export function TaskActions({
@@ -35,10 +37,13 @@ export function TaskActions({
 	labelCandidates,
 	assignedLabels,
 	showCopyLink = false,
+	redirectAfterArchive = false,
 }: TaskActionsProps) {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [isEditOpen, setIsEditOpen] = useState(false);
 	const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+	const archiveAction = archiveTask.bind(null, task.id, redirectAfterArchive);
 
 	const deleteAction = deleteTask.bind(null, task.id);
 
@@ -86,6 +91,17 @@ export function TaskActions({
 						<Pencil aria-hidden="true" size={14} />
 						Edit task
 					</Button>
+
+					<form action={archiveAction} onSubmit={() => setIsMenuOpen(false)}>
+						<Button
+							type="submit"
+							variant="ghost"
+							className="w-full justify-start"
+						>
+							<Archive aria-hidden="true" size={14} />
+							Archive task
+						</Button>
+					</form>
 
 					<div className="my-1 h-px bg-border" />
 

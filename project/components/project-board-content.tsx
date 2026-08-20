@@ -5,7 +5,9 @@ import { ProjectHeader } from "@/components/project-header";
 import { ProjectMembersButton } from "@/components/project-members-button";
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { getProjectForUser } from "@/lib/db/projects";
+import { getArchivedTasksForProject } from "@/lib/db/task-archive";
 import type { AssignmentCandidate } from "@/types/member";
+import { ArchivedTasksButton } from "./archived-tasks-button";
 
 type ProjectBoardContentProps = {
 	projectId: string;
@@ -21,6 +23,11 @@ export async function ProjectBoardContent({
 	if (!project) {
 		notFound();
 	}
+
+	const archivedTasks = await getArchivedTasksForProject(
+		projectId,
+		currentUserId,
+	);
 
 	const permissions = getProjectPermissions(project.accessRole);
 
@@ -48,12 +55,19 @@ export async function ProjectBoardContent({
 						Board
 					</h2>
 
-					<ProjectMembersButton
-						projectId={project.id}
-						owner={project.owner}
-						members={project.members}
-						canManageMembers={permissions.canManageMembers}
-					/>
+					<div className="flex items-center gap-2">
+						<ArchivedTasksButton
+							tasks={archivedTasks}
+							canManage={permissions.canManageTasks}
+						/>
+
+						<ProjectMembersButton
+							projectId={project.id}
+							owner={project.owner}
+							members={project.members}
+							canManageMembers={permissions.canManageMembers}
+						/>
+					</div>
 				</div>
 
 				<KanbanBoard
