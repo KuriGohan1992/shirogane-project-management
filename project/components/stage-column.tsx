@@ -31,6 +31,7 @@ type StageColumnProps = {
 	selectionMode: boolean;
 	selectedTaskIds: ReadonlySet<string>;
 	onToggleTaskSelection: (taskId: string) => void;
+	keyboardFocusedTaskId: string | null;
 };
 
 export function StageColumn({
@@ -47,6 +48,7 @@ export function StageColumn({
 	selectionMode,
 	selectedTaskIds,
 	onToggleTaskSelection,
+	keyboardFocusedTaskId,
 }: StageColumnProps) {
 	const stageDragDisabled = !permissions.canManageStages;
 
@@ -149,6 +151,7 @@ export function StageColumn({
 							selectionMode={selectionMode}
 							selected={selectedTaskIds.has(task.id)}
 							onToggleSelection={onToggleTaskSelection}
+							keyboardFocused={keyboardFocusedTaskId === task.id}
 						/>
 					))
 				)}

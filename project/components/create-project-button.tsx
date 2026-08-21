@@ -8,16 +8,24 @@ import { Button } from "@/components/ui/button";
 
 type CreateProjectButtonProps = {
 	label?: string;
+	keyboardShortcutTarget?: boolean;
 };
 
 export function CreateProjectButton({
 	label = "New Project",
+	keyboardShortcutTarget = false,
 }: CreateProjectButtonProps) {
 	const [isOpen, setIsOpen] = useState(false);
 
 	return (
 		<>
-			<Button type="button" onClick={() => setIsOpen(true)}>
+			<Button
+				type="button"
+				data-keyboard-action={
+					keyboardShortcutTarget ? "new-project" : undefined
+				}
+				onClick={() => setIsOpen(true)}
+			>
 				<Plus aria-hidden="true" />
 				{label}
 			</Button>

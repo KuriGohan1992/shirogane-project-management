@@ -16,6 +16,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { useState } from "react";
+import { DashboardKeyboardShortcuts } from "@/components/dashboard-keyboard-shortcuts";
 import { GlobalSearch } from "@/components/global-search";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -38,6 +39,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
 	return (
 		<div className="min-h-screen bg-background">
+			<DashboardKeyboardShortcuts />
 			{sidebarOpen && (
 				<button
 					type="button"

@@ -215,6 +215,7 @@ export function GlobalSearch() {
 					/>
 
 					<input
+						data-keyboard-action="global-search"
 						type="search"
 						value={query}
 						onChange={(event) => setQuery(event.target.value)}

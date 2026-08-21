@@ -28,6 +28,7 @@ type TaskCardProps = {
 	selectionMode?: boolean;
 	selected?: boolean;
 	onToggleSelection?: (taskId: string) => void;
+	keyboardFocused?: boolean;
 };
 
 function formatMonthDay(date: Date) {
@@ -112,6 +113,7 @@ export function TaskCard({
 	selectionMode = false,
 	selected = false,
 	onToggleSelection,
+	keyboardFocused = false,
 }: TaskCardProps) {
 	const assignedUsers = task.assignees.map((assignee) => assignee.user);
 
@@ -144,11 +146,15 @@ export function TaskCard({
 
 	return (
 		<article
+			id={`board-task-${task.id}`}
+			data-board-task-id={task.id}
 			ref={sortable.ref}
 			className={cn(
 				"relative overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm transition-[border-color,box-shadow,transform] hover:border-foreground/30 hover:shadow-md",
 				sortable.isDragging && "opacity-50",
 				selected && "border-primary ring-2 ring-primary/15",
+				keyboardFocused &&
+					"outline outline-2 outline-offset-2 outline-foreground/35",
 			)}
 		>
 			<div

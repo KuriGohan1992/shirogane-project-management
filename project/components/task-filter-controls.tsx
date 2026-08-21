@@ -239,6 +239,7 @@ export function TaskFilterControls({
 					/>
 
 					<input
+						data-keyboard-action="task-filter"
 						type="search"
 						value={filters.query}
 						maxLength={SEARCH_LIMITS.maxQueryLength}

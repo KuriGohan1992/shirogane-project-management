@@ -53,6 +53,10 @@ type TaskBulkToolbarProps = {
 	visibleTaskIds: string[];
 	onSelectVisible: () => void;
 	onClearSelection: () => void;
+	archiveDialogOpen: boolean;
+	onArchiveDialogOpenChange: (open: boolean) => void;
+	deleteDialogOpen: boolean;
+	onDeleteDialogOpenChange: (open: boolean) => void;
 };
 
 type PriorityValue = NonNullable<Task["priority"]> | null;
@@ -92,6 +96,10 @@ export function TaskBulkToolbar({
 	visibleTaskIds,
 	onSelectVisible,
 	onClearSelection,
+	archiveDialogOpen,
+	onArchiveDialogOpenChange,
+	deleteDialogOpen,
+	onDeleteDialogOpenChange,
 }: TaskBulkToolbarProps) {
 	const router = useRouter();
 
@@ -392,7 +400,10 @@ export function TaskBulkToolbar({
 					</PopoverContent>
 				</Popover>
 
-				<AlertDialog>
+				<AlertDialog
+					open={archiveDialogOpen}
+					onOpenChange={onArchiveDialogOpenChange}
+				>
 					<AlertDialogTrigger asChild>
 						<Button
 							type="button"
@@ -436,7 +447,10 @@ export function TaskBulkToolbar({
 					</AlertDialogContent>
 				</AlertDialog>
 
-				<AlertDialog>
+				<AlertDialog
+					open={deleteDialogOpen}
+					onOpenChange={onDeleteDialogOpenChange}
+				>
 					<AlertDialogTrigger asChild>
 						<Button
 							type="button"

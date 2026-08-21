@@ -5,6 +5,7 @@ import { DragDropProvider } from "@dnd-kit/react";
 import { isSortable } from "@dnd-kit/react/sortable";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+	useCallback,
 	useEffect,
 	useMemo,
 	useOptimistic,
@@ -33,10 +34,15 @@ import {
 } from "@/lib/board/dnd";
 import type { ProjectLabel } from "@/lib/db/schema";
 import {
+	BOARD_KEYBOARD_COMMAND_EVENT,
+	type BoardKeyboardCommandDetail,
+} from "@/lib/keyboard-shortcuts";
+import {
 	hasTaskFilters,
 	matchesTaskFilters,
 	parseTaskFilters,
 } from "@/lib/task-filters";
+import { getTaskHref } from "@/lib/task-route";
 import type { BoardMutationResult } from "@/types/board";
 import type { AssignmentCandidate } from "@/types/member";
 import type { StageWithTasks } from "@/types/stage";
@@ -63,6 +69,11 @@ type KanbanBoardContentProps = {
 type TaskLocation = {
 	stageId: string;
 	index: number;
+};
+
+type KeyboardTaskLocation = {
+	stageIndex: number;
+	taskIndex: number;
 };
 
 type QueuedBoardResult =
@@ -94,6 +105,79 @@ function findTaskLocation(
 	}
 
 	return undefined;
+}
+
+function findKeyboardTaskLocation(
+	stages: StageWithTasks[],
+	taskId: string,
+): KeyboardTaskLocation | undefined {
+	for (const [stageIndex, stage] of stages.entries()) {
+		const taskIndex = stage.tasks.findIndex((task) => task.id === taskId);
+
+		if (taskIndex !== -1) {
+			return {
+				stageIndex,
+				taskIndex,
+			};
+		}
+	}
+
+	return undefined;
+}
+
+function getFirstVisibleTaskId(stages: StageWithTasks[]) {
+	for (const stage of stages) {
+		const firstTask = stage.tasks[0];
+
+		if (firstTask) {
+			return firstTask.id;
+		}
+	}
+
+	return null;
+}
+
+function getVerticalKeyboardTarget(
+	stages: StageWithTasks[],
+	location: KeyboardTaskLocation,
+	direction: -1 | 1,
+) {
+	const stage = stages[location.stageIndex];
+
+	if (!stage) {
+		return null;
+	}
+
+	const targetTask = stage.tasks[location.taskIndex + direction];
+
+	return targetTask?.id ?? stage.tasks[location.taskIndex]?.id ?? null;
+}
+
+function getHorizontalKeyboardTarget(
+	stages: StageWithTasks[],
+	location: KeyboardTaskLocation,
+	direction: -1 | 1,
+) {
+	for (
+		let stageIndex = location.stageIndex + direction;
+		stageIndex >= 0 && stageIndex < stages.length;
+		stageIndex += direction
+	) {
+		const stage = stages[stageIndex];
+
+		if (!stage || stage.tasks.length === 0) {
+			continue;
+		}
+
+		const targetTaskIndex = Math.min(
+			location.taskIndex,
+			stage.tasks.length - 1,
+		);
+
+		return stage.tasks[targetTaskIndex]?.id ?? null;
+	}
+
+	return stages[location.stageIndex]?.tasks[location.taskIndex]?.id ?? null;
 }
 
 function KanbanBoardContent({
@@ -134,6 +218,12 @@ function KanbanBoardContent({
 	const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(
 		() => new Set(),
 	);
+
+	const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null);
+
+	const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
+
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
 	const dragSnapshotRef = useRef<StageWithTasks[] | null>(null);
 
@@ -223,17 +313,58 @@ function KanbanBoardContent({
 		});
 	}, [visibleTaskIds]);
 
-	function toggleSelectionMode() {
+	useEffect(() => {
+		if (!focusedTaskId) {
+			return;
+		}
+
+		if (visibleTaskIds.includes(focusedTaskId)) {
+			return;
+		}
+
+		setFocusedTaskId(getFirstVisibleTaskId(visibleStages));
+	}, [focusedTaskId, visibleStages, visibleTaskIds]);
+
+	useEffect(() => {
+		if (!focusedTaskId) {
+			return;
+		}
+
+		const frameId = window.requestAnimationFrame(() => {
+			const taskElement = document.getElementById(
+				`board-task-${focusedTaskId}`,
+			);
+
+			taskElement?.scrollIntoView({
+				block: "nearest",
+				inline: "nearest",
+			});
+		});
+
+		return () => {
+			window.cancelAnimationFrame(frameId);
+		};
+	}, [focusedTaskId]);
+
+	const toggleSelectionMode = useCallback(() => {
+		if (!permissions.canManageTasks) {
+			return;
+		}
+
 		setSelectionMode((current) => {
 			if (current) {
 				setSelectedTaskIds(new Set());
+				setArchiveDialogOpen(false);
+				setDeleteDialogOpen(false);
+			} else if (!focusedTaskId) {
+				setFocusedTaskId(getFirstVisibleTaskId(visibleStages));
 			}
 
 			return !current;
 		});
-	}
+	}, [focusedTaskId, permissions.canManageTasks, visibleStages]);
 
-	function toggleTaskSelection(taskId: string) {
+	const toggleTaskSelection = useCallback((taskId: string) => {
 		setSelectedTaskIds((current) => {
 			const next = new Set(current);
 
@@ -245,7 +376,7 @@ function KanbanBoardContent({
 
 			return next;
 		});
-	}
+	}, []);
 
 	function selectVisibleTasks() {
 		setSelectedTaskIds((current) => {
@@ -262,6 +393,58 @@ function KanbanBoardContent({
 	function clearSelection() {
 		setSelectedTaskIds(new Set());
 	}
+
+	const moveKeyboardFocus = useCallback(
+		(direction: "left" | "right" | "up" | "down") => {
+			setFocusedTaskId((currentTaskId) => {
+				const firstTaskId = getFirstVisibleTaskId(visibleStages);
+
+				if (!currentTaskId) {
+					return firstTaskId;
+				}
+
+				const location = findKeyboardTaskLocation(visibleStages, currentTaskId);
+
+				if (!location) {
+					return firstTaskId;
+				}
+
+				if (direction === "up") {
+					return getVerticalKeyboardTarget(visibleStages, location, -1);
+				}
+
+				if (direction === "down") {
+					return getVerticalKeyboardTarget(visibleStages, location, 1);
+				}
+
+				if (direction === "left") {
+					return getHorizontalKeyboardTarget(visibleStages, location, -1);
+				}
+
+				return getHorizontalKeyboardTarget(visibleStages, location, 1);
+			});
+		},
+		[visibleStages],
+	);
+
+	const openFocusedTask = useCallback(() => {
+		if (!focusedTaskId) {
+			return;
+		}
+
+		for (const stage of visibleStages) {
+			const task = stage.tasks.find(
+				(candidate) => candidate.id === focusedTaskId,
+			);
+
+			if (!task) {
+				continue;
+			}
+
+			router.push(getTaskHref(projectId, task.id, task.title));
+			return;
+		}
+	}, [focusedTaskId, projectId, router, visibleStages]);
 
 	function clearTaskDragPreview() {
 		dragPreviewRef.current = null;
@@ -354,6 +537,136 @@ function KanbanBoardContent({
 			}
 		});
 	}
+
+	useEffect(() => {
+		function handleBoardKeyboardCommand(event: Event) {
+			const keyboardEvent = event as CustomEvent<BoardKeyboardCommandDetail>;
+
+			const command = keyboardEvent.detail?.command;
+
+			if (!command) {
+				return;
+			}
+
+			if (command === "left" || command === "right") {
+				if (visibleTaskIds.length === 0) {
+					return;
+				}
+
+				keyboardEvent.preventDefault();
+				moveKeyboardFocus(command);
+				return;
+			}
+
+			if (command === "up" || command === "down") {
+				if (visibleTaskIds.length === 0) {
+					return;
+				}
+
+				keyboardEvent.preventDefault();
+				moveKeyboardFocus(command);
+				return;
+			}
+
+			if (command === "open") {
+				if (!focusedTaskId) {
+					return;
+				}
+
+				keyboardEvent.preventDefault();
+				openFocusedTask();
+				return;
+			}
+
+			if (command === "toggle-selection-mode") {
+				if (!permissions.canManageTasks) {
+					return;
+				}
+
+				keyboardEvent.preventDefault();
+				toggleSelectionMode();
+				return;
+			}
+
+			if (command === "toggle-focused-selection") {
+				if (
+					!selectionMode ||
+					!focusedTaskId ||
+					!visibleTaskIds.includes(focusedTaskId)
+				) {
+					return;
+				}
+
+				keyboardEvent.preventDefault();
+				toggleTaskSelection(focusedTaskId);
+				return;
+			}
+
+			if (command === "archive-selected") {
+				if (
+					selectionMode &&
+					selectedTaskIds.size > 0 &&
+					permissions.canManageTasks
+				) {
+					keyboardEvent.preventDefault();
+					setArchiveDialogOpen(true);
+				}
+
+				return;
+			}
+
+			if (command === "delete-selected") {
+				if (
+					selectionMode &&
+					selectedTaskIds.size > 0 &&
+					permissions.canManageTasks
+				) {
+					keyboardEvent.preventDefault();
+					setDeleteDialogOpen(true);
+				}
+
+				return;
+			}
+
+			if (command === "escape") {
+				if (selectionMode) {
+					keyboardEvent.preventDefault();
+					setSelectionMode(false);
+					setSelectedTaskIds(new Set());
+					setArchiveDialogOpen(false);
+					setDeleteDialogOpen(false);
+					return;
+				}
+
+				if (focusedTaskId) {
+					keyboardEvent.preventDefault();
+					setFocusedTaskId(null);
+				}
+			}
+		}
+
+		window.addEventListener(
+			BOARD_KEYBOARD_COMMAND_EVENT,
+			handleBoardKeyboardCommand,
+		);
+
+		return () => {
+			window.removeEventListener(
+				BOARD_KEYBOARD_COMMAND_EVENT,
+				handleBoardKeyboardCommand,
+			);
+		};
+	}, [
+		focusedTaskId,
+		moveKeyboardFocus,
+		openFocusedTask,
+		permissions.canManageTasks,
+		selectedTaskIds,
+		selectionMode,
+		toggleSelectionMode,
+		toggleTaskSelection,
+		visibleTaskIds,
+	]);
 
 	return (
 		<div className="space-y-3">
@@ -624,6 +937,10 @@ function KanbanBoardContent({
 							visibleTaskIds={visibleTaskIds}
 							onSelectVisible={selectVisibleTasks}
 							onClearSelection={clearSelection}
+							archiveDialogOpen={archiveDialogOpen}
+							onArchiveDialogOpenChange={setArchiveDialogOpen}
+							deleteDialogOpen={deleteDialogOpen}
+							onDeleteDialogOpenChange={setDeleteDialogOpen}
 						/>
 					)}
 
@@ -646,6 +963,7 @@ function KanbanBoardContent({
 								selectionMode={selectionMode}
 								selectedTaskIds={selectedTaskIds}
 								onToggleTaskSelection={toggleTaskSelection}
+								keyboardFocusedTaskId={focusedTaskId}
 							/>
 						))}
 

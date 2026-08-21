@@ -255,6 +255,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 					/>
 
 					<input
+						data-keyboard-action="project-filter"
 						type="search"
 						value={queryInput}
 						maxLength={SEARCH_LIMITS.maxQueryLength}

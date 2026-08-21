@@ -20,7 +20,7 @@ export default async function ProjectsPage() {
 					</p>
 				</div>
 
-				<CreateProjectButton />
+				<CreateProjectButton keyboardShortcutTarget />
 			</div>
 
 			<ProjectGrid projects={projects} />
