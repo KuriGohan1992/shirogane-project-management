@@ -1,12 +1,18 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import type React from "react";
-import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Analytics } from "@vercel/analytics/next";
+import type { Metadata } from "next";
+import { Manrope } from "next/font/google";
+import type React from "react";
+
 import { ThemeProvider } from "@/components/theme-provider";
 
-const inter = Inter({ subsets: ["latin"] });
+import "./globals.css";
+
+const manrope = Manrope({
+	subsets: ["latin"],
+	variable: "--font-manrope",
+	display: "swap",
+});
 
 export const metadata: Metadata = {
 	title: {
@@ -23,10 +29,11 @@ export default function RootLayout({
 }) {
 	return (
 		<html lang="en" suppressHydrationWarning>
-			<body className={inter.className}>
+			<body className={`${manrope.variable} font-sans antialiased`}>
 				<ClerkProvider>
 					<ThemeProvider>
 						{children}
+
 						<Analytics />
 					</ThemeProvider>
 				</ClerkProvider>

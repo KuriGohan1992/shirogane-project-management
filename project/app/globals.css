@@ -1,7 +1,12 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
+
 @theme inline {
+	--font-sans:
+		var(--font-manrope), ui-sans-serif, system-ui, sans-serif,
+		"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
 
@@ -30,9 +35,9 @@
 	--color-input: var(--input);
 	--color-ring: var(--ring);
 
-	--color-brand-soft: #eff6ff;
-	--color-brand: #2563eb;
-	--color-brand-hover: #1d4ed8;
+	--color-brand-soft: var(--brand-soft);
+	--color-brand: var(--primary);
+	--color-brand-hover: var(--primary-hover);
 
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);
@@ -40,16 +45,6 @@
 	--radius-xl: calc(var(--radius) + 4px);
 }
 
-/*
-	The default border color changed to `currentColor` in Tailwind CSS v4.
-
-	This compatibility rule preserves Tailwind CSS v3's previous default
-	border behavior for existing elements that use utilities such as
-	`border` without specifying an explicit border color.
-
-	It can be removed later after every bordered element uses an explicit
-	color utility such as `border-border`.
-*/
 @layer base {
 	*,
 	::after,
@@ -61,98 +56,117 @@
 }
 
 /*
-	Light-theme semantic values.
-
-	These variables do not directly create utility classes. The variables
-	declared in `@theme` above connect them to Tailwind utilities such as
-	`bg-background`, `text-foreground`, and `border-border`.
-*/
+ * Light theme
+ *
+ * Canvas and surfaces intentionally differ so cards and navigation
+ * have hierarchy without relying on heavy shadows.
+ */
 :root {
-	--background: #ffffff;
-	--foreground: #171717;
+	color-scheme: light;
+
+	--background: #f6f8fc;
+	--foreground: #172033;
 
 	--card: #ffffff;
-	--card-foreground: #171717;
+	--card-foreground: #172033;
 
 	--popover: #ffffff;
-	--popover-foreground: #171717;
+	--popover-foreground: #172033;
 
 	--primary: #2563eb;
+	--primary-hover: #1d4ed8;
 	--primary-foreground: #ffffff;
 
-	--secondary: #f3f4f6;
-	--secondary-foreground: #171717;
+	--brand-soft: #eaf1ff;
 
-	--muted: #f3f4f6;
-	--muted-foreground: #6b7280;
+	--secondary: #eef2f7;
+	--secondary-foreground: #24324a;
 
-	--accent: #eff6ff;
-	--accent-foreground: #1d4ed8;
+	--muted: #eef2f7;
+	--muted-foreground: #667085;
+
+	--accent: #e9eef5;
+	--accent-foreground: #172033;
 
 	--destructive: #dc2626;
 	--destructive-foreground: #ffffff;
 
-	--border: #e5e7eb;
-	--input: #d1d5db;
+	--border: #d8e0eb;
+	--input: #cbd5e1;
 	--ring: #2563eb;
 
 	--radius: 0.5rem;
 }
 
-/* Dark-theme semantic values */
+/*
+ * Dark theme
+ *
+ * The canvas is deep navy, while surfaces are visibly lighter.
+ * Primary stays exactly the same as light mode.
+ */
 .dark {
-	--background: #111827;
-	--foreground: #f9fafb;
+	color-scheme: dark;
 
-	--card: #1f2937;
-	--card-foreground: #f9fafb;
+	--background: #0a1020;
+	--foreground: #f3f6fb;
 
-	--popover: #1f2937;
-	--popover-foreground: #f9fafb;
+	--card: #131d2d;
+	--card-foreground: #f3f6fb;
 
-	--primary: #3b82f6;
+	--popover: #182438;
+	--popover-foreground: #f3f6fb;
+
+	--primary: #2563eb;
+	--primary-hover: #1d4ed8;
 	--primary-foreground: #ffffff;
 
-	--secondary: #374151;
-	--secondary-foreground: #f9fafb;
+	--brand-soft: #172554;
 
-	--muted: #374151;
-	--muted-foreground: #9ca3af;
+	--secondary: #1b283b;
+	--secondary-foreground: #edf2f8;
 
-	--accent: #1e3a8a;
-	--accent-foreground: #dbeafe;
+	--muted: #1a2638;
+	--muted-foreground: #9ca9bb;
+
+	--accent: #24334a;
+	--accent-foreground: #f3f6fb;
 
 	--destructive: #ef4444;
 	--destructive-foreground: #ffffff;
 
-	--border: #374151;
-	--input: #4b5563;
-	--ring: #60a5fa;
+	--border: #2b3a50;
+	--input: #39495f;
+	--ring: #2563eb;
 }
 
-/*
-	Base styles applied globally.
-
-	`border-border` gives every element the semantic border color, while
-	the body receives the active theme's background and foreground colors.
-*/
 @layer base {
 	* {
 		@apply border-border;
 	}
 
+	html {
+		background: var(--background);
+	}
+
 	body {
-		@apply bg-background text-foreground;
+		@apply bg-background font-sans text-foreground antialiased;
+		min-height: 100vh;
+		text-rendering: optimizeLegibility;
+	}
+
+	::selection {
+		background: rgb(37 99 235 / 25%);
 	}
 }
-/* Custom scrollbar styles */
+
 .scrollbar-thin {
 	scrollbar-width: thin;
-	scrollbar-color: var(--muted-foreground) transparent;
+	scrollbar-color: var(--input) transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
 	width: 6px;
+	height: 6px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
@@ -160,6 +174,10 @@
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
+	background-color: var(--input);
+	border-radius: 999px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
 	background-color: var(--muted-foreground);
-	border-radius: 3px;
 }
