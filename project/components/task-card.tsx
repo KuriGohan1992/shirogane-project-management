@@ -1,7 +1,7 @@
+import { PointerActivationConstraints, PointerSensor } from "@dnd-kit/dom";
 import { useSortable } from "@dnd-kit/react/sortable";
 import { Check, MessageSquare } from "lucide-react";
 import Link from "next/link";
-
 import { TaskActions } from "@/components/task-actions";
 import { TaskAssigneePicker } from "@/components/task-assignee-picker";
 import { TaskLabelBadge } from "@/components/task-label-badge";
@@ -142,6 +142,27 @@ export function TaskCard({
 		type: BOARD_DND_TYPES.task,
 		accept: BOARD_DND_TYPES.task,
 		disabled: taskDragDisabled,
+
+		sensors: [
+			PointerSensor.configure({
+				activationConstraints(event) {
+					if (event.pointerType === "touch") {
+						return [
+							new PointerActivationConstraints.Delay({
+								value: 250,
+								tolerance: 5,
+							}),
+						];
+					}
+
+					return [
+						new PointerActivationConstraints.Distance({
+							value: 6,
+						}),
+					];
+				},
+			}),
+		],
 	});
 
 	return (

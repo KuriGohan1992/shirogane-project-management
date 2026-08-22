@@ -24,7 +24,12 @@ export function ProjectActivityButton({
 	return (
 		<Sheet>
 			<SheetTrigger asChild>
-				<Button type="button" variant="outline" size="sm" className="h-9 gap-2">
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					className="h-9 gap-2 bg-card"
+				>
 					<History aria-hidden="true" className="size-4" />
 					Activity
 				</Button>

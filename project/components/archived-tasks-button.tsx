@@ -47,7 +47,12 @@ export function ArchivedTasksButton({
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
-				<Button type="button" variant="outline" size="sm" className="h-9 gap-2">
+				<Button
+					type="button"
+					variant="outline"
+					size="sm"
+					className="h-9 gap-2 bg-card"
+				>
 					<Archive aria-hidden="true" className="size-4" />
 
 					<span>Archived</span>

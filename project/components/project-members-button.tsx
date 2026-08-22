@@ -31,7 +31,7 @@ export function ProjectMembersButton({
 				type="button"
 				variant="outline"
 				size="sm"
-				className="h-9 gap-2"
+				className="h-9 gap-2 bg-card"
 				onClick={() => setIsOpen(true)}
 			>
 				<Users aria-hidden="true" className="size-4" />
