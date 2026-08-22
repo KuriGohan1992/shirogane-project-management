@@ -24,7 +24,7 @@ export const PROJECT_FILTER_DEFAULTS = {
 } as const;
 
 const ACCESS_FILTER_VALUES = ["owner", "member", "viewer"] as const;
-const STATUS_FILTER_VALUES = ["open", "closed"] as const;
+const STATUS_FILTER_VALUES = ["active", "completed"] as const;
 
 const SCHEDULE_FILTER_VALUES = [
 	"no-dates",
@@ -190,9 +190,9 @@ export function matchesProjectStatusFilter(
 		return true;
 	}
 
-	return filter === "closed"
-		? project.closedAt !== null
-		: project.closedAt === null;
+	return filter === "completed"
+		? project.completedAt !== null
+		: project.completedAt === null;
 }
 
 export function sortProjects(

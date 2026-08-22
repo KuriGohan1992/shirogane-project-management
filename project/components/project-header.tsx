@@ -66,7 +66,7 @@ export function ProjectHeader({
 	const hasProjectAdminActions =
 		permissions.canEditProject ||
 		permissions.canDeleteProject ||
-		permissions.canCloseProject;
+		permissions.canCompleteProject;
 
 	const showOwner = accessRole !== "owner";
 
@@ -82,7 +82,7 @@ export function ProjectHeader({
 
 			<div className="p-6 pt-7">
 				<div className="flex min-w-0 items-start gap-4">
-					<div className="flex min-w-0 flex-1 items-center gap-2">
+					<div className="flex min-w-0 flex-1 items-center gap-3">
 						<h1
 							title={project.name}
 							className="min-w-0 truncate text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
@@ -90,9 +90,9 @@ export function ProjectHeader({
 							{project.name}
 						</h1>
 
-						{project.closedAt && (
+						{project.completedAt && (
 							<span className="shrink-0 rounded-md bg-muted px-2 py-1 text-xs font-semibold text-muted-foreground">
-								Closed
+								Completed
 							</span>
 						)}
 					</div>
@@ -102,16 +102,22 @@ export function ProjectHeader({
 							{headerActions}
 
 							{headerActions && hasProjectAdminActions && (
-								<div aria-hidden="true" className="h-6 w-px bg-border" />
+								<div
+									aria-hidden="true"
+									className="h-6 w-px shrink-0 bg-border ml-2"
+								/>
 							)}
 
-							<ProjectActions
-								project={toEditableProject(project)}
-								canEdit={permissions.canEditProject}
-								canDelete={permissions.canDeleteProject}
-								canClose={permissions.canCloseProject}
-								isClosed={project.closedAt !== null}
-							/>
+							{hasProjectAdminActions && (
+								<ProjectActions
+									project={toEditableProject(project)}
+									canEdit={permissions.canEditProject}
+									canDelete={permissions.canDeleteProject}
+									canComplete={permissions.canCompleteProject}
+									isCompleted={project.completedAt !== null}
+									compact
+								/>
+							)}
 						</div>
 					)}
 				</div>

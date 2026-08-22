@@ -50,6 +50,13 @@
       "when": 1787408892060,
       "tag": "0006_demonic_romulus",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787414920521,
+      "tag": "0007_old_tombstone",
+      "breakpoints": true
     }
   ]
 }

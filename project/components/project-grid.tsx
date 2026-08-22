@@ -331,9 +331,9 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 						<SelectContent>
 							<SelectItem value="all">All projects</SelectItem>
 
-							<SelectItem value="open">Open</SelectItem>
+							<SelectItem value="active">Active</SelectItem>
 
-							<SelectItem value="closed">Closed</SelectItem>
+							<SelectItem value="completed">Completed</SelectItem>
 						</SelectContent>
 					</Select>
 

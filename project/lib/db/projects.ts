@@ -128,6 +128,17 @@ export async function getProjectsForUser(
 	const [ownedProjects, memberships] = await Promise.all([
 		db.query.projects.findMany({
 			where: (project, { eq }) => eq(project.ownerId, userId),
+
+			with: {
+				owner: {
+					columns: {
+						id: true,
+						name: true,
+						email: true,
+						imageUrl: true,
+					},
+				},
+			},
 		}),
 
 		db.query.projectMembers.findMany({
@@ -138,7 +149,18 @@ export async function getProjectsForUser(
 			where: (member, { eq }) => eq(member.userId, userId),
 
 			with: {
-				project: true,
+				project: {
+					with: {
+						owner: {
+							columns: {
+								id: true,
+								name: true,
+								email: true,
+								imageUrl: true,
+							},
+						},
+					},
+				},
 			},
 		}),
 	]);
@@ -330,14 +352,14 @@ export async function updateProjectForUser(
 	return project;
 }
 
-export async function setProjectClosedForUser(
+export async function setProjectCompletedForUser(
 	projectId: string,
 	userId: string,
-	closed: boolean,
+	completed: boolean,
 ): Promise<Project | undefined> {
 	const accessRole = await getProjectAccess(projectId, userId);
 
-	if (!accessRole || !getProjectPermissions(accessRole).canCloseProject) {
+	if (!accessRole || !getProjectPermissions(accessRole).canCompleteProject) {
 		return undefined;
 	}
 
@@ -349,9 +371,9 @@ export async function setProjectClosedForUser(
 		return undefined;
 	}
 
-	const isCurrentlyClosed = existingProject.closedAt !== null;
+	const isCurrentlyCompleted = existingProject.completedAt !== null;
 
-	if (isCurrentlyClosed === closed) {
+	if (isCurrentlyCompleted === completed) {
 		return existingProject;
 	}
 
@@ -360,7 +382,7 @@ export async function setProjectClosedForUser(
 	const [project] = await db
 		.update(projects)
 		.set({
-			closedAt: closed ? changedAt : null,
+			completedAt: completed ? changedAt : null,
 			updatedAt: changedAt,
 		})
 		.where(eq(projects.id, projectId))
@@ -373,7 +395,7 @@ export async function setProjectClosedForUser(
 	await recordActivity({
 		projectId,
 		actorId: userId,
-		action: closed ? "project_closed" : "project_reopened",
+		action: completed ? "project_completed" : "project_reactivated",
 		metadata: {
 			projectName: project.name,
 		},

@@ -8,7 +8,7 @@ import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import {
 	createProjectWithDefaultStages,
 	deleteProjectForUser,
-	setProjectClosedForUser,
+	setProjectCompletedForUser,
 	updateProjectForUser,
 } from "@/lib/db/projects";
 import { projectFormSchema, projectIdSchema } from "@/lib/validations/project";
@@ -136,9 +136,9 @@ export async function updateProject(
 	}
 }
 
-export async function setProjectClosedState(
+export async function setProjectCompletedState(
 	projectId: string,
-	closed: boolean,
+	completed: boolean,
 	_formData: FormData,
 ): Promise<void> {
 	const projectIdResult = projectIdSchema.safeParse(projectId);
@@ -152,10 +152,10 @@ export async function setProjectClosedState(
 	try {
 		const user = await getCurrentDatabaseUser();
 
-		const project = await setProjectClosedForUser(
+		const project = await setProjectCompletedForUser(
 			projectIdResult.data,
 			user.id,
-			closed,
+			completed,
 		);
 
 		if (!project) {

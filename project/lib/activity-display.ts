@@ -38,11 +38,11 @@ export function getActivityMessage(activity: ActivityWithActor) {
 				? `updated project ${metadata.changedFields}`
 				: "updated the project";
 
-		case "project_closed":
-			return "closed this project";
+		case "project_completed":
+			return "marked this project as completed";
 
-		case "project_reopened":
-			return "reopened this project";
+		case "project_reactivated":
+			return "marked this project as active";
 
 		case "stage_created":
 			return metadata.stageName
