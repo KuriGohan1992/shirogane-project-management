@@ -26,6 +26,7 @@ import { SEARCH_LIMITS } from "@/lib/constants/search";
 import {
 	getDefaultProjectSortDirection,
 	matchesProjectScheduleFilter,
+	matchesProjectStatusFilter,
 	PROJECT_FILTER_DEFAULTS,
 	PROJECT_FILTER_PARAMS,
 	type ProjectSortOption,
@@ -34,6 +35,7 @@ import {
 	parseProjectScheduleFilter,
 	parseProjectSortDirection,
 	parseProjectSortOption,
+	parseProjectStatusFilter,
 	sortProjects,
 } from "@/lib/project-filters";
 import type { ProjectWithAccess } from "@/types/project";
@@ -84,6 +86,10 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 		searchParams.get(PROJECT_FILTER_PARAMS.color),
 	);
 
+	const statusFilter = parseProjectStatusFilter(
+		searchParams.get(PROJECT_FILTER_PARAMS.status),
+	);
+
 	const scheduleFilter = parseProjectScheduleFilter(
 		searchParams.get(PROJECT_FILTER_PARAMS.dates),
 	);
@@ -105,6 +111,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 		normalizedQuery.length > 0 ||
 		accessFilter !== PROJECT_FILTER_DEFAULTS.access ||
 		colorFilter !== PROJECT_FILTER_DEFAULTS.color ||
+		statusFilter !== PROJECT_FILTER_DEFAULTS.status ||
 		scheduleFilter !== PROJECT_FILTER_DEFAULTS.dates;
 
 	// Keep the controlled input synchronized with bookmarked or shared URLs.
@@ -160,6 +167,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 				matchesQuery &&
 				matchesAccess &&
 				matchesColor &&
+				matchesProjectStatusFilter(project, statusFilter) &&
 				matchesProjectScheduleFilter(project, scheduleFilter)
 			);
 		});
@@ -170,6 +178,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 		normalizedQuery,
 		accessFilter,
 		colorFilter,
+		statusFilter,
 		scheduleFilter,
 		sort,
 		sortDirection,
@@ -214,6 +223,8 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 		params.delete(PROJECT_FILTER_PARAMS.access);
 
 		params.delete(PROJECT_FILTER_PARAMS.color);
+
+		params.delete(PROJECT_FILTER_PARAMS.status);
 
 		params.delete(PROJECT_FILTER_PARAMS.dates);
 
@@ -300,6 +311,29 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 							<SelectItem value="member">Member</SelectItem>
 
 							<SelectItem value="viewer">Viewer</SelectItem>
+						</SelectContent>
+					</Select>
+
+					<Select
+						value={statusFilter}
+						onValueChange={(value) =>
+							updateProjectFilterParam(
+								PROJECT_FILTER_PARAMS.status,
+								value,
+								PROJECT_FILTER_DEFAULTS.status,
+							)
+						}
+					>
+						<SelectTrigger size="sm" aria-label="Filter projects by status">
+							<SelectValue />
+						</SelectTrigger>
+
+						<SelectContent>
+							<SelectItem value="all">All projects</SelectItem>
+
+							<SelectItem value="open">Open</SelectItem>
+
+							<SelectItem value="closed">Closed</SelectItem>
 						</SelectContent>
 					</Select>
 

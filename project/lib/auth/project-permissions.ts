@@ -5,6 +5,7 @@ export type ProjectAccessRole = "owner" | ProjectMemberRoleValue;
 export type ProjectPermissions = {
 	canEditProject: boolean;
 	canDeleteProject: boolean;
+	canCloseProject: boolean;
 	canManageMembers: boolean;
 	canManageStages: boolean;
 	canManageTasks: boolean;
@@ -14,6 +15,7 @@ export type ProjectPermissions = {
 const OWNER_PERMISSIONS: ProjectPermissions = {
 	canEditProject: true,
 	canDeleteProject: true,
+	canCloseProject: true,
 	canManageMembers: true,
 	canManageStages: true,
 	canManageTasks: true,
@@ -23,6 +25,7 @@ const OWNER_PERMISSIONS: ProjectPermissions = {
 const MEMBER_PERMISSIONS: ProjectPermissions = {
 	canEditProject: false,
 	canDeleteProject: false,
+	canCloseProject: false,
 	canManageMembers: false,
 	canManageStages: true,
 	canManageTasks: true,
@@ -32,6 +35,7 @@ const MEMBER_PERMISSIONS: ProjectPermissions = {
 const VIEWER_PERMISSIONS: ProjectPermissions = {
 	canEditProject: false,
 	canDeleteProject: false,
+	canCloseProject: false,
 	canManageMembers: false,
 	canManageStages: false,
 	canManageTasks: false,

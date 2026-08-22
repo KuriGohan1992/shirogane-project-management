@@ -9,6 +9,7 @@ export const PROJECT_FILTER_PARAMS = {
 	query: "q",
 	access: "access",
 	color: "color",
+	status: "status",
 	dates: "dates",
 	sort: "sort",
 	order: "order",
@@ -17,11 +18,13 @@ export const PROJECT_FILTER_PARAMS = {
 export const PROJECT_FILTER_DEFAULTS = {
 	access: "all",
 	color: "all",
+	status: "all",
 	dates: "all",
 	sort: "last-activity",
 } as const;
 
 const ACCESS_FILTER_VALUES = ["owner", "member", "viewer"] as const;
+const STATUS_FILTER_VALUES = ["open", "closed"] as const;
 
 const SCHEDULE_FILTER_VALUES = [
 	"no-dates",
@@ -54,6 +57,9 @@ export type ProjectScheduleFilter =
 export type ProjectSortOption = (typeof SORT_VALUES)[number];
 
 export type ProjectSortDirection = (typeof SORT_DIRECTION_VALUES)[number];
+export type ProjectStatusFilter =
+	| typeof PROJECT_FILTER_DEFAULTS.status
+	| (typeof STATUS_FILTER_VALUES)[number];
 
 const PROJECT_SORT_DEFAULT_DIRECTION: Record<
 	ProjectSortOption,
@@ -117,6 +123,14 @@ export function parseProjectColorFilter(
 		: PROJECT_FILTER_DEFAULTS.color;
 }
 
+export function parseProjectStatusFilter(
+	value: string | null,
+): ProjectStatusFilter {
+	return includesValue(STATUS_FILTER_VALUES, value)
+		? value
+		: PROJECT_FILTER_DEFAULTS.status;
+}
+
 export function parseProjectScheduleFilter(
 	value: string | null,
 ): ProjectScheduleFilter {
@@ -166,6 +180,19 @@ export function matchesProjectScheduleFilter(
 	}
 
 	return dueDate >= today && dueDate <= today + 7 * DAY_IN_MS;
+}
+
+export function matchesProjectStatusFilter(
+	project: ProjectWithAccess,
+	filter: ProjectStatusFilter,
+) {
+	if (filter === "all") {
+		return true;
+	}
+
+	return filter === "closed"
+		? project.closedAt !== null
+		: project.closedAt === null;
 }
 
 export function sortProjects(

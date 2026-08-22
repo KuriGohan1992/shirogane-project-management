@@ -8,6 +8,7 @@ import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import {
 	createProjectWithDefaultStages,
 	deleteProjectForUser,
+	setProjectClosedForUser,
 	updateProjectForUser,
 } from "@/lib/db/projects";
 import { projectFormSchema, projectIdSchema } from "@/lib/validations/project";
@@ -133,6 +134,43 @@ export async function updateProject(
 			message: "Something went wrong while updating the project.",
 		};
 	}
+}
+
+export async function setProjectClosedState(
+	projectId: string,
+	closed: boolean,
+	_formData: FormData,
+): Promise<void> {
+	const projectIdResult = projectIdSchema.safeParse(projectId);
+
+	if (!projectIdResult.success) {
+		throw new Error(
+			"Project not found or you do not have permission to change its status.",
+		);
+	}
+
+	try {
+		const user = await getCurrentDatabaseUser();
+
+		const project = await setProjectClosedForUser(
+			projectIdResult.data,
+			user.id,
+			closed,
+		);
+
+		if (!project) {
+			throw new Error(
+				"Project not found or you do not have permission to change its status.",
+			);
+		}
+	} catch (error) {
+		console.error("Failed to change project status:", error);
+		throw error;
+	}
+
+	revalidatePath("/projects");
+	revalidatePath(`/projects/${projectIdResult.data}`, "layout");
+	revalidatePath("/dashboard");
 }
 
 export async function deleteProject(

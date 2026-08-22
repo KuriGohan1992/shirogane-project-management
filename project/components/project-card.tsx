@@ -73,12 +73,22 @@ export function ProjectCard({ project }: ProjectCardProps) {
 						project={toEditableProject(project)}
 						canEdit={permissions.canEditProject}
 						canDelete={permissions.canDeleteProject}
+						canClose={permissions.canCloseProject}
+						isClosed={project.closedAt !== null}
 						compact
 					/>
 
-					<span className="shrink-0 text-xs font-medium capitalize text-muted-foreground">
-						{project.accessRole}
-					</span>
+					<div className="flex shrink-0 items-center gap-2">
+						{project.closedAt && (
+							<span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
+								Closed
+							</span>
+						)}
+
+						<span className="text-xs font-medium capitalize text-muted-foreground">
+							{project.accessRole}
+						</span>
+					</div>
 				</div>
 
 				<Link href={`/projects/${project.id}`} className="min-h-0">

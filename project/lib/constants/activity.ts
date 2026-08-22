@@ -1,6 +1,8 @@
 export const PROJECT_ACTIVITY_ACTION_VALUES = [
 	"project_created",
 	"project_updated",
+	"project_closed",
+	"project_reopened",
 	"stage_created",
 	"stage_renamed",
 	"stage_deleted",

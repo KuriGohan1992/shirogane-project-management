@@ -330,6 +330,58 @@ export async function updateProjectForUser(
 	return project;
 }
 
+export async function setProjectClosedForUser(
+	projectId: string,
+	userId: string,
+	closed: boolean,
+): Promise<Project | undefined> {
+	const accessRole = await getProjectAccess(projectId, userId);
+
+	if (!accessRole || !getProjectPermissions(accessRole).canCloseProject) {
+		return undefined;
+	}
+
+	const existingProject = await db.query.projects.findFirst({
+		where: (project, { eq }) => eq(project.id, projectId),
+	});
+
+	if (!existingProject) {
+		return undefined;
+	}
+
+	const isCurrentlyClosed = existingProject.closedAt !== null;
+
+	if (isCurrentlyClosed === closed) {
+		return existingProject;
+	}
+
+	const changedAt = new Date();
+
+	const [project] = await db
+		.update(projects)
+		.set({
+			closedAt: closed ? changedAt : null,
+			updatedAt: changedAt,
+		})
+		.where(eq(projects.id, projectId))
+		.returning();
+
+	if (!project) {
+		return undefined;
+	}
+
+	await recordActivity({
+		projectId,
+		actorId: userId,
+		action: closed ? "project_closed" : "project_reopened",
+		metadata: {
+			projectName: project.name,
+		},
+	});
+
+	return project;
+}
+
 export async function deleteProjectForUser(
 	projectId: string,
 	userId: string,

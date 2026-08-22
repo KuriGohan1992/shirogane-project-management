@@ -91,11 +91,17 @@ export const projects = pgTable(
 			mode: "date",
 		}),
 
+		closedAt: timestamp("closed_at", {
+			withTimezone: true,
+			mode: "date",
+		}),
+
 		...timestamps,
 	},
 	(table) => [
 		index("projects_owner_id_idx").on(table.ownerId),
 		index("projects_created_at_idx").on(table.createdAt),
+		index("projects_closed_at_idx").on(table.closedAt),
 	],
 );
 
