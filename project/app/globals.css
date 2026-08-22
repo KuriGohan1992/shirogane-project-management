@@ -36,8 +36,13 @@
 	--color-ring: var(--ring);
 
 	--color-brand-soft: var(--brand-soft);
-	--color-brand: var(--primary);
+	--color-brand: var(--brand);
 	--color-brand-hover: var(--primary-hover);
+
+	--color-board-stage: var(--board-stage);
+	--color-board-stage-header: var(--board-stage-header);
+	--color-board-task: var(--board-task);
+	--color-board-task-hover: var(--board-task-hover);
 
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);
@@ -55,14 +60,10 @@
 	}
 }
 
-/*
- * Light theme
- *
- * Canvas and surfaces intentionally differ so cards and navigation
- * have hierarchy without relying on heavy shadows.
- */
 :root {
 	color-scheme: light;
+
+	--brand: #2563eb;
 
 	--background: #f6f8fc;
 	--foreground: #172033;
@@ -95,17 +96,23 @@
 	--input: #cbd5e1;
 	--ring: #2563eb;
 
+	--board-stage: #edf2f8;
+	--board-stage-header: #e4ebf5;
+	--board-task: #ffffff;
+	--board-task-hover: #f8fafc;
+
 	--radius: 0.5rem;
 }
 
-/*
- * Dark theme
- *
- * The canvas is deep navy, while surfaces are visibly lighter.
- * Primary stays exactly the same as light mode.
- */
 .dark {
 	color-scheme: dark;
+
+	/*
+	 * The Shiro brand itself remains #2563eb.
+	 * Interactive UI uses a darker blue so large selected
+	 * surfaces do not become overwhelmingly bright.
+	 */
+	--brand: #2563eb;
 
 	--background: #0a1020;
 	--foreground: #f3f6fb;
@@ -116,8 +123,8 @@
 	--popover: #182438;
 	--popover-foreground: #f3f6fb;
 
-	--primary: #2563eb;
-	--primary-hover: #1d4ed8;
+	--primary: #3153b7;
+	--primary-hover: #3a60c7;
 	--primary-foreground: #ffffff;
 
 	--brand-soft: #172554;
@@ -136,7 +143,21 @@
 
 	--border: #2b3a50;
 	--input: #39495f;
-	--ring: #2563eb;
+	--ring: #5b7cfa;
+
+	/*
+	 * Board hierarchy.
+	 *
+	 * Canvas
+	 *   Stage
+	 *     Stage header
+	 *     Task
+	 *       Task hover
+	 */
+	--board-stage: #101a29;
+	--board-stage-header: #17253a;
+	--board-task: #1b2a40;
+	--board-task-hover: #22344d;
 }
 
 @layer base {

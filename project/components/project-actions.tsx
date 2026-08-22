@@ -25,7 +25,10 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import { deleteProject, setProjectCompletedState } from "@/lib/actions/projects";
+import {
+	deleteProject,
+	setProjectCompletedState,
+} from "@/lib/actions/projects";
 import type { EditableProject } from "@/types/project";
 
 type ProjectActionsProps = {

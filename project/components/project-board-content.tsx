@@ -59,7 +59,7 @@ export async function ProjectBoardContent({
 				owner={project.owner}
 				lastActivityAt={lastActivityAt}
 				headerActions={
-					<>
+					<div className="flex items-center gap-2">
 						<ProjectActivityButton activities={projectActivities} />
 
 						<ArchivedTasksButton
@@ -73,7 +73,7 @@ export async function ProjectBoardContent({
 							members={project.members}
 							canManageMembers={permissions.canManageMembers}
 						/>
-					</>
+					</div>
 				}
 			/>
 

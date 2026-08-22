@@ -24,8 +24,8 @@ export function ProjectActivityButton({
 	return (
 		<Sheet>
 			<SheetTrigger asChild>
-				<Button type="button" variant="outline" size="sm">
-					<History aria-hidden="true" size={14} />
+				<Button type="button" variant="outline" size="sm" className="h-9 gap-2">
+					<History aria-hidden="true" className="size-4" />
 					Activity
 				</Button>
 			</SheetTrigger>

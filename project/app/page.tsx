@@ -1,8 +1,7 @@
 import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { ArrowRight, CheckCircle, Kanban, Users } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
-
+import { ShiroBrand } from "@/components/shiro-brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export default function HomePage() {
@@ -12,17 +11,7 @@ export default function HomePage() {
 			<header className="border-b border-border bg-background/80 backdrop-blur-xs">
 				<div className="container mx-auto px-4 sm:px-6 lg:px-8">
 					<div className="flex h-16 items-center justify-between">
-						<Link href="/" className="flex items-center gap-0.75">
-							<Image
-								src="/shiro-logo.png"
-								alt=""
-								width={36}
-								height={36}
-								priority
-							/>
-
-							<span className="text-2xl font-bold text-foreground">Shiro</span>
-						</Link>
+						<ShiroBrand priority />
 
 						<div className="flex items-center gap-4">
 							<Show when="signed-in">

@@ -122,10 +122,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
 					</p>
 				)}
 
-				<div
-					className=
-							 "mt-auto space-y-2 border-t border-border pt-3 text-sm text-muted-foreground"
-				>
+				<div className="mt-auto space-y-2 border-t border-border pt-3 text-sm text-muted-foreground">
 					<div className="flex items-center gap-2">
 						<CalendarRange aria-hidden="true" size={15} className="shrink-0" />
 

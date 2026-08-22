@@ -292,6 +292,7 @@ export function TaskFormFields({
 						projectId={labels.projectId}
 						labels={labels.candidates}
 						pending={pending}
+
 					/>
 				) : (
 					<TaskLabelPicker

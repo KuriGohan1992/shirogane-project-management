@@ -150,7 +150,7 @@ export function TaskCard({
 			data-board-task-id={task.id}
 			ref={sortable.ref}
 			className={cn(
-				"relative overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm transition-[border-color,box-shadow,transform] hover:border-foreground/30 hover:shadow-md",
+				"relative overflow-hidden rounded-xl border border-border bg-card pt-4 px-4 pb-2 shadow-sm transition-[border-color,box-shadow,transform] hover:border-foreground/30 hover:shadow-md",
 				sortable.isDragging && "opacity-50",
 				selected && "border-primary ring-2 ring-primary/15",
 				keyboardFocused &&

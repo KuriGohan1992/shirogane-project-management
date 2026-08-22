@@ -251,7 +251,7 @@ export function TaskFilterControls({
 						}
 						aria-label="Filter tasks by title or description"
 						placeholder="Filter tasks..."
-						className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-9 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+						className="h-9 w-full rounded-md border border-input bg-card pl-9 pr-9 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
 					/>
 
 					{filters.query.length > 0 && (
@@ -276,6 +276,7 @@ export function TaskFilterControls({
 								variant="outline"
 								size="sm"
 								className={cn(
+									"bg-card",
 									filters.priorities.length > 0 && "border-primary/40",
 								)}
 							>
@@ -314,6 +315,7 @@ export function TaskFilterControls({
 								variant="outline"
 								size="sm"
 								className={cn(
+									"bg-card",
 									filters.labelIds.length > 0 && "border-primary/40",
 								)}
 							>
@@ -368,6 +370,7 @@ export function TaskFilterControls({
 								variant="outline"
 								size="sm"
 								className={cn(
+									"bg-card",
 									filters.assigneeIds.length > 0 && "border-primary/40",
 								)}
 							>
@@ -436,6 +439,7 @@ export function TaskFilterControls({
 								variant="outline"
 								size="sm"
 								className={cn(
+									"bg-card",
 									filters.dueDates.length > 0 && "border-primary/40",
 								)}
 							>
@@ -470,6 +474,7 @@ export function TaskFilterControls({
 							variant="outline"
 							size="sm"
 							onClick={clearTaskFilters}
+							className="bg-card"
 						>
 							Clear filters
 						</Button>
@@ -480,7 +485,7 @@ export function TaskFilterControls({
 							variant={selectionMode ? "secondary" : "outline"}
 							size="sm"
 							onClick={onToggleSelectionMode}
-							className="ml-auto"
+							className="bg-card ml-auto"
 						>
 							<SquareCheckBig aria-hidden="true" className="size-4" />
 

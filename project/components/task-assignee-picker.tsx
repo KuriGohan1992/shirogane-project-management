@@ -81,7 +81,7 @@ export function TaskAssigneePicker({
 									<UserAvatar
 										key={user.id}
 										user={user}
-										className="size-5 border-2 border-card"
+										className="size-6 border-2 border-card"
 									/>
 								))}
 							</div>
