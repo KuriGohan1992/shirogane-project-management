@@ -162,6 +162,7 @@ export function StageColumn({
 						stageId={stage.id}
 						stageName={stage.name}
 						labelCandidates={labelCandidates}
+						assigneeCandidates={assigneeCandidates}
 					/>
 				)}
 			</div>

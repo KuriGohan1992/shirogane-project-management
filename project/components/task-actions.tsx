@@ -22,12 +22,17 @@ import {
 import { archiveTask } from "@/lib/actions/task-archive";
 import { deleteTask } from "@/lib/actions/tasks";
 import type { ProjectLabel } from "@/lib/db/schema";
+import type { AssignmentCandidate } from "@/types/member";
 import type { EditableTask } from "@/types/task";
+import type { UserSummary } from "@/types/user";
 
 type TaskActionsProps = {
 	task: EditableTask;
 	labelCandidates: ProjectLabel[];
 	assignedLabels: ProjectLabel[];
+	assigneeCandidates: AssignmentCandidate[];
+	assignedUsers: UserSummary[];
+	canAssignTasks: boolean;
 	showCopyLink?: boolean;
 	redirectAfterRemoval?: boolean;
 };
@@ -36,6 +41,9 @@ export function TaskActions({
 	task,
 	labelCandidates,
 	assignedLabels,
+	assigneeCandidates,
+	assignedUsers,
+	canAssignTasks,
 	showCopyLink = false,
 	redirectAfterRemoval = false,
 }: TaskActionsProps) {
@@ -125,6 +133,9 @@ export function TaskActions({
 					task={task}
 					labelCandidates={labelCandidates}
 					assignedLabels={assignedLabels}
+					assigneeCandidates={assigneeCandidates}
+					assignedUsers={assignedUsers}
+					canAssignTasks={canAssignTasks}
 					open={isEditOpen}
 					onOpenChange={setIsEditOpen}
 				/>

@@ -18,6 +18,7 @@ type DatePickerProps = {
 	disabled?: boolean;
 	invalid?: boolean;
 	errorId?: string;
+	className?: string;
 	onValueChange?: (value: string) => void;
 };
 
@@ -61,6 +62,7 @@ export function DatePicker({
 	disabled = false,
 	invalid = false,
 	errorId,
+	className,
 	onValueChange,
 }: DatePickerProps) {
 	const [date, setDate] = useState<Date | undefined>(() =>
@@ -96,6 +98,7 @@ export function DatePicker({
 							"w-full justify-start text-left font-normal",
 							!date && "text-muted-foreground",
 							invalid && "border-destructive",
+							className,
 						)}
 					>
 						<CalendarDays aria-hidden="true" />

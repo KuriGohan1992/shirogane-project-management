@@ -145,6 +145,9 @@ export function TaskDetailsView({
 							task={toEditableTask(task)}
 							labelCandidates={labelCandidates}
 							assignedLabels={assignedLabels}
+							assigneeCandidates={assigneeCandidates}
+							assignedUsers={assignedUsers}
+							canAssignTasks={permissions.canAssignTasks}
 							showCopyLink
 							redirectAfterRemoval
 						/>

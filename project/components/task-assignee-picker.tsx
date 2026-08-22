@@ -1,7 +1,8 @@
 "use client";
 
-import { Check, UserPlus } from "lucide-react";
+import { Check, Plus, UserPlus } from "lucide-react";
 
+import { TaskAssigneeStack } from "@/components/task-assignee-stack";
 import { Button } from "@/components/ui/button";
 import {
 	Popover,
@@ -10,6 +11,7 @@ import {
 } from "@/components/ui/popover";
 import { UserAvatar } from "@/components/user-avatar";
 import { assignTask, unassignTask } from "@/lib/actions/assignees";
+import { cn } from "@/lib/utils";
 import type { AssignmentCandidate } from "@/types/member";
 import type { UserSummary } from "@/types/user";
 
@@ -18,6 +20,7 @@ type TaskAssigneePickerProps = {
 	candidates: AssignmentCandidate[];
 	assignedUsers: UserSummary[];
 	canManage: boolean;
+	fieldStyle?: boolean;
 };
 
 export function TaskAssigneePicker({
@@ -25,128 +28,121 @@ export function TaskAssigneePicker({
 	candidates,
 	assignedUsers,
 	canManage,
+	fieldStyle = false,
 }: TaskAssigneePickerProps) {
 	const assignedUserIds = new Set(assignedUsers.map((user) => user.id));
-	const visibleAssignees = assignedUsers.slice(0, 5);
-
-	const hiddenAssigneeCount = assignedUsers.length - visibleAssignees.length;
 
 	if (!canManage) {
 		if (assignedUsers.length === 0) {
-			return null;
+			return (
+				<span className="text-sm text-muted-foreground">No assignees</span>
+			);
 		}
 
-		return (
-			<fieldset className="flex min-w-0 items-center gap-1.5 border-0 p-0">
-				<legend className="sr-only">Task assignees</legend>
-
-				<div className="flex -space-x-2">
-					{visibleAssignees.map((user) => (
-						<UserAvatar
-							key={user.id}
-							user={user}
-							className="size-6 border-2 border-card"
-						/>
-					))}
-				</div>
-
-				{assignedUsers.length > 3 && (
-					<span className="text-xs text-muted-foreground">
-						+{assignedUsers.length - 3}
-					</span>
-				)}
-			</fieldset>
-		);
+		<TaskAssigneeStack
+			users={assignedUsers}
+			size={fieldStyle ? "large" : "small"}
+		/>;
 	}
 
 	return (
-		<Popover>
-			<PopoverTrigger asChild>
-				<Button
-					type="button"
-					variant="ghost"
-					size="sm"
-					className="h-7 px-2"
-					aria-label="Manage task assignees"
-				>
-					{visibleAssignees.length === 0 ? (
-						<>
-							<UserPlus aria-hidden="true" />
-							Assign
-						</>
-					) : (
-						<div className="flex items-center">
-							<div className="flex -space-x-1.5">
-								{visibleAssignees.map((user) => (
-									<UserAvatar
-										key={user.id}
-										user={user}
-										className="size-6 border-2 border-card"
-									/>
-								))}
-							</div>
+		<div className="flex min-w-0 items-center gap-1">
+			<TaskAssigneeStack
+				users={assignedUsers}
+				size={fieldStyle ? "large" : "small"}
+			/>
 
-							{hiddenAssigneeCount > 0 && (
-								<span className="ml-1 text-xs font-medium text-muted-foreground">
-									+{hiddenAssigneeCount}
-								</span>
+			<Popover>
+				<PopoverTrigger asChild>
+					{assignedUsers.length === 0 ? (
+						<Button
+							type="button"
+							variant={fieldStyle ? "outline" : "ghost"}
+							size="sm"
+							className={
+								fieldStyle ? "h-8 bg-card px-2 hover:bg-card/90" : "h-7 px-2"
+							}
+							aria-label="Manage task assignees"
+						>
+							<UserPlus aria-hidden="true" className="size-4" />
+							Assign
+						</Button>
+					) : (
+						<button
+							type="button"
+							aria-label="Manage task assignees"
+							className={cn(
+								"inline-flex shrink-0 items-center justify-center rounded-md border border-border bg-card transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+								fieldStyle ? "size-8" : "size-6",
 							)}
+						>
+							<Plus
+								aria-hidden="true"
+								className={fieldStyle ? "size-4" : "size-3.5"}
+							/>
+						</button>
+					)}
+				</PopoverTrigger>
+
+				<PopoverContent
+					align={fieldStyle ? "end" : "start"}
+					className="w-80 p-2"
+				>
+					{candidates.length === 0 ? (
+						<p className="px-2 py-4 text-center text-sm text-muted-foreground">
+							No assignable project members.
+						</p>
+					) : (
+						<div className="max-h-72 space-y-1 overflow-y-auto">
+							{candidates.map((candidate) => {
+								const isAssigned = assignedUserIds.has(candidate.id);
+
+								const action = isAssigned
+									? unassignTask.bind(null, taskId, candidate.id)
+									: assignTask.bind(null, taskId, candidate.id);
+
+								return (
+									<form key={candidate.id} action={action}>
+										<button
+											type="submit"
+											aria-pressed={isAssigned}
+											className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors hover:bg-muted"
+										>
+											<UserAvatar
+												user={candidate}
+												className="size-7 shrink-0"
+											/>
+
+											<div className="min-w-0 flex-1">
+												<p className="truncate text-sm font-medium">
+													{candidate.name ?? candidate.email}
+												</p>
+
+												<p className="truncate text-xs text-muted-foreground">
+													{candidate.email}
+												</p>
+											</div>
+
+											{candidate.isOwner && (
+												<span className="shrink-0 text-xs text-muted-foreground">
+													Owner
+												</span>
+											)}
+
+											{isAssigned && (
+												<Check
+													aria-hidden="true"
+													className="size-4 shrink-0 text-primary"
+												/>
+											)}
+										</button>
+									</form>
+								);
+							})}
 						</div>
 					)}
-				</Button>
-			</PopoverTrigger>
-
-			<PopoverContent align="end" className="w-80 p-2">
-				<div className="px-2 pb-2">
-					<p className="text-sm font-medium">Assignees</p>
-
-					<p className="text-xs text-muted-foreground">
-						Assign project members to this task.
-					</p>
-				</div>
-
-				<div className="max-h-72 space-y-1 overflow-y-auto">
-					{candidates.map((candidate) => {
-						const isAssigned = assignedUserIds.has(candidate.id);
-
-						const action = isAssigned
-							? unassignTask.bind(null, taskId, candidate.id)
-							: assignTask.bind(null, taskId, candidate.id);
-
-						return (
-							<form key={candidate.id} action={action}>
-								<button
-									type="submit"
-									className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition hover:bg-muted"
-								>
-									<UserAvatar user={candidate} className="size-7" />
-
-									<div className="min-w-0 flex-1">
-										<p className="truncate text-sm font-medium">
-											{candidate.name ?? candidate.email}
-										</p>
-
-										<p className="truncate text-xs text-muted-foreground">
-											{candidate.email}
-										</p>
-									</div>
-
-									{candidate.isOwner && (
-										<span className="text-xs text-muted-foreground">Owner</span>
-									)}
-
-									{isAssigned && (
-										<Check
-											className="size-4 shrink-0 text-primary"
-											aria-hidden="true"
-										/>
-									)}
-								</button>
-							</form>
-						);
-					})}
-				</div>
-			</PopoverContent>
-		</Popover>
+				</PopoverContent>
+			</Popover>
+		</div>
 	);
 }

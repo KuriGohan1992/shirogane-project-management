@@ -13,6 +13,7 @@ import {
 import { labelIdSchema } from "@/lib/validations/label";
 import { stageIdSchema } from "@/lib/validations/stage";
 import { taskFormSchema, taskIdSchema } from "@/lib/validations/task";
+import { userIdSchema } from "@/lib/validations/user";
 import type { BoardMutationResult } from "@/types/board";
 import type { TaskActionState } from "@/types/task";
 
@@ -57,10 +58,21 @@ export async function createTask(
 		};
 	}
 
+	const assigneeIdsResult = z
+		.array(userIdSchema)
+		.safeParse(formData.getAll("assigneeIds"));
+
 	if (!labelIdsResult.success) {
 		return {
 			success: false,
 			message: "One or more selected labels are invalid.",
+		};
+	}
+
+	if (!assigneeIdsResult.success) {
+		return {
+			success: false,
+			message: "One or more selected assignees are invalid.",
 		};
 	}
 
@@ -78,6 +90,7 @@ export async function createTask(
 				dueDate: parseDate(result.data.dueDate),
 			},
 			labelIdsResult.data,
+			assigneeIdsResult.data,
 		);
 
 		if (!created) {

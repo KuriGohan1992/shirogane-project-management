@@ -30,7 +30,7 @@ function getFirstName(name: string | null) {
 
 function DashboardMetric({ label, value }: { label: string; value: number }) {
 	return (
-		<div className="min-w-0">
+		<div className="min-w-32">
 			<dt className="text-sm font-semibold text-muted-foreground">{label}</dt>
 
 			<dd className="mt-0.5 text-2xl font-bold tracking-tight text-foreground">

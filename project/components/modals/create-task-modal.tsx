@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { createTask } from "@/lib/actions/tasks";
 import type { ProjectLabel } from "@/lib/db/schema";
+import type { AssignmentCandidate } from "@/types/member";
 import type { TaskActionState } from "@/types/task";
 
 type CreateTaskModalProps = {
@@ -19,6 +20,7 @@ type CreateTaskModalProps = {
 	stageId: string;
 	stageName: string;
 	labelCandidates: ProjectLabel[];
+	assigneeCandidates: AssignmentCandidate[];
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 };
@@ -32,10 +34,12 @@ export function CreateTaskModal({
 	stageId,
 	stageName,
 	labelCandidates,
+	assigneeCandidates,
 	open,
 	onOpenChange,
 }: CreateTaskModalProps) {
 	const createAction = createTask.bind(null, stageId);
+
 	const formId = `create-task-${stageId}`;
 
 	const [state, formAction, pending] = useActionState(
@@ -55,8 +59,8 @@ export function CreateTaskModal({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-lg">
-				<DialogHeader>
+			<DialogContent className="gap-0 overflow-hidden bg-background p-0 sm:max-w-lg">
+				<DialogHeader className="border-b border-border bg-card px-6 py-5 pr-12">
 					<DialogTitle>Create task</DialogTitle>
 
 					<DialogDescription>Add a task to {stageName}.</DialogDescription>
@@ -64,34 +68,41 @@ export function CreateTaskModal({
 
 				<form id={formId} action={formAction} noValidate />
 
-				<TaskFormFields
-					formId={formId}
-					state={state}
-					pending={pending}
-					defaultValues={{
-						title: "",
-						description: "",
-						priority: null,
-						startDate: "",
-						dueDate: "",
-					}}
-					labels={{
-						mode: "create",
-						projectId,
-						candidates: labelCandidates,
-					}}
-				/>
+				<div className="space-y-4 px-6 py-5">
+					<TaskFormFields
+						formId={formId}
+						state={state}
+						pending={pending}
+						defaultValues={{
+							title: "",
+							description: "",
+							priority: null,
+							startDate: "",
+							dueDate: "",
+						}}
+						labels={{
+							mode: "create",
+							projectId,
+							candidates: labelCandidates,
+						}}
+						assignees={{
+							mode: "create",
+							candidates: assigneeCandidates,
+						}}
+					/>
 
-				{state.message && !state.success && !hasFieldErrors && (
-					<p aria-live="polite" className="text-sm text-destructive">
-						{state.message}
-					</p>
-				)}
+					{state.message && !state.success && !hasFieldErrors && (
+						<p aria-live="polite" className="text-sm text-destructive">
+							{state.message}
+						</p>
+					)}
+				</div>
 
-				<DialogFooter>
+				<DialogFooter className="px-6 pb-6">
 					<Button
 						type="button"
 						variant="outline"
+						className="bg-card hover:bg-card/90"
 						disabled={pending}
 						onClick={() => onOpenChange(false)}
 					>

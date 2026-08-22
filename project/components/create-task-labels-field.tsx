@@ -114,11 +114,14 @@ export function CreateTaskLabelsField({
 	const isDisabled = pending || createPending;
 
 	return (
-		<div className="flex flex-wrap items-center gap-2">
+		<div className="flex min-w-0 flex-wrap items-center gap-2">
 			{selectedLabels.map((label) => (
-				<TaskLabelBadge key={label.id} label={label} />
+				<TaskLabelBadge
+					key={label.id}
+					label={label}
+					className="h-8 max-w-full px-3 text-sm"
+				/>
 			))}
-
 			{selectedLabelIds.map((labelId) => (
 				<input
 					key={labelId}
@@ -136,7 +139,7 @@ export function CreateTaskLabelsField({
 						type="button"
 						variant="outline"
 						size="sm"
-						className="h-8"
+						className="h-8 shrink-0 bg-card hover:bg-card/90"
 						disabled={isDisabled}
 					>
 						<Plus aria-hidden="true" size={14} />

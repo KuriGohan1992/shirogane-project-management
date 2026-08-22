@@ -3,9 +3,11 @@
 import { useState } from "react";
 
 import { CharacterCount } from "@/components/character-count";
+import { CreateTaskAssigneesField } from "@/components/create-task-assignees-field";
 import { CreateTaskLabelsField } from "@/components/create-task-labels-field";
 import { DatePicker } from "@/components/date-picker";
 import { FormFieldError } from "@/components/form-field-error";
+import { TaskAssigneePicker } from "@/components/task-assignee-picker";
 import { TaskLabelPicker } from "@/components/task-label-picker";
 import {
 	Select,
@@ -19,7 +21,9 @@ import { TASK_FIELD_LIMITS } from "@/lib/constants/form-limits";
 import type { ProjectLabel } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 import type { TaskFormData } from "@/lib/validations/task";
+import type { AssignmentCandidate } from "@/types/member";
 import type { TaskActionState } from "@/types/task";
+import type { UserSummary } from "@/types/user";
 
 type TaskLabelFieldConfig =
 	| {
@@ -35,12 +39,26 @@ type TaskLabelFieldConfig =
 			canManage: boolean;
 	  };
 
+type TaskAssigneeFieldConfig =
+	| {
+			mode: "create";
+			candidates: AssignmentCandidate[];
+	  }
+	| {
+			mode: "edit";
+			taskId: string;
+			candidates: AssignmentCandidate[];
+			assignedUsers: UserSummary[];
+			canManage: boolean;
+	  };
+
 type TaskFormFieldsProps = {
 	formId: string;
 	state: TaskActionState;
 	defaultValues: TaskFormData;
 	pending: boolean;
 	labels: TaskLabelFieldConfig;
+	assignees: TaskAssigneeFieldConfig;
 };
 
 type TaskPriority = NonNullable<TaskFormData["priority"]>;
@@ -77,6 +95,7 @@ export function TaskFormFields({
 	defaultValues,
 	pending,
 	labels,
+	assignees,
 }: TaskFormFieldsProps) {
 	const [titleLength, setTitleLength] = useState(defaultValues.title.length);
 
@@ -89,13 +108,9 @@ export function TaskFormFields({
 	);
 
 	const titleErrorId = "task-title-error";
-
 	const descriptionErrorId = "task-description-error";
-
 	const priorityErrorId = "task-priority-error";
-
 	const startDateErrorId = "task-start-date-error";
-
 	const dueDateErrorId = "task-due-date-error";
 
 	const { getFieldErrors, clearFieldError } = useFieldErrors<TaskField>(
@@ -103,13 +118,9 @@ export function TaskFormFields({
 	);
 
 	const titleErrors = getFieldErrors("title");
-
 	const descriptionErrors = getFieldErrors("description");
-
 	const priorityErrors = getFieldErrors("priority");
-
 	const startDateErrors = getFieldErrors("startDate");
-
 	const dueDateErrors = getFieldErrors("dueDate");
 
 	return (
@@ -148,7 +159,7 @@ export function TaskFormFields({
 					aria-describedby={titleErrors ? titleErrorId : undefined}
 					placeholder="e.g. Build project dashboard"
 					className={cn(
-						"w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60",
+						"w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60",
 						titleErrors && "border-destructive",
 					)}
 				/>
@@ -181,14 +192,13 @@ export function TaskFormFields({
 					disabled={pending}
 					onChange={(event) => {
 						setDescriptionLength(event.currentTarget.value.length);
-
 						clearFieldError("description");
 					}}
 					aria-invalid={Boolean(descriptionErrors)}
 					aria-describedby={descriptionErrors ? descriptionErrorId : undefined}
 					placeholder="Add more details about this task..."
 					className={cn(
-						"w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60",
+						"w-full resize-none rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground outline-none transition focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-60",
 						descriptionErrors && "border-destructive",
 					)}
 				/>
@@ -220,7 +230,6 @@ export function TaskFormFields({
 					disabled={pending}
 					onValueChange={(value) => {
 						setPriority(value as PrioritySelection);
-
 						clearFieldError("priority");
 					}}
 				>
@@ -228,7 +237,10 @@ export function TaskFormFields({
 						id="task-priority"
 						aria-invalid={Boolean(priorityErrors)}
 						aria-describedby={priorityErrors ? priorityErrorId : undefined}
-						className={cn("w-full", priorityErrors && "border-destructive")}
+						className={cn(
+							"w-full bg-card hover:bg-card/90",
+							priorityErrors && "border-destructive",
+						)}
 					>
 						<SelectValue />
 					</SelectTrigger>
@@ -260,6 +272,7 @@ export function TaskFormFields({
 						invalid={Boolean(startDateErrors)}
 						errorId={startDateErrorId}
 						onValueChange={() => clearFieldError("startDate")}
+						className="bg-card hover:bg-card/90"
 					/>
 
 					<FormFieldError id={startDateErrorId} messages={startDateErrors} />
@@ -277,31 +290,53 @@ export function TaskFormFields({
 						invalid={Boolean(dueDateErrors)}
 						errorId={dueDateErrorId}
 						onValueChange={() => clearFieldError("dueDate")}
+						className="bg-card hover:bg-card/90"
 					/>
 
 					<FormFieldError id={dueDateErrorId} messages={dueDateErrors} />
 				</div>
 			</div>
 
-			<div>
-				<p className="mb-2 text-sm font-medium text-foreground">Labels</p>
+			<div className="grid gap-4 sm:grid-cols-2">
+				<div className="min-w-0">
+					<p className="mb-2 text-sm font-medium text-foreground">Labels</p>
 
-				{labels.mode === "create" ? (
-					<CreateTaskLabelsField
-						formId={formId}
-						projectId={labels.projectId}
-						labels={labels.candidates}
-						pending={pending}
+					{labels.mode === "create" ? (
+						<CreateTaskLabelsField
+							formId={formId}
+							projectId={labels.projectId}
+							labels={labels.candidates}
+							pending={pending}
+						/>
+					) : (
+						<TaskLabelPicker
+							taskId={labels.taskId}
+							labels={labels.candidates}
+							assignedLabels={labels.assignedLabels}
+							canManage={labels.canManage}
+						/>
+					)}
+				</div>
 
-					/>
-				) : (
-					<TaskLabelPicker
-						taskId={labels.taskId}
-						labels={labels.candidates}
-						assignedLabels={labels.assignedLabels}
-						canManage={labels.canManage}
-					/>
-				)}
+				<div className="min-w-0">
+					<p className="mb-2 text-sm font-medium text-foreground">Assignees</p>
+
+					{assignees.mode === "create" ? (
+						<CreateTaskAssigneesField
+							formId={formId}
+							candidates={assignees.candidates}
+							pending={pending}
+						/>
+					) : (
+						<TaskAssigneePicker
+							taskId={assignees.taskId}
+							candidates={assignees.candidates}
+							assignedUsers={assignees.assignedUsers}
+							canManage={assignees.canManage}
+							fieldStyle
+						/>
+					)}
+				</div>
 			</div>
 		</div>
 	);

@@ -263,6 +263,9 @@ export function TaskCard({
 							task={toEditableTask(task)}
 							labelCandidates={labelCandidates}
 							assignedLabels={assignedLabels}
+							assigneeCandidates={assigneeCandidates}
+							assignedUsers={assignedUsers}
+							canAssignTasks={permissions.canAssignTasks}
 						/>
 					</div>
 				)

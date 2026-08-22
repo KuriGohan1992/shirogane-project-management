@@ -100,14 +100,18 @@ function LabelColorOptions({
 
 function LabelRow({ taskId, label, isAssigned }: LabelRowProps) {
 	const [isEditing, setIsEditing] = useState(false);
+
 	const updateAction = updateProjectLabel.bind(null, label.id);
+
 	const [updateState, updateFormAction, updatePending] = useActionState(
 		updateAction,
 		initialState,
 	);
+
 	const assignmentAction = isAssigned
 		? unassignTaskLabel.bind(null, taskId, label.id)
 		: assignTaskLabel.bind(null, taskId, label.id);
+
 	const deleteAction = deleteProjectLabel.bind(null, label.id);
 
 	useEffect(() => {
@@ -136,12 +140,15 @@ function LabelRow({ taskId, label, isAssigned }: LabelRowProps) {
 									? "opacity-100"
 									: "opacity-30 group-hover:opacity-60",
 							)}
-							style={{ backgroundColor: getColorHex(label.color) }}
+							style={{
+								backgroundColor: getColorHex(label.color),
+							}}
 						/>
 
 						<span className="min-w-0 flex-1 truncate text-sm">
 							{label.name}
 						</span>
+
 						<span className="sr-only">
 							{isAssigned ? "Assigned" : "Not assigned"}
 						</span>
@@ -281,11 +288,14 @@ export function TaskLabelPicker({
 	canManage,
 }: TaskLabelPickerProps) {
 	const createAction = createTaskLabel.bind(null, taskId);
+
 	const [state, formAction, pending] = useActionState(
 		createAction,
 		initialState,
 	);
+
 	const [showCreate, setShowCreate] = useState(false);
+
 	const formRef = useRef<HTMLFormElement>(null);
 
 	const assignedLabelIds = useMemo(
@@ -308,23 +318,36 @@ export function TaskLabelPicker({
 		}
 
 		return (
-			<div className="flex flex-wrap gap-2">
+			<div className="flex min-w-0 flex-wrap items-center gap-2">
 				{assignedLabels.map((label) => (
-					<TaskLabelBadge key={label.id} label={label} />
+					<TaskLabelBadge
+						key={label.id}
+						label={label}
+						className="h-8 max-w-full px-3 text-sm"
+					/>
 				))}
 			</div>
 		);
 	}
 
 	return (
-		<div className="flex flex-wrap items-center gap-2">
+		<div className="flex min-w-0 flex-wrap items-center gap-2">
 			{assignedLabels.map((label) => (
-				<TaskLabelBadge key={label.id} label={label} />
+				<TaskLabelBadge
+					key={label.id}
+					label={label}
+					className="h-8 max-w-full px-3 text-sm"
+				/>
 			))}
 
 			<Popover>
 				<PopoverTrigger asChild>
-					<Button type="button" variant="outline" size="sm" className="h-8">
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						className="h-8 shrink-0 bg-card hover:bg-card/90"
+					>
 						<Plus aria-hidden="true" size={14} />
 						Label
 					</Button>

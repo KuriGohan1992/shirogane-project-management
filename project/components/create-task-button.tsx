@@ -6,12 +6,14 @@ import { useState } from "react";
 import { CreateTaskModal } from "@/components/modals/create-task-modal";
 import { Button } from "@/components/ui/button";
 import type { ProjectLabel } from "@/lib/db/schema";
+import type { AssignmentCandidate } from "@/types/member";
 
 type CreateTaskButtonProps = {
 	projectId: string;
 	stageId: string;
 	stageName: string;
 	labelCandidates: ProjectLabel[];
+	assigneeCandidates: AssignmentCandidate[];
 };
 
 export function CreateTaskButton({
@@ -19,6 +21,7 @@ export function CreateTaskButton({
 	stageId,
 	stageName,
 	labelCandidates,
+	assigneeCandidates,
 }: CreateTaskButtonProps) {
 	const [isOpen, setIsOpen] = useState(false);
 
@@ -40,6 +43,7 @@ export function CreateTaskButton({
 					stageId={stageId}
 					stageName={stageName}
 					labelCandidates={labelCandidates}
+					assigneeCandidates={assigneeCandidates}
 					open={isOpen}
 					onOpenChange={setIsOpen}
 				/>

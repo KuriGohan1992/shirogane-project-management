@@ -9,7 +9,9 @@ import { getProjectAccess } from "@/lib/db/project-access";
 import {
 	type NewTask,
 	projectLabels,
+	projectMembers,
 	type Task,
+	taskAssignees,
 	taskLabels,
 	tasks,
 } from "@/lib/db/schema";
@@ -53,7 +55,6 @@ function getChangedTaskFields(task: Task, data: TaskMutationData) {
 
 	return changedFields;
 }
-
 async function getEditableStage(stageId: string, userId: string) {
 	const stage = await db.query.stages.findFirst({
 		columns: {
@@ -63,6 +64,14 @@ async function getEditableStage(stageId: string, userId: string) {
 		},
 
 		where: (stage, { eq }) => eq(stage.id, stageId),
+
+		with: {
+			project: {
+				columns: {
+					ownerId: true,
+				},
+			},
+		},
 	});
 
 	if (!stage) {
@@ -108,11 +117,12 @@ async function getEditableTask(taskId: string, userId: string) {
 
 export async function createTaskInStage(
 	stageId: string,
-	ownerId: string,
+	userId: string,
 	data: TaskMutationData,
 	labelIds: string[] = [],
+	assigneeIds: string[] = [],
 ): Promise<TaskMutationResult | undefined> {
-	const stage = await getEditableStage(stageId, ownerId);
+	const stage = await getEditableStage(stageId, userId);
 
 	if (!stage) {
 		return undefined;
@@ -168,10 +178,57 @@ export async function createTaskInStage(
 		}
 	}
 
+	const uniqueAssigneeIds = [...new Set(assigneeIds)];
+
+	if (uniqueAssigneeIds.length > 0) {
+		const validAssigneeIds = new Set<string>();
+
+		// Project owners are valid assignees even though
+		// they are not stored in projectMembers.
+		if (uniqueAssigneeIds.includes(stage.project.ownerId)) {
+			validAssigneeIds.add(stage.project.ownerId);
+		}
+
+		const memberIds = uniqueAssigneeIds.filter(
+			(userId) => userId !== stage.project.ownerId,
+		);
+
+		if (memberIds.length > 0) {
+			const validMembers = await db
+				.select({
+					userId: projectMembers.userId,
+				})
+				.from(projectMembers)
+				.where(
+					and(
+						eq(projectMembers.projectId, stage.projectId),
+						eq(projectMembers.role, "member"),
+						inArray(projectMembers.userId, memberIds),
+					),
+				);
+
+			for (const member of validMembers) {
+				validAssigneeIds.add(member.userId);
+			}
+		}
+
+		if (validAssigneeIds.size > 0) {
+			await db
+				.insert(taskAssignees)
+				.values(
+					[...validAssigneeIds].map((userId) => ({
+						taskId: task.id,
+						userId,
+					})),
+				)
+				.onConflictDoNothing();
+		}
+	}
+
 	await recordTaskActivity({
 		projectId: stage.projectId,
 		taskId: task.id,
-		actorId: ownerId,
+		actorId: userId,
 		action: "task_created",
 		taskTitle: task.title,
 		metadata: {
