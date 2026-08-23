@@ -94,9 +94,9 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 		searchParams.get(PROJECT_FILTER_PARAMS.dates),
 	);
 
-	const sort = parseProjectSortOption(
-		searchParams.get(PROJECT_FILTER_PARAMS.sort),
-	);
+	const rawSort = searchParams.get(PROJECT_FILTER_PARAMS.sort);
+
+	const sort = parseProjectSortOption(rawSort);
 
 	const sortDirection = parseProjectSortDirection(
 		searchParams.get(PROJECT_FILTER_PARAMS.order),
@@ -114,12 +114,10 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 		statusFilter !== PROJECT_FILTER_DEFAULTS.status ||
 		scheduleFilter !== PROJECT_FILTER_DEFAULTS.dates;
 
-	// Keep the controlled input synchronized with bookmarked or shared URLs.
 	useEffect(() => {
 		setQueryInput(urlQuery);
 	}, [urlQuery]);
 
-	// Keep filtering instant while writing the shareable keyword to the URL after typing settles.
 	useEffect(() => {
 		if (queryInput === urlQuery) {
 			return;
@@ -187,13 +185,8 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 	function handleSortChange(nextSort: ProjectSortOption) {
 		const params = new URLSearchParams(window.location.search);
 
-		if (nextSort === PROJECT_FILTER_DEFAULTS.sort) {
-			params.delete(PROJECT_FILTER_PARAMS.sort);
-		} else {
-			params.set(PROJECT_FILTER_PARAMS.sort, nextSort);
-		}
+		params.set(PROJECT_FILTER_PARAMS.sort, nextSort);
 
-		// Each sort type starts with the direction that makes the most sense for it.
 		params.delete(PROJECT_FILTER_PARAMS.order);
 
 		replaceProjectFilterUrl(params);
@@ -205,6 +198,10 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 		const defaultDirection = getDefaultProjectSortDirection(sort);
 
 		const params = new URLSearchParams(window.location.search);
+
+		if (!rawSort) {
+			params.set(PROJECT_FILTER_PARAMS.sort, sort);
+		}
 
 		if (nextDirection === defaultDirection) {
 			params.delete(PROJECT_FILTER_PARAMS.order);
@@ -219,13 +216,9 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 		const params = new URLSearchParams(window.location.search);
 
 		params.delete(PROJECT_FILTER_PARAMS.query);
-
 		params.delete(PROJECT_FILTER_PARAMS.access);
-
 		params.delete(PROJECT_FILTER_PARAMS.color);
-
 		params.delete(PROJECT_FILTER_PARAMS.status);
-
 		params.delete(PROJECT_FILTER_PARAMS.dates);
 
 		setQueryInput("");
@@ -258,7 +251,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 	return (
 		<div className="space-y-4">
 			<div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-				<div className="relative min-w-0 flex-1 xl:max-w-sm">
+				<div className="relative w-full min-w-0 xl:min-w-48 xl:flex-1">
 					<Search
 						aria-hidden="true"
 						size={16}
@@ -273,7 +266,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 						onChange={(event) => setQueryInput(event.target.value)}
 						aria-label="Filter projects by name or description"
 						placeholder="Filter projects..."
-						className="h-9 w-full rounded-md border border-input bg-background pl-9 pr-9 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+						className="h-9 w-full rounded-md border border-input bg-card pl-9 pr-9 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
 					/>
 
 					{queryInput.length > 0 && (
@@ -288,9 +281,13 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 					)}
 				</div>
 
-				<div className="flex flex-wrap items-center gap-2 bm">
+				<div className="flex shrink-0 flex-wrap items-center gap-2 xl:flex-nowrap">
 					<Select
-						value={accessFilter}
+						value={
+							accessFilter === PROJECT_FILTER_DEFAULTS.access
+								? ""
+								: accessFilter
+						}
 						onValueChange={(value) =>
 							updateProjectFilterParam(
 								PROJECT_FILTER_PARAMS.access,
@@ -299,23 +296,31 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 							)
 						}
 					>
-						<SelectTrigger size="sm" aria-label="Filter projects by access">
-							<SelectValue />
+						<SelectTrigger
+							size="sm"
+							aria-label="Filter projects by access"
+							className="w-28 bg-card data-[placeholder]:text-foreground"
+						>
+							<SelectValue placeholder="Access" />
 						</SelectTrigger>
 
-						<SelectContent>
-							<SelectItem value="all">Access</SelectItem>
+						<SelectContent position="popper" align="start" sideOffset={4}>
+							<SelectItem value={PROJECT_FILTER_DEFAULTS.access}>
+								All
+							</SelectItem>
 
 							<SelectItem value="owner">Owner</SelectItem>
-
 							<SelectItem value="member">Member</SelectItem>
-
 							<SelectItem value="viewer">Viewer</SelectItem>
 						</SelectContent>
 					</Select>
 
 					<Select
-						value={statusFilter}
+						value={
+							statusFilter === PROJECT_FILTER_DEFAULTS.status
+								? ""
+								: statusFilter
+						}
 						onValueChange={(value) =>
 							updateProjectFilterParam(
 								PROJECT_FILTER_PARAMS.status,
@@ -324,12 +329,18 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 							)
 						}
 					>
-						<SelectTrigger size="sm" aria-label="Filter projects by status">
-							<SelectValue />
+						<SelectTrigger
+							size="sm"
+							aria-label="Filter projects by status"
+							className="w-32 bg-card data-[placeholder]:text-foreground"
+						>
+							<SelectValue placeholder="Status" />
 						</SelectTrigger>
 
-						<SelectContent>
-							<SelectItem value="all">Status</SelectItem>
+						<SelectContent position="popper" align="start" sideOffset={4}>
+							<SelectItem value={PROJECT_FILTER_DEFAULTS.status}>
+								All
+							</SelectItem>
 
 							<SelectItem value="active">Active</SelectItem>
 
@@ -338,7 +349,9 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 					</Select>
 
 					<Select
-						value={colorFilter}
+						value={
+							colorFilter === PROJECT_FILTER_DEFAULTS.color ? "" : colorFilter
+						}
 						onValueChange={(value) =>
 							updateProjectFilterParam(
 								PROJECT_FILTER_PARAMS.color,
@@ -347,12 +360,16 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 							)
 						}
 					>
-						<SelectTrigger size="sm" aria-label="Filter projects by color">
-							<SelectValue />
+						<SelectTrigger
+							size="sm"
+							aria-label="Filter projects by color"
+							className="w-32 bg-card data-[placeholder]:text-foreground"
+						>
+							<SelectValue placeholder="Color" />
 						</SelectTrigger>
 
-						<SelectContent>
-							<SelectItem value="all">Color</SelectItem>
+						<SelectContent position="popper" align="start" sideOffset={4}>
+							<SelectItem value={PROJECT_FILTER_DEFAULTS.color}>All</SelectItem>
 
 							{COLOR_OPTIONS.map((option) => (
 								<SelectItem key={option.value} value={option.value}>
@@ -371,7 +388,11 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 					</Select>
 
 					<Select
-						value={scheduleFilter}
+						value={
+							scheduleFilter === PROJECT_FILTER_DEFAULTS.dates
+								? ""
+								: scheduleFilter
+						}
 						onValueChange={(value) =>
 							updateProjectFilterParam(
 								PROJECT_FILTER_PARAMS.dates,
@@ -380,12 +401,16 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 							)
 						}
 					>
-						<SelectTrigger size="sm" aria-label="Filter projects by dates">
-							<SelectValue />
+						<SelectTrigger
+							size="sm"
+							aria-label="Filter projects by dates"
+							className="w-42 bg-card data-[placeholder]:text-foreground"
+						>
+							<SelectValue placeholder="Due date" />
 						</SelectTrigger>
 
-						<SelectContent>
-							<SelectItem value="all">Due date</SelectItem>
+						<SelectContent position="popper" align="start" sideOffset={4}>
+							<SelectItem value={PROJECT_FILTER_DEFAULTS.dates}>All</SelectItem>
 
 							<SelectItem value="no-dates">No project dates</SelectItem>
 
@@ -399,18 +424,22 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 
 					<div className="flex items-center gap-1">
 						<Select
-							value={sort}
+							value={rawSort ? sort : ""}
 							onValueChange={(value) =>
 								handleSortChange(parseProjectSortOption(value))
 							}
 						>
-							<SelectTrigger size="sm" aria-label="Sort projects by">
+							<SelectTrigger
+								size="sm"
+								aria-label="Sort projects by"
+								className="w-40 justify-start gap-2 bg-card text-left data-[placeholder]:text-foreground [&>svg:last-child]:ml-auto"
+							>
 								<SlidersHorizontal aria-hidden="true" size={14} />
 
-								<SelectValue />
+								<SelectValue placeholder="Sort by" />
 							</SelectTrigger>
 
-							<SelectContent>
+							<SelectContent position="popper" align="start" sideOffset={4}>
 								<SelectItem value="last-activity">Last activity</SelectItem>
 
 								<SelectItem value="date-created">Date created</SelectItem>
@@ -427,7 +456,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 							type="button"
 							variant="outline"
 							size="sm"
-							className="w-9 px-0"
+							className="w-9 bg-card px-0"
 							onClick={toggleSortDirection}
 							aria-label={
 								sortDirection === "asc" ? "Sort descending" : "Sort ascending"
@@ -440,15 +469,17 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 						</Button>
 					</div>
 
-					<Button
-						type="button"
-						variant="ghost"
-						size="sm"
-						disabled={!hasFilters}
-						onClick={clearFilters}
-					>
-						Clear filters
-					</Button>
+					{hasFilters && (
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							className="bg-card"
+							onClick={clearFilters}
+						>
+							Clear filters
+						</Button>
+					)}
 				</div>
 			</div>
 
@@ -469,7 +500,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 					</h2>
 
 					<p className="mt-2 max-w-sm text-sm text-muted-foreground">
-						Try changing the keyword, access, color, or date filters.
+						Try changing the keyword, access, status, color, or date filters.
 					</p>
 
 					<Button

@@ -237,15 +237,15 @@ export function ProjectCalendar({
 		<>
 			<section className="overflow-hidden rounded-xl border border-border bg-card">
 				<div className="flex flex-wrap items-center justify-between gap-3 border-b border-primary bg-primary px-4 py-3 text-primary-foreground">
-<Button
-	type="button"
-	variant="ghost"
-	size="sm"
-	className="bg-transparent font-medium text-primary-foreground shadow-none transition-transform hover:scale-105 hover:bg-transparent hover:font-semibold hover:text-primary-foreground active:scale-95"
-	onClick={goToToday}
->
-	Go to Today
-</Button>
+					<Button
+						type="button"
+						variant="ghost"
+						size="sm"
+						className="bg-transparent font-medium text-primary-foreground shadow-none transition-transform hover:scale-105 hover:bg-transparent hover:font-semibold hover:text-primary-foreground active:scale-95"
+						onClick={goToToday}
+					>
+						Go to Today
+					</Button>
 
 					<div className="flex items-center">
 						<Button
