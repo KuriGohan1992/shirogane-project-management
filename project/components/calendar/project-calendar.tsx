@@ -379,7 +379,7 @@ export function ProjectCalendar({
 
 			<section className="overflow-hidden rounded-xl border border-border bg-card">
 				{/* Calendar-only navigation */}
-				<div className="flex items-center justify-center border-b border-primary bg-primary px-4 py-3 text-primary-foreground">
+				<div className="flex items-center justify-center border-b border-primary bg-primary py-2 text-primary-foreground">
 					<div className="flex items-center">
 						<Button
 							type="button"

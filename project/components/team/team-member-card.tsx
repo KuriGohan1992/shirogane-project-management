@@ -52,7 +52,7 @@ export function TeamMemberCard({
 				className="flex min-h-44 w-full flex-col rounded-xl px-5 py-4 text-left focus-visible:outline-none"
 			>
 				<div
-					className={cn("flex min-w-0 items-start gap-3", canRemove && "pr-9")}
+					className={cn("flex min-h-[3.75rem] min-w-0 items-start gap-3", canRemove && "pr-9")}
 				>
 					<UserAvatar user={collaborator} className="size-11 shrink-0" />
 

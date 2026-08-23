@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { recordTaskActivity } from "@/lib/db/activity";
 import { getProjectAccess } from "@/lib/db/project-access";
 import { type Task, taskAssignees, taskLabels, tasks } from "@/lib/db/schema";
+import { createNotificationsSafely } from "../services/notifications";
 
 type BulkTaskMutationResult = {
 	projectId: string;
@@ -87,6 +88,7 @@ async function getAssignableProjectUser(
 		db.query.projects.findFirst({
 			columns: {
 				ownerId: true,
+			name: true,
 			},
 
 			where: (project, { eq }) => eq(project.id, projectId),
@@ -107,9 +109,12 @@ async function getAssignableProjectUser(
 		return undefined;
 	}
 
-	if (project.ownerId === assignee.id) {
-		return assignee;
-	}
+if (project.ownerId === assignee.id) {
+	return {
+		user: assignee,
+		project,
+	};
+}
 
 	const member = await db.query.projectMembers.findFirst({
 		columns: {
@@ -124,7 +129,12 @@ async function getAssignableProjectUser(
 			),
 	});
 
-	return member ? assignee : undefined;
+return member
+	? {
+			user: assignee,
+			project,
+		}
+	: undefined;
 }
 
 function getUserDisplayName(user: { name: string | null; email: string }) {
@@ -343,11 +353,20 @@ async function changeTaskAssigneeForUser(
 		return undefined;
 	}
 
-	const assignee = await getAssignableProjectUser(projectId, assigneeUserId);
+const assignable =
+	await getAssignableProjectUser(
+		projectId,
+		assigneeUserId,
+	);
 
-	if (!assignee) {
-		return undefined;
-	}
+if (!assignable) {
+	return undefined;
+}
+
+const {
+	user: assignee,
+	project,
+} = assignable;
 
 	const changedRows =
 		mode === "assign"
@@ -396,6 +415,109 @@ async function changeTaskAssigneeForUser(
 			},
 		})),
 	);
+
+	if (changedTasks.length === 1) {
+	const [task] =
+		changedTasks;
+
+	if (task) {
+		await createNotificationsSafely([
+			mode === "assign"
+				? {
+						type:
+							"task_assigned",
+
+						recipientId:
+							assignee.id,
+
+						actorId:
+							userId,
+
+						projectId,
+
+						taskId:
+							task.id,
+
+						metadata: {
+							projectName:
+								project.name,
+
+							taskTitle:
+								task.title,
+						},
+					}
+				: {
+						type:
+							"task_unassigned",
+
+						recipientId:
+							assignee.id,
+
+						actorId:
+							userId,
+
+						projectId,
+
+						taskId:
+							task.id,
+
+						metadata: {
+							projectName:
+								project.name,
+
+							taskTitle:
+								task.title,
+						},
+					},
+		]);
+	}
+}
+
+if (changedTasks.length > 1) {
+	await createNotificationsSafely([
+		mode === "assign"
+			? {
+					type:
+						"tasks_assigned",
+
+					recipientId:
+						assignee.id,
+
+					actorId:
+						userId,
+
+					projectId,
+
+					metadata: {
+						projectName:
+							project.name,
+
+						taskCount:
+							changedTasks.length,
+					},
+				}
+			: {
+					type:
+						"tasks_unassigned",
+
+					recipientId:
+						assignee.id,
+
+					actorId:
+						userId,
+
+					projectId,
+
+					metadata: {
+						projectName:
+							project.name,
+
+						taskCount:
+							changedTasks.length,
+					},
+				},
+	]);
+}
 
 	return {
 		projectId,

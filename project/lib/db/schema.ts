@@ -20,6 +20,10 @@ import type { ColorValue } from "@/lib/constants/colors";
 import { DEFAULT_COLOR } from "@/lib/constants/colors";
 
 import { PROJECT_MEMBER_ROLE_VALUES } from "@/lib/constants/project-roles";
+import type {
+	NotificationMetadata,
+	NotificationType,
+} from "../constants/notifications";
 
 export const projectMemberRoleEnum = pgEnum(
 	"project_member_role",
@@ -364,6 +368,65 @@ export const activityLogs = pgTable(
 	],
 );
 
+export const notifications = pgTable(
+	"notifications",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+
+		recipientId: uuid("recipient_id")
+			.notNull()
+			.references(() => users.id, {
+				onDelete: "cascade",
+			}),
+
+		actorId: uuid("actor_id").references(() => users.id, {
+			onDelete: "set null",
+		}),
+
+		projectId: uuid("project_id").references(() => projects.id, {
+			onDelete: "cascade",
+		}),
+
+		taskId: uuid("task_id").references(() => tasks.id, {
+			onDelete: "cascade",
+		}),
+
+		type: text("type").$type<NotificationType>().notNull(),
+
+		metadata: jsonb("metadata").$type<NotificationMetadata>().notNull(),
+
+		dedupeKey: text("dedupe_key"),
+
+		readAt: timestamp("read_at", {
+			withTimezone: true,
+			mode: "date",
+		}),
+
+		createdAt: timestamp("created_at", {
+			withTimezone: true,
+			mode: "date",
+		})
+			.defaultNow()
+			.notNull(),
+	},
+	(table) => [
+		index("notifications_recipient_created_at_idx").on(
+			table.recipientId,
+			table.createdAt,
+		),
+
+		index("notifications_recipient_read_at_idx").on(
+			table.recipientId,
+			table.readAt,
+		),
+
+		uniqueIndex("notifications_recipient_dedupe_unique").on(
+			table.recipientId,
+			table.dedupeKey,
+		),
+	],
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
 	ownedProjects: many(projects),
 
@@ -374,6 +437,14 @@ export const usersRelations = relations(users, ({ many }) => ({
 	taskComments: many(taskComments),
 
 	activities: many(activityLogs),
+
+	receivedNotifications: many(notifications, {
+		relationName: "notificationRecipient",
+	}),
+
+	triggeredNotifications: many(notifications, {
+		relationName: "notificationActor",
+	}),
 }));
 
 export const projectsRelations = relations(projects, ({ one, many }) => ({
@@ -389,6 +460,8 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
 	stages: many(stages),
 
 	activities: many(activityLogs),
+
+	notifications: many(notifications),
 }));
 
 export const projectLabelsRelations = relations(
@@ -437,6 +510,8 @@ export const tasksRelations = relations(tasks, ({ one, many }) => ({
 	comments: many(taskComments),
 
 	activities: many(activityLogs),
+
+	notifications: many(notifications),
 }));
 
 export const taskAssigneesRelations = relations(taskAssignees, ({ one }) => ({
@@ -472,6 +547,30 @@ export const taskCommentsRelations = relations(taskComments, ({ one }) => ({
 	author: one(users, {
 		fields: [taskComments.authorId],
 		references: [users.id],
+	}),
+}));
+
+export const notificationsRelations = relations(notifications, ({ one }) => ({
+	recipient: one(users, {
+		fields: [notifications.recipientId],
+		references: [users.id],
+		relationName: "notificationRecipient",
+	}),
+
+	actor: one(users, {
+		fields: [notifications.actorId],
+		references: [users.id],
+		relationName: "notificationActor",
+	}),
+
+	project: one(projects, {
+		fields: [notifications.projectId],
+		references: [projects.id],
+	}),
+
+	task: one(tasks, {
+		fields: [notifications.taskId],
+		references: [tasks.id],
 	}),
 }));
 
@@ -518,6 +617,9 @@ export type NewTaskLabel = typeof taskLabels.$inferInsert;
 
 export type TaskComment = typeof taskComments.$inferSelect;
 export type NewTaskComment = typeof taskComments.$inferInsert;
+
+export type Notification = typeof notifications.$inferSelect;
+export type NewNotification = typeof notifications.$inferInsert;
 
 export type ActivityLog = typeof activityLogs.$inferSelect;
 export type NewActivityLog = typeof activityLogs.$inferInsert;

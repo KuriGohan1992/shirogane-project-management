@@ -3,7 +3,6 @@
 import { UserButton } from "@clerk/nextjs";
 import {
 	BarChart3,
-	Bell,
 	Calendar,
 	ChevronLeft,
 	ChevronRight,
@@ -24,6 +23,8 @@ import { GlobalSearch } from "@/components/global-search";
 import { ShiroBrand } from "@/components/shiro-brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
+import type { NotificationCenterData } from "@/types/notification";
+import { NotificationCenter } from "./notification-center";
 
 const navigation = [
 	{
@@ -61,8 +62,8 @@ const navigation = [
 type DashboardShellProps = {
 	children: ReactNode;
 	serverTime: string;
+	initialNotifications: NotificationCenterData;
 };
-
 function formatServerTime(date: Date) {
 	return new Intl.DateTimeFormat("en-US", {
 		hour: "numeric",
@@ -85,7 +86,11 @@ function isEditableTarget(target: EventTarget | null) {
 	);
 }
 
-export function DashboardShell({ children, serverTime }: DashboardShellProps) {
+export function DashboardShell({
+	children,
+	serverTime,
+	initialNotifications,
+}: DashboardShellProps) {
 	const pathname = usePathname();
 
 	const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -304,17 +309,7 @@ export function DashboardShell({ children, serverTime }: DashboardShellProps) {
 
 							<div className="flex items-center gap-3">
 								<div className="flex items-center gap-1">
-									<button
-										type="button"
-										aria-label="View notifications"
-										className="group inline-flex size-9 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-									>
-										<Bell
-											aria-hidden="true"
-											size={19}
-											className="transition-transform duration-150 group-hover:scale-110"
-										/>
-									</button>
+									<NotificationCenter initialData={initialNotifications} />
 
 									<ThemeToggle />
 								</div>

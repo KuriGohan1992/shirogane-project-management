@@ -172,7 +172,7 @@ export default function CalendarLoading() {
 			{/* Calendar */}
 			<section className="overflow-hidden rounded-xl border border-border bg-card">
 				{/* Month navigation only */}
-				<div className="flex items-center justify-center bg-primary px-4 py-3">
+				<div className="flex items-center justify-center bg-primary px-4 py-4">
 					<div className="flex items-center gap-3">
 						<Skeleton className="size-6 bg-primary-foreground/20" />
 

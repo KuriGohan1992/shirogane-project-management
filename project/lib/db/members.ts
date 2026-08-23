@@ -13,6 +13,7 @@ import {
 	taskAssignees,
 	tasks,
 } from "@/lib/db/schema";
+import { createNotificationsSafely } from "../services/notifications";
 
 type AddProjectMemberResult =
 	| "added"
@@ -38,6 +39,7 @@ export async function addProjectMemberByEmail(
 	const project = await db.query.projects.findFirst({
 		columns: {
 			id: true,
+			name: true,
 		},
 
 		where: (project, { and, eq }) =>
@@ -92,6 +94,24 @@ export async function addProjectMemberByEmail(
 		},
 	});
 
+	await createNotificationsSafely([
+		{
+			type: "project_member_added",
+
+			recipientId: targetUser.id,
+
+			actorId: ownerId,
+
+			projectId,
+
+			metadata: {
+				projectName: project.name,
+
+				role: "member",
+			},
+		},
+	]);
+
 	return "added";
 }
 
@@ -107,6 +127,7 @@ export async function removeProjectMemberOwnedByUser(
 	const project = await db.query.projects.findFirst({
 		columns: {
 			id: true,
+			name: true,
 		},
 
 		where: (project, { and, eq }) =>
@@ -162,6 +183,22 @@ export async function removeProjectMemberOwnedByUser(
 			memberRole: targetMember.role,
 		},
 	});
+
+	await createNotificationsSafely([
+		{
+			type: "project_member_removed",
+
+			recipientId: memberUserId,
+
+			actorId: ownerId,
+
+			projectId,
+
+			metadata: {
+				projectName: project.name,
+			},
+		},
+	]);
 
 	return project.id;
 }
@@ -228,6 +265,18 @@ export async function updateProjectMemberRoleOwnedByUser(
 		return "project_not_found";
 	}
 
+	const project = await db.query.projects.findFirst({
+		columns: {
+			name: true,
+		},
+
+		where: (project, { eq }) => eq(project.id, projectId),
+	});
+
+	if (!project) {
+		return "project_not_found";
+	}
+
 	const existingMember = await db.query.projectMembers.findFirst({
 		columns: {
 			role: true,
@@ -277,6 +326,26 @@ export async function updateProjectMemberRoleOwnedByUser(
 				memberRole: role,
 			},
 		});
+
+		await createNotificationsSafely([
+			{
+				type: "project_member_role_changed",
+
+				recipientId: memberUserId,
+
+				actorId: ownerId,
+
+				projectId,
+
+				metadata: {
+					projectName: project.name,
+
+					previousRole: existingMember.role,
+
+					role,
+				},
+			},
+		]);
 	}
 
 	return "updated";
@@ -306,6 +375,8 @@ export async function removeCollaboratorFromOwnedProjects(
 	const removableMemberships = await db
 		.select({
 			projectId: projectMembers.projectId,
+
+			projectName: projects.name,
 		})
 		.from(projectMembers)
 		.innerJoin(projects, eq(projectMembers.projectId, projects.id))
@@ -362,6 +433,29 @@ export async function removeCollaboratorFromOwnedProjects(
 				inArray(projectMembers.projectId, projectIds),
 			),
 		);
+
+	await createNotificationsSafely(
+	removableMemberships.map(
+		(membership) => ({
+			type:
+				"project_member_removed" as const,
+
+			recipientId:
+				collaboratorUserId,
+
+			actorId:
+				ownerId,
+
+			projectId:
+				membership.projectId,
+
+			metadata: {
+				projectName:
+					membership.projectName,
+			},
+		}),
+	),
+);
 
 	return {
 		status: "removed",

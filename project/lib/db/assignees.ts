@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { recordTaskActivity } from "@/lib/db/activity";
 import { getProjectAccess } from "@/lib/db/project-access";
 import { taskAssignees } from "@/lib/db/schema";
+import { createNotificationsSafely } from "../services/notifications";
 
 type AssignTaskResult =
 	| {
@@ -43,12 +44,13 @@ async function getAssignableTask(taskId: string, userId: string) {
 				},
 
 				with: {
-					project: {
-						columns: {
-							id: true,
-							ownerId: true,
-						},
-					},
+project: {
+	columns: {
+		id: true,
+		ownerId: true,
+		name: true,
+	},
+},
 				},
 			},
 		},
@@ -162,6 +164,32 @@ export async function assignUserToTask(
 				assigneeName: getUserDisplayName(assignee),
 			},
 		});
+
+		await createNotificationsSafely([
+	{
+		type: "task_assigned",
+
+		recipientId:
+			assigneeUserId,
+
+		actorId:
+			userId,
+
+		projectId:
+			project.id,
+
+		taskId:
+			task.id,
+
+		metadata: {
+			projectName:
+				project.name,
+
+			taskTitle:
+				task.title,
+		},
+	},
+]);
 	}
 
 	return {
@@ -217,6 +245,33 @@ export async function unassignUserFromTask(
 					: "a project member",
 			},
 		});
+
+		await createNotificationsSafely([
+	{
+		type:
+			"task_unassigned",
+
+		recipientId:
+			assigneeUserId,
+
+		actorId:
+			userId,
+
+		projectId:
+			task.stage.project.id,
+
+		taskId:
+			task.id,
+
+		metadata: {
+			projectName:
+				task.stage.project.name,
+
+			taskTitle:
+				task.title,
+		},
+	},
+]);
 	}
 
 	return {

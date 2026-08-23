@@ -293,7 +293,7 @@ export function TaskCard({
 			)}
 
 			{showFooter && (
-				<div className="mt-3 flex items-center justify-between gap-2 border-t border-border pt-2">
+				<div className="mt-2 flex items-center justify-between gap-2 border-t border-border pt-2">
 					<div className="min-w-0">
 						<TaskAssigneePicker
 							taskId={task.id}

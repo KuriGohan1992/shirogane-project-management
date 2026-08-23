@@ -100,8 +100,6 @@ export function TeamMemberSidebar({
 
 									{/* Project roles */}
 									<div className="grid grid-cols-2 gap-x-4 pt-2 text-sm">
-
-
 										<div className="flex min-w-0 items-center gap-1.5 text-foreground">
 											<ShieldCheck
 												aria-hidden="true"
@@ -115,7 +113,7 @@ export function TeamMemberSidebar({
 												</span>
 											</span>
 										</div>
-                                        										<div className="flex min-w-0 items-center gap-1.5 text-foreground">
+										<div className="flex min-w-0 items-center gap-1.5 text-foreground">
 											<ShieldCheck
 												aria-hidden="true"
 												className="size-4 shrink-0"

@@ -15,6 +15,7 @@ import {
 	taskLabels,
 	tasks,
 } from "@/lib/db/schema";
+import { createNotificationsSafely } from "../services/notifications";
 
 type TaskMutationData = Pick<
 	NewTask,
@@ -66,11 +67,12 @@ async function getEditableStage(stageId: string, userId: string) {
 		where: (stage, { eq }) => eq(stage.id, stageId),
 
 		with: {
-			project: {
-				columns: {
-					ownerId: true,
-				},
-			},
+project: {
+	columns: {
+		ownerId: true,
+		name: true,
+	},
+},
 		},
 	});
 
@@ -178,6 +180,8 @@ export async function createTaskInStage(
 		}
 	}
 
+	let insertedAssigneeIds: string[] = [];
+
 	const uniqueAssigneeIds = [...new Set(assigneeIds)];
 
 	if (uniqueAssigneeIds.length > 0) {
@@ -213,15 +217,30 @@ export async function createTaskInStage(
 		}
 
 		if (validAssigneeIds.size > 0) {
-			await db
-				.insert(taskAssignees)
-				.values(
-					[...validAssigneeIds].map((userId) => ({
-						taskId: task.id,
-						userId,
-					})),
-				)
-				.onConflictDoNothing();
+			const insertedAssignments =
+	await db
+		.insert(taskAssignees)
+		.values(
+			[...validAssigneeIds].map(
+				(userId) => ({
+					taskId:
+						task.id,
+
+					userId,
+				}),
+			),
+		)
+		.onConflictDoNothing()
+		.returning({
+			userId:
+				taskAssignees.userId,
+		});
+
+insertedAssigneeIds =
+	insertedAssignments.map(
+		(assignment) =>
+			assignment.userId,
+	);
 		}
 	}
 
@@ -235,6 +254,34 @@ export async function createTaskInStage(
 			stageName: stage.name,
 		},
 	});
+
+	await createNotificationsSafely(
+	insertedAssigneeIds.map(
+		(recipientId) => ({
+			type:
+				"task_assigned" as const,
+
+			recipientId,
+
+			actorId:
+				userId,
+
+			projectId:
+				stage.projectId,
+
+			taskId:
+				task.id,
+
+			metadata: {
+				projectName:
+					stage.project.name,
+
+				taskTitle:
+					task.title,
+			},
+		}),
+	),
+);
 
 	return {
 		task,
