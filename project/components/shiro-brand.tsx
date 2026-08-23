@@ -10,7 +10,11 @@ type ShiroBrandProps = {
 
 export function ShiroBrand({ className, priority = false }: ShiroBrandProps) {
 	return (
-		<Link href="/" className={cn("flex items-center gap-0.75", className)}>
+		<Link
+			href="/"
+			aria-label="Shiro home"
+			className={cn("flex items-center gap-0.75", className)}
+		>
 			<Image
 				src="/shiro-logo.png"
 				alt=""

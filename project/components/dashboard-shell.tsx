@@ -5,6 +5,8 @@ import {
 	BarChart3,
 	Bell,
 	Calendar,
+	ChevronLeft,
+	ChevronRight,
 	FolderOpen,
 	Home,
 	Menu,
@@ -70,13 +72,31 @@ function formatServerTime(date: Date) {
 	}).format(date);
 }
 
+function isEditableTarget(target: EventTarget | null) {
+	if (!(target instanceof HTMLElement)) {
+		return false;
+	}
+
+	return (
+		target instanceof HTMLInputElement ||
+		target instanceof HTMLTextAreaElement ||
+		target instanceof HTMLSelectElement ||
+		target.isContentEditable
+	);
+}
+
 export function DashboardShell({ children, serverTime }: DashboardShellProps) {
 	const pathname = usePathname();
 
 	const [sidebarOpen, setSidebarOpen] = useState(false);
+	const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
 	const [serverNow, setServerNow] = useState(() => new Date(serverTime));
 
+	/*
+	 * Keep the displayed server time moving without asking
+	 * the server for a new value every few seconds.
+	 */
 	useEffect(() => {
 		const serverStart = new Date(serverTime).getTime();
 		const clientStart = Date.now();
@@ -87,13 +107,49 @@ export function DashboardShell({ children, serverTime }: DashboardShellProps) {
 
 		const interval = window.setInterval(updateServerTime, 30_000);
 
-		return () => window.clearInterval(interval);
+		return () => {
+			window.clearInterval(interval);
+		};
 	}, [serverTime]);
+
+	/*
+	 * Cmd/Ctrl + B toggles the desktop sidebar.
+	 *
+	 * We intentionally ignore the shortcut while typing in
+	 * inputs, textareas, selects, or contenteditable elements.
+	 */
+	useEffect(() => {
+		function handleKeyDown(event: KeyboardEvent) {
+			if (
+				event.key.toLowerCase() !== "b" ||
+				(!event.metaKey && !event.ctrlKey) ||
+				event.altKey ||
+				event.shiftKey
+			) {
+				return;
+			}
+
+			if (isEditableTarget(event.target)) {
+				return;
+			}
+
+			event.preventDefault();
+
+			setSidebarCollapsed((current) => !current);
+		}
+
+		window.addEventListener("keydown", handleKeyDown);
+
+		return () => {
+			window.removeEventListener("keydown", handleKeyDown);
+		};
+	}, []);
 
 	return (
 		<div className="min-h-screen bg-background text-foreground">
 			<DashboardKeyboardShortcuts />
 
+			{/* Mobile backdrop */}
 			{sidebarOpen && (
 				<button
 					type="button"
@@ -103,25 +159,39 @@ export function DashboardShell({ children, serverTime }: DashboardShellProps) {
 				/>
 			)}
 
+			{/* Sidebar */}
 			<aside
+				id="dashboard-sidebar"
 				className={cn(
-					"fixed inset-y-0 left-0 z-50 w-64 transform border-r border-border bg-card transition-transform duration-300 ease-in-out lg:translate-x-0",
+					"fixed inset-y-0 left-0 z-50 w-64 transform border-r border-border bg-card transition-[transform,width] duration-200 ease-out lg:translate-x-0",
 					sidebarOpen ? "translate-x-0" : "-translate-x-full",
+					sidebarCollapsed ? "lg:w-20" : "lg:w-64",
 				)}
 			>
-				<div className="flex h-16 items-center justify-between border-b border-border px-6">
-					<ShiroBrand priority />
+				{/* Brand */}
+				<div
+					className={cn(
+						"flex h-16 items-center justify-between border-b border-border px-6",
+						sidebarCollapsed && "lg:justify-center lg:px-0",
+					)}
+				>
+					<ShiroBrand
+						priority
+						className={cn(sidebarCollapsed && "lg:gap-0 lg:[&>span]:hidden")}
+					/>
 
+					{/* Mobile close button */}
 					<button
 						type="button"
 						aria-label="Close navigation menu"
-						className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
+						className="inline-flex size-9 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
 						onClick={() => setSidebarOpen(false)}
 					>
 						<X aria-hidden="true" size={19} />
 					</button>
 				</div>
 
+				{/* Navigation */}
 				<nav aria-label="Dashboard navigation" className="mt-5 px-3">
 					<ul className="space-y-1">
 						{navigation.map((item) => {
@@ -138,35 +208,94 @@ export function DashboardShell({ children, serverTime }: DashboardShellProps) {
 									<Link
 										href={item.href}
 										aria-current={isActive ? "page" : undefined}
+										aria-label={sidebarCollapsed ? item.name : undefined}
+										title={sidebarCollapsed ? item.name : undefined}
 										className={cn(
-											"flex items-center rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors",
+											"flex items-center rounded-lg px-3 py-2.5 text-sm font-semibold transition-[background-color,color] duration-150",
 											isActive
-												? "bg-primary text-primary-foreground shadow-sm"
+												? "bg-primary text-primary-foreground"
 												: "text-muted-foreground hover:bg-muted hover:text-foreground",
+											sidebarCollapsed && "lg:justify-center lg:px-0",
 										)}
 										onClick={() => setSidebarOpen(false)}
 									>
-										<Icon aria-hidden="true" className="mr-3" size={19} />
+										<Icon
+											aria-hidden="true"
+											size={19}
+											className={cn(
+												"shrink-0",
+												sidebarCollapsed ? "lg:mr-0" : "mr-3",
+											)}
+										/>
 
-										{item.name}
+										<span
+											className={cn(
+												"whitespace-nowrap",
+												sidebarCollapsed && "lg:hidden",
+											)}
+										>
+											{item.name}
+										</span>
 									</Link>
 								</li>
 							);
 						})}
 					</ul>
 				</nav>
+
+				{/* Desktop sidebar edge toggle */}
+				<button
+					type="button"
+					aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+					title={
+						sidebarCollapsed
+							? "Expand sidebar — Ctrl/⌘ + B"
+							: "Collapse sidebar — Ctrl/⌘ + B"
+					}
+					aria-expanded={!sidebarCollapsed}
+					aria-controls="dashboard-sidebar"
+					onClick={() => setSidebarCollapsed((current) => !current)}
+					className="group absolute left-full top-1/2 hidden h-9 w-6 -translate-y-1/2 items-center justify-center rounded-r-md border border-l-0 border-border bg-card text-muted-foreground shadow-sm transition-[width,background-color,color] duration-150 hover:w-7 hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:inline-flex"
+				>
+					{sidebarCollapsed ? (
+						<ChevronRight
+							aria-hidden="true"
+							size={15}
+							strokeWidth={2.25}
+							className="transition-transform duration-150 group-hover:translate-x-0.5"
+						/>
+					) : (
+						<ChevronLeft
+							aria-hidden="true"
+							size={15}
+							strokeWidth={2.25}
+							className="transition-transform duration-150 group-hover:-translate-x-0.5"
+						/>
+					)}
+				</button>
 			</aside>
 
-			<div className="lg:pl-64">
+			{/* Page area */}
+			<div
+				className={cn(
+					"transition-[padding] duration-200 ease-out",
+					sidebarCollapsed ? "lg:pl-20" : "lg:pl-64",
+				)}
+			>
 				<header className="sticky top-0 z-30 h-16 border-b border-border bg-card/95 backdrop-blur-md">
 					<div className="mx-auto flex h-full w-full max-w-[1600px] items-center gap-x-4 px-4 sm:gap-x-6 sm:px-6 lg:px-8">
+						{/* Mobile menu only */}
 						<button
 							type="button"
 							aria-label="Open navigation menu"
-							className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden"
+							className="group inline-flex size-9 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
 							onClick={() => setSidebarOpen(true)}
 						>
-							<Menu aria-hidden="true" size={20} />
+							<Menu
+								aria-hidden="true"
+								size={20}
+								className="transition-transform duration-150 group-hover:scale-110"
+							/>
 						</button>
 
 						<div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
@@ -178,9 +307,13 @@ export function DashboardShell({ children, serverTime }: DashboardShellProps) {
 								<button
 									type="button"
 									aria-label="View notifications"
-									className="inline-flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+									className="group inline-flex size-9 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 								>
-									<Bell aria-hidden="true" size={19} />
+									<Bell
+										aria-hidden="true"
+										size={19}
+										className="transition-transform duration-150 group-hover:scale-110"
+									/>
 								</button>
 
 								<ThemeToggle />
@@ -199,7 +332,7 @@ export function DashboardShell({ children, serverTime }: DashboardShellProps) {
 			<time
 				dateTime={serverNow.toISOString()}
 				title="Server-synchronized UTC time"
-				className="pointer-events-none fixed bottom-0 right-0 z-[60] border-l border-t border-border bg-card/95 px-2.5 py-1 text-[11px] font-medium shadow-sm backdrop-blur"
+				className="pointer-events-none fixed bottom-0 right-0 z-[60] border-l border-t border-border bg-card/95 px-2.5 py-1 text-[11px] font-medium backdrop-blur"
 			>
 				Server time {formatServerTime(serverNow)}
 			</time>

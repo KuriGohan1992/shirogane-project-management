@@ -6,19 +6,22 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 
-type KeyboardShortcutsDialogProps = {
-	open: boolean;
-	onOpenChange: (open: boolean) => void;
-};
+type ShortcutSeparator = "plus" | "or";
 
 type Shortcut = {
 	keys: string[];
 	label: string;
+	separator?: ShortcutSeparator;
 };
 
 type ShortcutSection = {
 	title: string;
 	shortcuts: Shortcut[];
+};
+
+type KeyboardShortcutsDialogProps = {
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
 };
 
 const SHORTCUT_SECTIONS: ShortcutSection[] = [
@@ -28,6 +31,12 @@ const SHORTCUT_SECTIONS: ShortcutSection[] = [
 			{
 				keys: ["⌘/Ctrl", "K"],
 				label: "Focus global search",
+				separator: "plus",
+			},
+			{
+				keys: ["⌘/Ctrl", "B"],
+				label: "Toggle sidebar",
+				separator: "plus",
 			},
 			{
 				keys: ["?"],
@@ -39,27 +48,27 @@ const SHORTCUT_SECTIONS: ShortcutSection[] = [
 		title: "Navigation",
 		shortcuts: [
 			{
-				keys: ["G", "D"],
+				keys: ["GD"],
 				label: "Go to Dashboard",
 			},
 			{
-				keys: ["G", "P"],
+				keys: ["GP"],
 				label: "Go to Projects",
 			},
 			{
-				keys: ["G", "T"],
+				keys: ["GT"],
 				label: "Go to Team",
 			},
 			{
-				keys: ["G", "A"],
+				keys: ["GA"],
 				label: "Go to Analytics",
 			},
 			{
-				keys: ["G", "C"],
+				keys: ["GC"],
 				label: "Go to Calendar",
 			},
 			{
-				keys: ["G", "S"],
+				keys: ["GS"],
 				label: "Go to Settings",
 			},
 		],
@@ -79,22 +88,27 @@ const SHORTCUT_SECTIONS: ShortcutSection[] = [
 			{
 				keys: ["⌘/Ctrl", "/"],
 				label: "Focus page filters",
+				separator: "plus",
 			},
 			{
 				keys: ["H", "←"],
 				label: "Move focus to the previous stage",
+				separator: "or",
 			},
 			{
 				keys: ["J", "↓"],
 				label: "Move focus to the next task",
+				separator: "or",
 			},
 			{
 				keys: ["K", "↑"],
 				label: "Move focus to the previous task",
+				separator: "or",
 			},
 			{
 				keys: ["L", "→"],
 				label: "Move focus to the next stage",
+				separator: "or",
 			},
 			{
 				keys: ["Enter"],
@@ -115,6 +129,7 @@ const SHORTCUT_SECTIONS: ShortcutSection[] = [
 			{
 				keys: ["⌫", "Delete"],
 				label: "Delete selected tasks",
+				separator: "or",
 			},
 			{
 				keys: ["Esc"],
@@ -129,6 +144,30 @@ function Key({ children }: { children: string }) {
 		<kbd className="inline-flex min-w-7 items-center justify-center rounded-md border border-border bg-muted px-1.5 py-1 font-mono text-[11px] font-semibold text-foreground shadow-xs">
 			{children}
 		</kbd>
+	);
+}
+
+function ShortcutKeys({ shortcut }: { shortcut: Shortcut }) {
+	return (
+		<div className="flex shrink-0 items-center gap-1">
+			{shortcut.keys.map((key, index) => (
+				<span
+					key={`${shortcut.label}-${key}`}
+					className="flex items-center gap-1"
+				>
+					{index > 0 && shortcut.separator && (
+						<span
+							aria-hidden="true"
+							className="px-0.5 text-[11px] text-muted-foreground"
+						>
+							{shortcut.separator === "plus" ? "+" : "/"}
+						</span>
+					)}
+
+					<Key>{key}</Key>
+				</span>
+			))}
+		</div>
 	);
 }
 
@@ -161,29 +200,11 @@ export function KeyboardShortcutsDialog({
 										key={`${section.title}-${shortcut.label}`}
 										className="flex items-center justify-between gap-4 px-3 py-2.5"
 									>
-										<span className="text-sm text-foreground">
+										<span className="min-w-0 text-sm text-foreground">
 											{shortcut.label}
 										</span>
 
-										<div className="flex shrink-0 items-center gap-1">
-											{shortcut.keys.map((key, index) => (
-												<span
-													key={`${shortcut.label}-${key}`}
-													className="flex items-center gap-1"
-												>
-													{index > 0 && (
-														<span
-															aria-hidden="true"
-															className="text-[10px] text-muted-foreground"
-														>
-															{shortcut.keys[0] === "G" ? "then" : "/"}
-														</span>
-													)}
-
-													<Key>{key}</Key>
-												</span>
-											))}
-										</div>
+										<ShortcutKeys shortcut={shortcut} />
 									</div>
 								))}
 							</div>
