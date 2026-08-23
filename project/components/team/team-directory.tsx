@@ -126,13 +126,13 @@ export function TeamDirectory({ collaborators, projects }: TeamDirectoryProps) {
 						value={projectFilter === ALL_PROJECTS ? "" : projectFilter}
 						onValueChange={setProjectFilter}
 					>
-<SelectTrigger
-	size="sm"
-	aria-label="Filter collaborators by project"
-	className="w-fit min-w-28 max-w-72 bg-card data-[placeholder]:text-foreground [&>span:first-child]:truncate"
->
-	<SelectValue placeholder="Project" />
-</SelectTrigger>
+						<SelectTrigger
+							size="sm"
+							aria-label="Filter collaborators by project"
+							className="w-fit min-w-28 max-w-72 bg-card data-[placeholder]:text-foreground [&>span:first-child]:truncate"
+						>
+							<SelectValue placeholder="Project" />
+						</SelectTrigger>
 
 						<SelectContent position="popper" align="start" sideOffset={4}>
 							<SelectItem value={ALL_PROJECTS}>All projects</SelectItem>

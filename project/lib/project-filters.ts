@@ -1,3 +1,4 @@
+import type { ProjectAccessRole } from "@/lib/auth/project-permissions";
 import {
 	COLOR_OPTIONS,
 	COLOR_VALUES,
@@ -24,6 +25,7 @@ export const PROJECT_FILTER_DEFAULTS = {
 } as const;
 
 const ACCESS_FILTER_VALUES = ["owner", "member", "viewer"] as const;
+
 const STATUS_FILTER_VALUES = ["active", "completed"] as const;
 
 const SCHEDULE_FILTER_VALUES = [
@@ -57,9 +59,20 @@ export type ProjectScheduleFilter =
 export type ProjectSortOption = (typeof SORT_VALUES)[number];
 
 export type ProjectSortDirection = (typeof SORT_DIRECTION_VALUES)[number];
+
 export type ProjectStatusFilter =
 	| typeof PROJECT_FILTER_DEFAULTS.status
 	| (typeof STATUS_FILTER_VALUES)[number];
+
+export type ProjectFilterTarget = {
+	name: string;
+	description: string | null;
+	color: ColorValue;
+	accessRole: ProjectAccessRole;
+	startDate: Date | string | null;
+	dueDate: Date | string | null;
+	completedAt: Date | string | null;
+};
 
 const PROJECT_SORT_DEFAULT_DIRECTION: Record<
 	ProjectSortOption,
@@ -94,9 +107,12 @@ function compareProjectNames(
 	});
 }
 
-function getUtcDayValue(date: Date) {
+function getUtcDayValue(value: Date | string) {
+	const date = typeof value === "string" ? new Date(value) : value;
+
 	return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
 }
+
 function getLocalTodayValue() {
 	const now = new Date();
 
@@ -157,7 +173,7 @@ export function parseProjectSortDirection(
 }
 
 export function matchesProjectScheduleFilter(
-	project: ProjectWithAccess,
+	project: ProjectFilterTarget,
 	filter: ProjectScheduleFilter,
 	today = getLocalTodayValue(),
 ) {
@@ -183,7 +199,7 @@ export function matchesProjectScheduleFilter(
 }
 
 export function matchesProjectStatusFilter(
-	project: ProjectWithAccess,
+	project: ProjectFilterTarget,
 	filter: ProjectStatusFilter,
 ) {
 	if (filter === "all") {
@@ -222,7 +238,6 @@ export function sortProjects(
 			}
 
 			case "due-date": {
-				// Projects without due dates stay last regardless of direction.
 				if (!left.dueDate && !right.dueDate) {
 					return compareProjectNames(left, right) * directionMultiplier;
 				}

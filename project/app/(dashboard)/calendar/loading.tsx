@@ -2,6 +2,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const WEEKDAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
+const FILTER_SKELETONS = [
+	{
+		id: "access",
+		widthClassName: "w-24",
+	},
+	{
+		id: "status",
+		widthClassName: "w-24",
+	},
+	{
+		id: "color",
+		widthClassName: "w-24",
+	},
+] as const;
+
 type Bar = {
 	id: string;
 	start: number;
@@ -87,7 +102,6 @@ function CalendarWeekSkeleton({
 }) {
 	return (
 		<div className="relative h-24 border-b border-border last:border-b-0">
-			{/* Full-height calendar cells */}
 			<div className="absolute inset-0 grid grid-cols-7">
 				{WEEKDAYS.map((day, dayIndex) => (
 					<div key={day} className="border-r border-border p-3 last:border-r-0">
@@ -100,7 +114,6 @@ function CalendarWeekSkeleton({
 				))}
 			</div>
 
-			{/* Timeline bars float above the day grid */}
 			{bars.length > 0 && (
 				<div className="pointer-events-none absolute inset-x-0 top-10 grid grid-cols-7 px-1">
 					{bars.map((bar) => (
@@ -109,7 +122,9 @@ function CalendarWeekSkeleton({
 							className="h-7 rounded-md"
 							style={{
 								gridColumn: `${bar.start} / span ${bar.span}`,
+
 								gridRow: 1,
+
 								transform: `translateY(${(bar.lane ?? 0) * 32}px)`,
 							}}
 						/>
@@ -123,20 +138,41 @@ function CalendarWeekSkeleton({
 export default function CalendarLoading() {
 	return (
 		<div className="space-y-4">
+			{/* Page heading */}
 			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
 				<div>
 					<Skeleton className="h-9 w-36" />
+
 					<Skeleton className="mt-1.5 h-5 w-36" />
 				</div>
 
 				<Skeleton className="h-10 w-32" />
 			</div>
 
-			<section className="overflow-hidden rounded-xl border border-border bg-card">
-				{/* Calendar controls */}
-				<div className="flex items-center justify-between bg-primary px-4 py-3">
-					<Skeleton className="h-8 w-24 bg-primary-foreground/20" />
+			{/* Filters + calendar controls */}
+			<div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+				<Skeleton className="h-9 w-full xl:flex-1" />
 
+				<div className="flex flex-wrap items-center gap-2">
+					{FILTER_SKELETONS.map((filter) => (
+						<Skeleton
+							key={filter.id}
+							className={`h-8 ${filter.widthClassName}`}
+						/>
+					))}
+				</div>
+
+				<div className="flex items-center gap-2 border-t border-border pt-3 xl:ml-1 xl:border-l xl:border-t-0 xl:pl-3 xl:pt-0">
+					<Skeleton className="h-8 w-24" />
+
+					<Skeleton className="h-8 w-24" />
+				</div>
+			</div>
+
+			{/* Calendar */}
+			<section className="overflow-hidden rounded-xl border border-border bg-card">
+				{/* Month navigation only */}
+				<div className="flex items-center justify-center bg-primary px-4 py-3">
 					<div className="flex items-center gap-3">
 						<Skeleton className="size-6 bg-primary-foreground/20" />
 
@@ -144,17 +180,10 @@ export default function CalendarLoading() {
 
 						<Skeleton className="size-6 bg-primary-foreground/20" />
 					</div>
-
-					<div className="flex items-center gap-2">
-						<Skeleton className="h-4 w-24 bg-primary-foreground/20" />
-
-						<Skeleton className="size-4 bg-primary-foreground/20" />
-					</div>
 				</div>
 
 				<div className="overflow-x-auto">
 					<div className="min-w-[900px]">
-						{/* Weekday headings */}
 						<div className="grid grid-cols-7 border-b border-border bg-muted/35">
 							{WEEKDAYS.map((day) => (
 								<div
@@ -166,7 +195,6 @@ export default function CalendarLoading() {
 							))}
 						</div>
 
-						{/* Calendar weeks */}
 						{WEEKS.map((week) => (
 							<CalendarWeekSkeleton
 								key={week.id}

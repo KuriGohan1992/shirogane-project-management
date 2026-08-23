@@ -1,19 +1,35 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { CalendarProjectSidebar } from "@/components/calendar/calendar-project-sidebar";
 import { ProjectTimelineBar } from "@/components/calendar/project-timeline-bar";
+import { CreateProjectButton } from "@/components/create-project-button";
+import { ProjectFilterControls } from "@/components/project-filter-controls";
 import { Button } from "@/components/ui/button";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { useProjectFilters } from "@/hooks/use-project-filters";
 import { DAY_MS, parseDateKey, toDateKey } from "@/lib/calendar-dates";
 import { cn } from "@/lib/utils";
 import type { CalendarProjectSummary } from "@/types/calendar";
 
 const DAYS_PER_WEEK = 7;
+
 const CALENDAR_WEEK_COUNT = 6;
 
+const CALENDAR_VIEW_PARAM = "view";
+
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
+type CalendarViewMode = "timeline" | "due";
 
 type TimelineSegment = {
 	project: CalendarProjectSummary;
@@ -68,7 +84,21 @@ function getCalendarDays(month: Date) {
 	);
 }
 
-function getProjectRange(project: CalendarProjectSummary) {
+function parseCalendarViewMode(value: string | null): CalendarViewMode {
+	return value === "due" ? "due" : "timeline";
+}
+
+function replaceCalendarUrl(params: URLSearchParams) {
+	const queryString = params.toString();
+
+	const nextUrl = `${window.location.pathname}${
+		queryString ? `?${queryString}` : ""
+	}${window.location.hash}`;
+
+	window.history.replaceState(null, "", nextUrl);
+}
+
+function getTimelineProjectRange(project: CalendarProjectSummary) {
 	const firstDate = project.startDate ?? project.dueDate;
 
 	const secondDate = project.dueDate ?? project.startDate;
@@ -88,7 +118,7 @@ function getProjectRange(project: CalendarProjectSummary) {
 			};
 }
 
-function getPointKind(project: CalendarProjectSummary) {
+function getTimelinePointKind(project: CalendarProjectSummary) {
 	if (project.startDate && !project.dueDate) {
 		return "start" as const;
 	}
@@ -100,9 +130,38 @@ function getPointKind(project: CalendarProjectSummary) {
 	return null;
 }
 
+function getProjectCalendarRange(
+	project: CalendarProjectSummary,
+	viewMode: CalendarViewMode,
+) {
+	if (viewMode === "due") {
+		if (!project.dueDate) {
+			return null;
+		}
+
+		return {
+			start: project.dueDate,
+			end: project.dueDate,
+			pointKind: "due" as const,
+		};
+	}
+
+	const range = getTimelineProjectRange(project);
+
+	if (!range) {
+		return null;
+	}
+
+	return {
+		...range,
+		pointKind: getTimelinePointKind(project),
+	};
+}
+
 function buildWeekSegments(
 	projects: CalendarProjectSummary[],
 	week: Date[],
+	viewMode: CalendarViewMode,
 ): TimelineSegment[] {
 	const weekStartKey = toDateKey(week[0] ?? new Date(0));
 
@@ -110,7 +169,7 @@ function buildWeekSegments(
 
 	const segments = projects
 		.flatMap((project) => {
-			const range = getProjectRange(project);
+			const range = getProjectCalendarRange(project, viewMode);
 
 			if (!range || range.end < weekStartKey || range.start > weekEndKey) {
 				return [];
@@ -135,7 +194,7 @@ function buildWeekSegments(
 
 					continuesAfter: range.end > segmentEnd,
 
-					pointKind: getPointKind(project),
+					pointKind: range.pointKind,
 				},
 			];
 		})
@@ -185,6 +244,14 @@ export function ProjectCalendar({
 	projects,
 	todayDateKey,
 }: ProjectCalendarProps) {
+	const searchParams = useSearchParams();
+
+	const filters = useProjectFilters(projects, {
+		defaultStatus: "active",
+	});
+
+	const viewMode = parseCalendarViewMode(searchParams.get(CALENDAR_VIEW_PARAM));
+
 	const [visibleMonth, setVisibleMonth] = useState(() =>
 		startOfMonth(parseDateKey(todayDateKey)),
 	);
@@ -192,8 +259,6 @@ export function ProjectCalendar({
 	const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
 		null,
 	);
-
-	const [showCompleted, setShowCompleted] = useState(false);
 
 	const calendarDays = useMemo(
 		() => getCalendarDays(visibleMonth),
@@ -216,14 +281,14 @@ export function ProjectCalendar({
 		[calendarDays],
 	);
 
-	const scheduledProjects = useMemo(
+	const calendarProjects = useMemo(
 		() =>
-			projects.filter(
-				(project) =>
-					(project.startDate || project.dueDate) &&
-					(showCompleted || !project.completedAt),
+			filters.filteredProjects.filter((project) =>
+				viewMode === "due"
+					? Boolean(project.dueDate)
+					: Boolean(project.startDate || project.dueDate),
 			),
-		[projects, showCompleted],
+		[filters.filteredProjects, viewMode],
 	);
 
 	const selectedProject =
@@ -233,20 +298,88 @@ export function ProjectCalendar({
 		setVisibleMonth(startOfMonth(parseDateKey(todayDateKey)));
 	}
 
-	return (
-		<>
-			<section className="overflow-hidden rounded-xl border border-border bg-card">
-				<div className="flex flex-wrap items-center justify-between gap-3 border-b border-primary bg-primary px-4 py-3 text-primary-foreground">
-					<Button
-						type="button"
-						variant="ghost"
-						size="sm"
-						className="bg-transparent font-medium text-primary-foreground shadow-none transition-transform hover:scale-105 hover:bg-transparent hover:font-semibold hover:text-primary-foreground active:scale-95"
-						onClick={goToToday}
-					>
-						Go to Today
-					</Button>
+	function setViewMode(nextViewMode: CalendarViewMode) {
+		const params = new URLSearchParams(window.location.search);
 
+		if (nextViewMode === "timeline") {
+			params.delete(CALENDAR_VIEW_PARAM);
+		} else {
+			params.set(CALENDAR_VIEW_PARAM, nextViewMode);
+		}
+
+		replaceCalendarUrl(params);
+	}
+
+	const calendarUtilityControls = (
+		<>
+			<Button
+				type="button"
+				variant="outline"
+				size="sm"
+				className="shrink-0 bg-card"
+				onClick={goToToday}
+			>
+				Go to Today
+			</Button>
+			<Select
+				value={searchParams.get(CALENDAR_VIEW_PARAM) ? viewMode : ""}
+				onValueChange={(value) => setViewMode(parseCalendarViewMode(value))}
+			>
+				<SelectTrigger
+					size="sm"
+					aria-label="Calendar view"
+					className="w-fit min-w-24 max-w-40 bg-card data-[placeholder]:text-foreground [&>span:first-child]:truncate"
+				>
+					<SelectValue placeholder="View" />
+				</SelectTrigger>
+
+				<SelectContent position="popper" align="end" sideOffset={4}>
+					<SelectItem value="timeline">Timeline</SelectItem>
+
+					<SelectItem value="due">Due date</SelectItem>
+				</SelectContent>
+			</Select>
+		</>
+	);
+
+	return (
+		<div className="space-y-4">
+			<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+				<div>
+					<h1 className="text-3xl font-bold text-foreground">Calendar</h1>
+
+					<p className="mt-0.5 text-muted-foreground">
+						{calendarProjects.length === 1
+							? "1 scheduled project"
+							: `${calendarProjects.length} scheduled projects`}
+					</p>
+				</div>
+
+				<CreateProjectButton keyboardShortcutTarget />
+			</div>
+
+			<ProjectFilterControls
+				query={filters.queryInput}
+				onQueryChange={filters.setQueryInput}
+				accessFilter={filters.accessFilter}
+				onAccessFilterChange={filters.setAccessFilter}
+				statusFilter={filters.statusFilter}
+				defaultStatus={filters.defaultStatus}
+				onStatusFilterChange={filters.setStatusFilter}
+				colorFilter={filters.colorFilter}
+				onColorFilterChange={filters.setColorFilter}
+				scheduleFilter={filters.scheduleFilter}
+				onScheduleFilterChange={filters.setScheduleFilter}
+				hasFilters={filters.hasFilters}
+				onClearFilters={filters.clearFilters}
+				showScheduleFilter={false}
+				utilityControls={calendarUtilityControls}
+				compactSearch
+			/>
+
+			<section className="overflow-hidden rounded-xl border border-border bg-card">
+				{/* Calendar-only navigation */}
+				<div className="flex items-center justify-center border-b border-primary bg-primary px-4 py-3 text-primary-foreground">
 					<div className="flex items-center">
 						<Button
 							type="button"
@@ -264,7 +397,7 @@ export function ProjectCalendar({
 							/>
 						</Button>
 
-						<h2 className="px-1 text-lg font-bold">
+						<h2 className="px-2 text-lg font-bold">
 							{formatMonth(visibleMonth)}
 						</h2>
 
@@ -284,16 +417,6 @@ export function ProjectCalendar({
 							/>
 						</Button>
 					</div>
-					<label className="flex cursor-pointer select-none items-center gap-2 text-sm font-medium text-primary-foreground">
-						<span>Show completed</span>
-
-						<input
-							type="checkbox"
-							checked={showCompleted}
-							onChange={(event) => setShowCompleted(event.target.checked)}
-							className="size-4 cursor-pointer accent-primary-foreground"
-						/>
-					</label>
 				</div>
 
 				<div className="overflow-x-auto">
@@ -312,13 +435,23 @@ export function ProjectCalendar({
 						{weeks.map((week) => {
 							const weekKey = toDateKey(week[0] ?? new Date(0));
 
-							const segments = buildWeekSegments(scheduledProjects, week);
+							const segments = buildWeekSegments(
+								calendarProjects,
+								week,
+								viewMode,
+							);
 
 							const laneCount = Math.max(
 								1,
 
 								segments.reduce(
-									(maxLane, segment) => Math.max(maxLane, segment.lane + 1),
+									(maxLane, segment) =>
+										Math.max(
+											maxLane,
+
+											segment.lane + 1,
+										),
+
 									0,
 								),
 							);
@@ -416,6 +549,6 @@ export function ProjectCalendar({
 					}
 				}}
 			/>
-		</>
+		</div>
 	);
 }

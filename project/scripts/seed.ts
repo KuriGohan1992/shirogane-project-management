@@ -10,15 +10,6 @@ import type { ColorValue } from "../lib/constants/colors";
 import * as schema from "../lib/db/schema";
 import {
 	activityLogs,
-	projectLabels,
-	projectMembers,
-	projects,
-	stages,
-	taskAssignees,
-	taskComments,
-	taskLabels,
-	tasks,
-	users,
 	type NewActivityLog,
 	type NewProject,
 	type NewProjectLabel,
@@ -29,6 +20,15 @@ import {
 	type NewTaskComment,
 	type NewTaskLabel,
 	type NewUser,
+	projectLabels,
+	projectMembers,
+	projects,
+	stages,
+	taskAssignees,
+	taskComments,
+	taskLabels,
+	tasks,
+	users,
 } from "../lib/db/schema";
 
 config({ path: ".env.local" });
@@ -47,7 +47,10 @@ function getRequiredEnv(name: string) {
 const databaseUrl = getRequiredEnv("DATABASE_URL");
 const seedUserEmail = getRequiredEnv("SEED_USER_EMAIL");
 
-if (process.env.NODE_ENV === "production" && process.env.ALLOW_PRODUCTION_SEED !== "true") {
+if (
+	process.env.NODE_ENV === "production" &&
+	process.env.ALLOW_PRODUCTION_SEED !== "true"
+) {
 	throw new Error(
 		"Refusing to seed while NODE_ENV=production. If this is intentional, set ALLOW_PRODUCTION_SEED=true.",
 	);
@@ -140,7 +143,8 @@ const PEOPLE: SeedPerson[] = [
 		key: "maya-rodriguez",
 		name: "Maya Rodriguez",
 		email: "seed.maya.rodriguez@shiro.local",
-		imageUrl: "https://api.dicebear.com/9.x/notionists/svg?seed=Maya%20Rodriguez",
+		imageUrl:
+			"https://api.dicebear.com/9.x/notionists/svg?seed=Maya%20Rodriguez",
 	},
 	{
 		key: "noah-williams",
@@ -164,7 +168,8 @@ const PEOPLE: SeedPerson[] = [
 		key: "isabella-rossi",
 		name: "Isabella Rossi",
 		email: "seed.isabella.rossi@shiro.local",
-		imageUrl: "https://api.dicebear.com/9.x/notionists/svg?seed=Isabella%20Rossi",
+		imageUrl:
+			"https://api.dicebear.com/9.x/notionists/svg?seed=Isabella%20Rossi",
 	},
 	{
 		key: "ethan-kim",
@@ -698,7 +703,8 @@ async function main() {
 				? null
 				: dateFromNow(scenario.dueOffset);
 		const completedAt =
-			scenario.completedOffset === undefined || scenario.completedOffset === null
+			scenario.completedOffset === undefined ||
+			scenario.completedOffset === null
 				? null
 				: dateFromNow(scenario.completedOffset, 16);
 		const updatedAt = dateFromNow(scenario.lastActivityOffset, 16);
@@ -731,12 +737,20 @@ async function main() {
 			roleByUserId.set(currentUser.id, currentRole);
 		}
 
-		for (let memberOffset = 0; memberOffset < scenario.extraMemberCount; memberOffset += 1) {
+		for (
+			let memberOffset = 0;
+			memberOffset < scenario.extraMemberCount;
+			memberOffset += 1
+		) {
 			const candidateIndex =
 				(projectIndex * 3 + memberOffset * 2 + 1) % syntheticUsers.length;
 			const candidateId = syntheticUsers[candidateIndex]?.id as string;
 
-			if (!candidateId || candidateId === ownerId || memberIds.includes(candidateId)) {
+			if (
+				!candidateId ||
+				candidateId === ownerId ||
+				memberIds.includes(candidateId)
+			) {
 				continue;
 			}
 
@@ -783,12 +797,16 @@ async function main() {
 						memberName: accessUserNames.get(memberId) ?? "Project member",
 						memberRole: roleByUserId.get(memberId) ?? "member",
 					},
-					createdAt: addMinutes(createdAt, 180 + memberIds.indexOf(memberId) * 60),
+					createdAt: addMinutes(
+						createdAt,
+						180 + memberIds.indexOf(memberId) * 60,
+					),
 				}),
 			);
 		}
 
-		const stageNames = STAGE_TEMPLATES[scenario.stageTemplate] ?? STAGE_TEMPLATES[0];
+		const stageNames =
+			STAGE_TEMPLATES[scenario.stageTemplate] ?? STAGE_TEMPLATES[0];
 		const projectStageIds: string[] = [];
 
 		for (const [stageIndex, stageName] of stageNames.entries()) {
@@ -821,8 +839,11 @@ async function main() {
 
 		for (let labelIndex = 0; labelIndex < labelCount; labelIndex += 1) {
 			const libraryLabel =
-				LABEL_LIBRARY[(projectIndex + labelIndex) % LABEL_LIBRARY.length] ?? LABEL_LIBRARY[0];
-			const labelId = deterministicUuid(`label:${scenario.key}:${libraryLabel.name}`);
+				LABEL_LIBRARY[(projectIndex + labelIndex) % LABEL_LIBRARY.length] ??
+				LABEL_LIBRARY[0];
+			const labelId = deterministicUuid(
+				`label:${scenario.key}:${libraryLabel.name}`,
+			);
 			projectLabelIds.push(labelId);
 			projectLabelNames.set(labelId, libraryLabel.name);
 			labelRows.push({
@@ -849,11 +870,11 @@ async function main() {
 			const position = positionsByStage.get(stageId) ?? 0;
 			positionsByStage.set(stageId, position + 1);
 
-			const baseTitle = TASK_TITLES[(projectIndex * 5 + taskIndex) % TASK_TITLES.length] as string;
+			const baseTitle = TASK_TITLES[
+				(projectIndex * 5 + taskIndex) % TASK_TITLES.length
+			] as string;
 			const title =
-				taskIndex % 11 === 0
-					? `${baseTitle} for ${scenario.name}`
-					: baseTitle;
+				taskIndex % 11 === 0 ? `${baseTitle} for ${scenario.name}` : baseTitle;
 			const description = pick(TASK_DESCRIPTIONS, random);
 			const priority = pick(PRIORITIES, random);
 
@@ -869,10 +890,7 @@ async function main() {
 			const creationSpan = creationEndOffset - creationStartOffset;
 			const taskCreatedOffset =
 				creationStartOffset + Math.floor(random() * (creationSpan + 1));
-			const taskCreatedAt = dateFromNow(
-				taskCreatedOffset,
-				8 + (taskIndex % 9),
-			);
+			const taskCreatedAt = dateFromNow(taskCreatedOffset, 8 + (taskIndex % 9));
 
 			let startDate: Date | null = null;
 			let dueDate: Date | null = null;
@@ -894,37 +912,58 @@ async function main() {
 				dueDate = dateFromNow(taskAnchorOffset);
 			} else if (dateMode === 2) {
 				startDate = dateFromNow(taskAnchorOffset - 2);
-				dueDate = dateFromNow(Math.min(scheduleEndOffset, taskAnchorOffset + 5));
+				dueDate = dateFromNow(
+					Math.min(scheduleEndOffset, taskAnchorOffset + 5),
+				);
 			} else if (dateMode === 3) {
 				startDate = dateFromNow(taskAnchorOffset);
 			} else if (dateMode === 4) {
 				dueDate = dateFromNow(
-					Math.min(latestTaskDateOffset, scheduleEndOffset + 10, taskAnchorOffset + 10),
+					Math.min(
+						latestTaskDateOffset,
+						scheduleEndOffset + 10,
+						taskAnchorOffset + 10,
+					),
 				);
 			} else if (dateMode === 5) {
-				startDate = dateFromNow(Math.max(scheduleStartOffset, taskAnchorOffset - 8));
-				dueDate = dateFromNow(Math.min(scheduleEndOffset, taskAnchorOffset + 2));
+				startDate = dateFromNow(
+					Math.max(scheduleStartOffset, taskAnchorOffset - 8),
+				);
+				dueDate = dateFromNow(
+					Math.min(scheduleEndOffset, taskAnchorOffset + 2),
+				);
 			} else if (dateMode === 6) {
 				startDate = dateFromNow(taskAnchorOffset);
-				dueDate = dateFromNow(Math.min(latestTaskDateOffset, scheduleEndOffset + 21, taskAnchorOffset + 16));
+				dueDate = dateFromNow(
+					Math.min(
+						latestTaskDateOffset,
+						scheduleEndOffset + 21,
+						taskAnchorOffset + 16,
+					),
+				);
 			} else if (dateMode === 7 && scenario.completedOffset === undefined) {
 				/* Intentionally leave some active tasks entirely unscheduled. */
 				startDate = null;
 				dueDate = null;
 			}
 
-			const canArchive = scenario.completedOffset === undefined || scenario.completedOffset === null;
+			const canArchive =
+				scenario.completedOffset === undefined ||
+				scenario.completedOffset === null;
 			const archivedAt =
 				canArchive && taskIndex % 13 === 0
 					? dateFromNow(
-						Math.min(-1, scenario.lastActivityOffset - (taskIndex % 9)),
-						17,
-					)
+							Math.min(-1, scenario.lastActivityOffset - (taskIndex % 9)),
+							17,
+						)
 					: null;
 			const updatedAt =
 				archivedAt ??
 				dateFromNow(
-					Math.max(taskCreatedOffset, scenario.lastActivityOffset - (taskIndex % 12)),
+					Math.max(
+						taskCreatedOffset,
+						scenario.lastActivityOffset - (taskIndex % 12),
+					),
 					17,
 				);
 
@@ -941,7 +980,6 @@ async function main() {
 				createdAt: taskCreatedAt,
 				updatedAt,
 			});
-
 
 			const actorId = pick(accessUserIds, random);
 			activityRows.push(
@@ -1002,24 +1040,31 @@ async function main() {
 			const selectedAssignees = shuffledAccessUsers.slice(0, assigneeCount);
 
 			for (const assigneeId of selectedAssignees) {
-				const assignedAt = addMinutes(taskCreatedAt, 45 + selectedAssignees.indexOf(assigneeId) * 20);
+				const assignedAt = addMinutes(
+					taskCreatedAt,
+					45 + selectedAssignees.indexOf(assigneeId) * 20,
+				);
 				assigneeRows.push({
 					taskId,
 					userId: assigneeId,
 					assignedAt,
 				});
 				activityRows.push(
-					makeActivity(`${scenario.key}:assignee-added:${taskIndex}:${assigneeId}`, {
-						projectId,
-						taskId,
-						actorId,
-						action: "assignee_added",
-						metadata: {
-							taskTitle: title,
-							assigneeName: accessUserNames.get(assigneeId) ?? "Project member",
+					makeActivity(
+						`${scenario.key}:assignee-added:${taskIndex}:${assigneeId}`,
+						{
+							projectId,
+							taskId,
+							actorId,
+							action: "assignee_added",
+							metadata: {
+								taskTitle: title,
+								assigneeName:
+									accessUserNames.get(assigneeId) ?? "Project member",
+							},
+							createdAt: assignedAt,
 						},
-						createdAt: assignedAt,
-					}),
+					),
 				);
 			}
 
@@ -1049,31 +1094,51 @@ async function main() {
 			}
 
 			const commentCount =
-				taskIndex % 7 === 0 ? 3 : taskIndex % 4 === 0 ? 2 : taskIndex % 3 === 0 ? 1 : 0;
+				taskIndex % 7 === 0
+					? 3
+					: taskIndex % 4 === 0
+						? 2
+						: taskIndex % 3 === 0
+							? 1
+							: 0;
 
-			for (let commentIndex = 0; commentIndex < commentCount; commentIndex += 1) {
+			for (
+				let commentIndex = 0;
+				commentIndex < commentCount;
+				commentIndex += 1
+			) {
 				const commentId = deterministicUuid(
 					`comment:${scenario.key}:${taskIndex}:${commentIndex}`,
 				);
-				const authorId = accessUserIds[(taskIndex + commentIndex) % accessUserIds.length] as string;
-				const commentCreatedAt = addMinutes(taskCreatedAt, 240 + commentIndex * 180);
+				const authorId = accessUserIds[
+					(taskIndex + commentIndex) % accessUserIds.length
+				] as string;
+				const commentCreatedAt = addMinutes(
+					taskCreatedAt,
+					240 + commentIndex * 180,
+				);
 				commentRows.push({
 					id: commentId,
 					taskId,
 					authorId,
-					content: COMMENT_TEMPLATES[(taskIndex + commentIndex) % COMMENT_TEMPLATES.length] as string,
+					content: COMMENT_TEMPLATES[
+						(taskIndex + commentIndex) % COMMENT_TEMPLATES.length
+					] as string,
 					createdAt: commentCreatedAt,
 					updatedAt: commentCreatedAt,
 				});
 				activityRows.push(
-					makeActivity(`${scenario.key}:comment-added:${taskIndex}:${commentIndex}`, {
-						projectId,
-						taskId,
-						actorId: authorId,
-						action: "comment_added",
-						metadata: { taskTitle: title },
-						createdAt: commentCreatedAt,
-					}),
+					makeActivity(
+						`${scenario.key}:comment-added:${taskIndex}:${commentIndex}`,
+						{
+							projectId,
+							taskId,
+							actorId: authorId,
+							action: "comment_added",
+							metadata: { taskTitle: title },
+							createdAt: commentCreatedAt,
+						},
+					),
 				);
 			}
 		}
@@ -1106,7 +1171,9 @@ async function main() {
 		}
 	}
 
-	console.log("Reset seeded projects. Inserting fresh deterministic dataset...");
+	console.log(
+		"Reset seeded projects. Inserting fresh deterministic dataset...",
+	);
 
 	await db.insert(projects).values(projectRows);
 	await db.insert(projectMembers).values(memberRows);

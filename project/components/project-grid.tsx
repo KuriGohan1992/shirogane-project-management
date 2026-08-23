@@ -3,16 +3,15 @@
 import {
 	ArrowUpDown,
 	FolderPlus,
-	Search,
 	SearchX,
 	SlidersHorizontal,
-	X,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { CreateProjectButton } from "@/components/create-project-button";
 import { ProjectCard } from "@/components/project-card";
+import { ProjectFilterControls } from "@/components/project-filter-controls";
 import { Button } from "@/components/ui/button";
 import {
 	Select,
@@ -21,21 +20,13 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { COLOR_OPTIONS } from "@/lib/constants/colors";
-import { SEARCH_LIMITS } from "@/lib/constants/search";
+import { useProjectFilters } from "@/hooks/use-project-filters";
 import {
 	getDefaultProjectSortDirection,
-	matchesProjectScheduleFilter,
-	matchesProjectStatusFilter,
-	PROJECT_FILTER_DEFAULTS,
 	PROJECT_FILTER_PARAMS,
 	type ProjectSortOption,
-	parseProjectAccessFilter,
-	parseProjectColorFilter,
-	parseProjectScheduleFilter,
 	parseProjectSortDirection,
 	parseProjectSortOption,
-	parseProjectStatusFilter,
 	sortProjects,
 } from "@/lib/project-filters";
 import type { ProjectWithAccess } from "@/types/project";
@@ -44,7 +35,7 @@ type ProjectGridProps = {
 	projects: ProjectWithAccess[];
 };
 
-function replaceProjectFilterUrl(params: URLSearchParams) {
+function replaceProjectGridUrl(params: URLSearchParams) {
 	const queryString = params.toString();
 
 	const nextUrl = `${window.location.pathname}${
@@ -54,45 +45,10 @@ function replaceProjectFilterUrl(params: URLSearchParams) {
 	window.history.replaceState(null, "", nextUrl);
 }
 
-function updateProjectFilterParam(
-	key: string,
-	value: string,
-	defaultValue: string,
-) {
-	const params = new URLSearchParams(window.location.search);
-
-	if (value === defaultValue) {
-		params.delete(key);
-	} else {
-		params.set(key, value);
-	}
-
-	replaceProjectFilterUrl(params);
-}
-
 export function ProjectGrid({ projects }: ProjectGridProps) {
 	const searchParams = useSearchParams();
 
-	const urlQuery =
-		searchParams
-			.get(PROJECT_FILTER_PARAMS.query)
-			?.slice(0, SEARCH_LIMITS.maxQueryLength) ?? "";
-
-	const accessFilter = parseProjectAccessFilter(
-		searchParams.get(PROJECT_FILTER_PARAMS.access),
-	);
-
-	const colorFilter = parseProjectColorFilter(
-		searchParams.get(PROJECT_FILTER_PARAMS.color),
-	);
-
-	const statusFilter = parseProjectStatusFilter(
-		searchParams.get(PROJECT_FILTER_PARAMS.status),
-	);
-
-	const scheduleFilter = parseProjectScheduleFilter(
-		searchParams.get(PROJECT_FILTER_PARAMS.dates),
-	);
+	const filters = useProjectFilters(projects);
 
 	const rawSort = searchParams.get(PROJECT_FILTER_PARAMS.sort);
 
@@ -103,85 +59,10 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 		sort,
 	);
 
-	const [queryInput, setQueryInput] = useState(urlQuery);
-
-	const normalizedQuery = queryInput.trim().toLocaleLowerCase("en-US");
-
-	const hasFilters =
-		normalizedQuery.length > 0 ||
-		accessFilter !== PROJECT_FILTER_DEFAULTS.access ||
-		colorFilter !== PROJECT_FILTER_DEFAULTS.color ||
-		statusFilter !== PROJECT_FILTER_DEFAULTS.status ||
-		scheduleFilter !== PROJECT_FILTER_DEFAULTS.dates;
-
-	useEffect(() => {
-		setQueryInput(urlQuery);
-	}, [urlQuery]);
-
-	useEffect(() => {
-		if (queryInput === urlQuery) {
-			return;
-		}
-
-		const timeoutId = window.setTimeout(() => {
-			const params = new URLSearchParams(window.location.search);
-
-			const query = queryInput.trim();
-
-			if (query.length === 0) {
-				params.delete(PROJECT_FILTER_PARAMS.query);
-			} else {
-				params.set(PROJECT_FILTER_PARAMS.query, query);
-			}
-
-			replaceProjectFilterUrl(params);
-		}, SEARCH_LIMITS.debounceMs);
-
-		return () => {
-			window.clearTimeout(timeoutId);
-		};
-	}, [queryInput, urlQuery]);
-
-	const visibleProjects = useMemo(() => {
-		const filteredProjects = projects.filter((project) => {
-			const description =
-				project.description?.toLocaleLowerCase("en-US") ?? "";
-
-			const name = project.name.toLocaleLowerCase("en-US");
-
-			const matchesQuery =
-				normalizedQuery.length === 0 ||
-				name.includes(normalizedQuery) ||
-				description.includes(normalizedQuery);
-
-			const matchesAccess =
-				accessFilter === PROJECT_FILTER_DEFAULTS.access ||
-				project.accessRole === accessFilter;
-
-			const matchesColor =
-				colorFilter === PROJECT_FILTER_DEFAULTS.color ||
-				project.color === colorFilter;
-
-			return (
-				matchesQuery &&
-				matchesAccess &&
-				matchesColor &&
-				matchesProjectStatusFilter(project, statusFilter) &&
-				matchesProjectScheduleFilter(project, scheduleFilter)
-			);
-		});
-
-		return sortProjects(filteredProjects, sort, sortDirection);
-	}, [
-		projects,
-		normalizedQuery,
-		accessFilter,
-		colorFilter,
-		statusFilter,
-		scheduleFilter,
-		sort,
-		sortDirection,
-	]);
+	const visibleProjects = useMemo(
+		() => sortProjects(filters.filteredProjects, sort, sortDirection),
+		[filters.filteredProjects, sort, sortDirection],
+	);
 
 	function handleSortChange(nextSort: ProjectSortOption) {
 		const params = new URLSearchParams(window.location.search);
@@ -190,7 +71,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 
 		params.delete(PROJECT_FILTER_PARAMS.order);
 
-		replaceProjectFilterUrl(params);
+		replaceProjectGridUrl(params);
 	}
 
 	function toggleSortDirection() {
@@ -210,21 +91,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 			params.set(PROJECT_FILTER_PARAMS.order, nextDirection);
 		}
 
-		replaceProjectFilterUrl(params);
-	}
-
-	function clearFilters() {
-		const params = new URLSearchParams(window.location.search);
-
-		params.delete(PROJECT_FILTER_PARAMS.query);
-		params.delete(PROJECT_FILTER_PARAMS.access);
-		params.delete(PROJECT_FILTER_PARAMS.color);
-		params.delete(PROJECT_FILTER_PARAMS.status);
-		params.delete(PROJECT_FILTER_PARAMS.dates);
-
-		setQueryInput("");
-
-		replaceProjectFilterUrl(params);
+		replaceProjectGridUrl(params);
 	}
 
 	if (projects.length === 0) {
@@ -249,256 +116,73 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 		);
 	}
 
+	const sortControls = (
+		<div className="flex items-center gap-1">
+			<Select
+				value={rawSort ? sort : ""}
+				onValueChange={(value) =>
+					handleSortChange(parseProjectSortOption(value))
+				}
+			>
+				<SelectTrigger
+					size="sm"
+					aria-label="Sort projects by"
+					className="w-fit min-w-32 max-w-48 justify-start gap-2 bg-card text-left data-[placeholder]:text-foreground [&>span:first-child]:truncate [&>svg:last-child]:ml-auto"
+				>
+					<SlidersHorizontal aria-hidden="true" size={14} />
+
+					<SelectValue placeholder="Sort by" />
+				</SelectTrigger>
+
+				<SelectContent position="popper" align="start" sideOffset={4}>
+					<SelectItem value="last-activity">Last activity</SelectItem>
+
+					<SelectItem value="date-created">Date created</SelectItem>
+
+					<SelectItem value="due-date">Due date</SelectItem>
+
+					<SelectItem value="name">Name</SelectItem>
+
+					<SelectItem value="color">Color</SelectItem>
+				</SelectContent>
+			</Select>
+
+			<Button
+				type="button"
+				variant="outline"
+				size="sm"
+				className="w-9 bg-card px-0"
+				onClick={toggleSortDirection}
+				aria-label={
+					sortDirection === "asc" ? "Sort descending" : "Sort ascending"
+				}
+				title={sortDirection === "asc" ? "Sort descending" : "Sort ascending"}
+			>
+				<ArrowUpDown aria-hidden="true" size={15} />
+			</Button>
+		</div>
+	);
+
 	return (
 		<div className="space-y-4">
-			<div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-				<div className="relative w-full min-w-0 xl:min-w-48 xl:flex-1">
-					<Search
-						aria-hidden="true"
-						size={16}
-						className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-					/>
+			<ProjectFilterControls
+				query={filters.queryInput}
+				onQueryChange={filters.setQueryInput}
+				accessFilter={filters.accessFilter}
+				onAccessFilterChange={filters.setAccessFilter}
+				statusFilter={filters.statusFilter}
+				defaultStatus={filters.defaultStatus}
+				onStatusFilterChange={filters.setStatusFilter}
+				colorFilter={filters.colorFilter}
+				onColorFilterChange={filters.setColorFilter}
+				scheduleFilter={filters.scheduleFilter}
+				onScheduleFilterChange={filters.setScheduleFilter}
+				hasFilters={filters.hasFilters}
+				onClearFilters={filters.clearFilters}
+				trailingControls={sortControls}
+			/>
 
-					<input
-						data-keyboard-action="project-filter"
-						type="search"
-						value={queryInput}
-						maxLength={SEARCH_LIMITS.maxQueryLength}
-						onChange={(event) => setQueryInput(event.target.value)}
-						aria-label="Filter projects by name or description"
-						placeholder="Filter projects..."
-						className="h-9 w-full rounded-md border border-input bg-card pl-9 pr-9 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-					/>
-
-					{queryInput.length > 0 && (
-						<button
-							type="button"
-							onClick={() => setQueryInput("")}
-							aria-label="Clear project keyword filter"
-							className="absolute right-2 top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-						>
-							<X aria-hidden="true" size={14} />
-						</button>
-					)}
-				</div>
-
-				<div className="flex shrink-0 flex-wrap items-center gap-2 xl:flex-nowrap">
-					<Select
-						value={
-							accessFilter === PROJECT_FILTER_DEFAULTS.access
-								? ""
-								: accessFilter
-						}
-						onValueChange={(value) =>
-							updateProjectFilterParam(
-								PROJECT_FILTER_PARAMS.access,
-								value,
-								PROJECT_FILTER_DEFAULTS.access,
-							)
-						}
-					>
-						<SelectTrigger
-							size="sm"
-							aria-label="Filter projects by access"
-							className="w-fit min-w-24 max-w-40 bg-card data-[placeholder]:text-foreground [&>span:first-child]:truncate"
-						>
-							<SelectValue placeholder="Access" />
-						</SelectTrigger>
-
-						<SelectContent position="popper" align="start" sideOffset={4}>
-							<SelectItem value={PROJECT_FILTER_DEFAULTS.access}>
-								All
-							</SelectItem>
-
-							<SelectItem value="owner">Owner</SelectItem>
-							<SelectItem value="member">Member</SelectItem>
-							<SelectItem value="viewer">Viewer</SelectItem>
-						</SelectContent>
-					</Select>
-
-					<Select
-						value={
-							statusFilter === PROJECT_FILTER_DEFAULTS.status
-								? ""
-								: statusFilter
-						}
-						onValueChange={(value) =>
-							updateProjectFilterParam(
-								PROJECT_FILTER_PARAMS.status,
-								value,
-								PROJECT_FILTER_DEFAULTS.status,
-							)
-						}
-					>
-						<SelectTrigger
-							size="sm"
-							aria-label="Filter projects by status"
-							className="w-fit min-w-24 max-w-40 bg-card data-[placeholder]:text-foreground [&>span:first-child]:truncate"
-						>
-							<SelectValue placeholder="Status" />
-						</SelectTrigger>
-
-						<SelectContent position="popper" align="start" sideOffset={4}>
-							<SelectItem value={PROJECT_FILTER_DEFAULTS.status}>
-								All
-							</SelectItem>
-
-							<SelectItem value="active">Active</SelectItem>
-
-							<SelectItem value="completed">Completed</SelectItem>
-						</SelectContent>
-					</Select>
-
-					<Select
-						value={
-							colorFilter === PROJECT_FILTER_DEFAULTS.color
-								? ""
-								: colorFilter
-						}
-						onValueChange={(value) =>
-							updateProjectFilterParam(
-								PROJECT_FILTER_PARAMS.color,
-								value,
-								PROJECT_FILTER_DEFAULTS.color,
-							)
-						}
-					>
-						<SelectTrigger
-							size="sm"
-							aria-label="Filter projects by color"
-							className="w-fit min-w-24 max-w-40 bg-card data-[placeholder]:text-foreground [&>span:first-child]:truncate"
-						>
-							<SelectValue placeholder="Color" />
-						</SelectTrigger>
-
-						<SelectContent position="popper" align="start" sideOffset={4}>
-							<SelectItem value={PROJECT_FILTER_DEFAULTS.color}>
-								All
-							</SelectItem>
-
-							{COLOR_OPTIONS.map((option) => (
-								<SelectItem key={option.value} value={option.value}>
-									<span
-										aria-hidden="true"
-										className="size-2.5 rounded-full"
-										style={{
-											backgroundColor: option.hex,
-										}}
-									/>
-
-									{option.label}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-
-					<Select
-						value={
-							scheduleFilter === PROJECT_FILTER_DEFAULTS.dates
-								? ""
-								: scheduleFilter
-						}
-						onValueChange={(value) =>
-							updateProjectFilterParam(
-								PROJECT_FILTER_PARAMS.dates,
-								value,
-								PROJECT_FILTER_DEFAULTS.dates,
-							)
-						}
-					>
-						<SelectTrigger
-							size="sm"
-							aria-label="Filter projects by dates"
-							className="w-fit min-w-28 max-w-52 bg-card data-[placeholder]:text-foreground [&>span:first-child]:truncate"
-						>
-							<SelectValue placeholder="Due date" />
-						</SelectTrigger>
-
-						<SelectContent position="popper" align="start" sideOffset={4}>
-							<SelectItem value={PROJECT_FILTER_DEFAULTS.dates}>
-								All
-							</SelectItem>
-
-							<SelectItem value="no-dates">No project dates</SelectItem>
-
-							<SelectItem value="overdue">Overdue</SelectItem>
-
-							<SelectItem value="due-next-7-days">
-								Due in next 7 days
-							</SelectItem>
-						</SelectContent>
-					</Select>
-
-					<div className="flex items-center gap-1">
-						<Select
-							value={rawSort ? sort : ""}
-							onValueChange={(value) =>
-								handleSortChange(parseProjectSortOption(value))
-							}
-						>
-							<SelectTrigger
-								size="sm"
-								aria-label="Sort projects by"
-								className="w-fit min-w-32 max-w-48 justify-start gap-2 bg-card text-left data-[placeholder]:text-foreground [&>span:first-child]:truncate [&>svg:last-child]:ml-auto"
-							>
-								<SlidersHorizontal aria-hidden="true" size={14} />
-
-								<SelectValue placeholder="Sort by" />
-							</SelectTrigger>
-
-							<SelectContent position="popper" align="start" sideOffset={4}>
-								<SelectItem value="last-activity">
-									Last activity
-								</SelectItem>
-
-								<SelectItem value="date-created">
-									Date created
-								</SelectItem>
-
-								<SelectItem value="due-date">Due date</SelectItem>
-
-								<SelectItem value="name">Name</SelectItem>
-
-								<SelectItem value="color">Color</SelectItem>
-							</SelectContent>
-						</Select>
-
-						<Button
-							type="button"
-							variant="outline"
-							size="sm"
-							className="w-9 bg-card px-0"
-							onClick={toggleSortDirection}
-							aria-label={
-								sortDirection === "asc"
-									? "Sort descending"
-									: "Sort ascending"
-							}
-							title={
-								sortDirection === "asc"
-									? "Sort descending"
-									: "Sort ascending"
-							}
-						>
-							<ArrowUpDown aria-hidden="true" size={15} />
-						</Button>
-					</div>
-
-					{hasFilters && (
-						<Button
-							type="button"
-							variant="outline"
-							size="sm"
-							className="shrink-0 bg-card"
-							onClick={clearFilters}
-						>
-							Clear filters
-						</Button>
-					)}
-				</div>
-			</div>
-
-			{hasFilters && (
+			{filters.hasFilters && (
 				<p className="text-sm text-muted-foreground">
 					{visibleProjects.length} of {projects.length} projects shown
 				</p>
@@ -523,7 +207,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 						variant="outline"
 						size="sm"
 						className="mt-4"
-						onClick={clearFilters}
+						onClick={filters.clearFilters}
 					>
 						Clear filters
 					</Button>
