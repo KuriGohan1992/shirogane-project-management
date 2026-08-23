@@ -144,7 +144,8 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 
 	const visibleProjects = useMemo(() => {
 		const filteredProjects = projects.filter((project) => {
-			const description = project.description?.toLocaleLowerCase("en-US") ?? "";
+			const description =
+				project.description?.toLocaleLowerCase("en-US") ?? "";
 
 			const name = project.name.toLocaleLowerCase("en-US");
 
@@ -299,7 +300,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 						<SelectTrigger
 							size="sm"
 							aria-label="Filter projects by access"
-							className="w-28 bg-card data-[placeholder]:text-foreground"
+							className="w-fit min-w-24 max-w-40 bg-card data-[placeholder]:text-foreground [&>span:first-child]:truncate"
 						>
 							<SelectValue placeholder="Access" />
 						</SelectTrigger>
@@ -332,7 +333,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 						<SelectTrigger
 							size="sm"
 							aria-label="Filter projects by status"
-							className="w-32 bg-card data-[placeholder]:text-foreground"
+							className="w-fit min-w-24 max-w-40 bg-card data-[placeholder]:text-foreground [&>span:first-child]:truncate"
 						>
 							<SelectValue placeholder="Status" />
 						</SelectTrigger>
@@ -350,7 +351,9 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 
 					<Select
 						value={
-							colorFilter === PROJECT_FILTER_DEFAULTS.color ? "" : colorFilter
+							colorFilter === PROJECT_FILTER_DEFAULTS.color
+								? ""
+								: colorFilter
 						}
 						onValueChange={(value) =>
 							updateProjectFilterParam(
@@ -363,13 +366,15 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 						<SelectTrigger
 							size="sm"
 							aria-label="Filter projects by color"
-							className="w-32 bg-card data-[placeholder]:text-foreground"
+							className="w-fit min-w-24 max-w-40 bg-card data-[placeholder]:text-foreground [&>span:first-child]:truncate"
 						>
 							<SelectValue placeholder="Color" />
 						</SelectTrigger>
 
 						<SelectContent position="popper" align="start" sideOffset={4}>
-							<SelectItem value={PROJECT_FILTER_DEFAULTS.color}>All</SelectItem>
+							<SelectItem value={PROJECT_FILTER_DEFAULTS.color}>
+								All
+							</SelectItem>
 
 							{COLOR_OPTIONS.map((option) => (
 								<SelectItem key={option.value} value={option.value}>
@@ -404,13 +409,15 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 						<SelectTrigger
 							size="sm"
 							aria-label="Filter projects by dates"
-							className="w-42 bg-card data-[placeholder]:text-foreground"
+							className="w-fit min-w-28 max-w-52 bg-card data-[placeholder]:text-foreground [&>span:first-child]:truncate"
 						>
 							<SelectValue placeholder="Due date" />
 						</SelectTrigger>
 
 						<SelectContent position="popper" align="start" sideOffset={4}>
-							<SelectItem value={PROJECT_FILTER_DEFAULTS.dates}>All</SelectItem>
+							<SelectItem value={PROJECT_FILTER_DEFAULTS.dates}>
+								All
+							</SelectItem>
 
 							<SelectItem value="no-dates">No project dates</SelectItem>
 
@@ -432,7 +439,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 							<SelectTrigger
 								size="sm"
 								aria-label="Sort projects by"
-								className="w-40 justify-start gap-2 bg-card text-left data-[placeholder]:text-foreground [&>svg:last-child]:ml-auto"
+								className="w-fit min-w-32 max-w-48 justify-start gap-2 bg-card text-left data-[placeholder]:text-foreground [&>span:first-child]:truncate [&>svg:last-child]:ml-auto"
 							>
 								<SlidersHorizontal aria-hidden="true" size={14} />
 
@@ -440,9 +447,13 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 							</SelectTrigger>
 
 							<SelectContent position="popper" align="start" sideOffset={4}>
-								<SelectItem value="last-activity">Last activity</SelectItem>
+								<SelectItem value="last-activity">
+									Last activity
+								</SelectItem>
 
-								<SelectItem value="date-created">Date created</SelectItem>
+								<SelectItem value="date-created">
+									Date created
+								</SelectItem>
 
 								<SelectItem value="due-date">Due date</SelectItem>
 
@@ -459,10 +470,14 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 							className="w-9 bg-card px-0"
 							onClick={toggleSortDirection}
 							aria-label={
-								sortDirection === "asc" ? "Sort descending" : "Sort ascending"
+								sortDirection === "asc"
+									? "Sort descending"
+									: "Sort ascending"
 							}
 							title={
-								sortDirection === "asc" ? "Sort descending" : "Sort ascending"
+								sortDirection === "asc"
+									? "Sort descending"
+									: "Sort ascending"
 							}
 						>
 							<ArrowUpDown aria-hidden="true" size={15} />
@@ -474,7 +489,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 							type="button"
 							variant="outline"
 							size="sm"
-							className="bg-card"
+							className="shrink-0 bg-card"
 							onClick={clearFilters}
 						>
 							Clear filters

@@ -191,35 +191,35 @@ export function DashboardShell({ children, serverTime }: DashboardShellProps) {
 					</button>
 				</div>
 
-<button
-	type="button"
-	aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-	title={
-		sidebarCollapsed
-			? "Expand sidebar — Ctrl/⌘ + B"
-			: "Collapse sidebar — Ctrl/⌘ + B"
-	}
-	aria-expanded={!sidebarCollapsed}
-	aria-controls="dashboard-sidebar"
-	onClick={() => setSidebarCollapsed((current) => !current)}
-	className="group absolute left-full top-8 z-10 hidden h-9 w-6 -translate-y-1/2 items-center justify-center rounded-r-md border border-l-0 border-border bg-card text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:inline-flex"
->
-	{sidebarCollapsed ? (
-		<ChevronRight
-			aria-hidden="true"
-			size={18}
-			strokeWidth={3}
-			className="transition-[transform,stroke-width] duration-150 group-hover:scale-110 group-hover:[stroke-width:3.5]"
-		/>
-	) : (
-		<ChevronLeft
-			aria-hidden="true"
-			size={18}
-			strokeWidth={3}
-			className="transition-[transform,stroke-width] duration-150 group-hover:scale-110 group-hover:[stroke-width:3.5]"
-		/>
-	)}
-</button>
+				<button
+					type="button"
+					aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+					title={
+						sidebarCollapsed
+							? "Expand sidebar — Ctrl/⌘ + B"
+							: "Collapse sidebar — Ctrl/⌘ + B"
+					}
+					aria-expanded={!sidebarCollapsed}
+					aria-controls="dashboard-sidebar"
+					onClick={() => setSidebarCollapsed((current) => !current)}
+					className="group absolute left-full top-8 z-10 hidden h-9 w-6 -translate-y-1/2 items-center justify-center rounded-r-md border border-l-0 border-border bg-card text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:inline-flex"
+				>
+					{sidebarCollapsed ? (
+						<ChevronRight
+							aria-hidden="true"
+							size={18}
+							strokeWidth={3}
+							className="transition-[transform,stroke-width] duration-150 group-hover:scale-110 group-hover:[stroke-width:3.5]"
+						/>
+					) : (
+						<ChevronLeft
+							aria-hidden="true"
+							size={18}
+							strokeWidth={3}
+							className="transition-[transform,stroke-width] duration-150 group-hover:scale-110 group-hover:[stroke-width:3.5]"
+						/>
+					)}
+				</button>
 
 				{/* Navigation */}
 				<nav aria-label="Dashboard navigation" className="mt-5 px-3">
@@ -302,20 +302,22 @@ export function DashboardShell({ children, serverTime }: DashboardShellProps) {
 								<GlobalSearch />
 							</div>
 
-							<div className="flex items-center gap-x-3">
-								<button
-									type="button"
-									aria-label="View notifications"
-									className="group inline-flex size-9 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-								>
-									<Bell
-										aria-hidden="true"
-										size={19}
-										className="transition-transform duration-150 group-hover:scale-110"
-									/>
-								</button>
+							<div className="flex items-center gap-3">
+								<div className="flex items-center gap-1">
+									<button
+										type="button"
+										aria-label="View notifications"
+										className="group inline-flex size-9 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+									>
+										<Bell
+											aria-hidden="true"
+											size={19}
+											className="transition-transform duration-150 group-hover:scale-110"
+										/>
+									</button>
 
-								<ThemeToggle />
+									<ThemeToggle />
+								</div>
 
 								<UserButton />
 							</div>
