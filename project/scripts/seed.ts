@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 
 import { neon } from "@neondatabase/serverless";
 import { config } from "dotenv";
-import { ilike, inArray } from "drizzle-orm";
+import { ilike, inArray, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/neon-http";
 
 import type { ActivityMetadata } from "../lib/constants/activity";
@@ -136,87 +136,87 @@ const PEOPLE: SeedPerson[] = [
 	{
 		key: "avery-chen",
 		name: "Avery Chen",
-		email: "seed.avery.chen@shiro.local",
+		email: "avery.chen@shiro.local",
 		imageUrl: "https://api.dicebear.com/9.x/notionists/svg?seed=Avery%20Chen",
 	},
 	{
 		key: "maya-rodriguez",
 		name: "Maya Rodriguez",
-		email: "seed.maya.rodriguez@shiro.local",
+		email: "maya.rodriguez@shiro.local",
 		imageUrl:
 			"https://api.dicebear.com/9.x/notionists/svg?seed=Maya%20Rodriguez",
 	},
 	{
 		key: "noah-williams",
 		name: "Noah Williams",
-		email: "seed.noah.williams@shiro.local",
+		email: "noah.williams@shiro.local",
 		imageUrl: null,
 	},
 	{
 		key: "sofia-patel",
 		name: "Sofia Patel",
-		email: "seed.sofia.patel@shiro.local",
+		email: "sofia.patel@shiro.local",
 		imageUrl: "https://api.dicebear.com/9.x/notionists/svg?seed=Sofia%20Patel",
 	},
 	{
 		key: "liam-nguyen",
 		name: "Liam Nguyen",
-		email: "seed.liam.nguyen@shiro.local",
+		email: "liam.nguyen@shiro.local",
 		imageUrl: null,
 	},
 	{
 		key: "isabella-rossi",
 		name: "Isabella Rossi",
-		email: "seed.isabella.rossi@shiro.local",
+		email: "isabella.rossi@shiro.local",
 		imageUrl:
 			"https://api.dicebear.com/9.x/notionists/svg?seed=Isabella%20Rossi",
 	},
 	{
 		key: "ethan-kim",
 		name: "Ethan Kim",
-		email: "seed.ethan.kim@shiro.local",
+		email: "ethan.kim@shiro.local",
 		imageUrl: null,
 	},
 	{
 		key: "amara-okafor",
 		name: "Amara Okafor",
-		email: "seed.amara.okafor@shiro.local",
+		email: "amara.okafor@shiro.local",
 		imageUrl: "https://api.dicebear.com/9.x/notionists/svg?seed=Amara%20Okafor",
 	},
 	{
 		key: "lucas-martin",
 		name: "Lucas Martin",
-		email: "seed.lucas.martin@shiro.local",
+		email: "lucas.martin@shiro.local",
 		imageUrl: null,
 	},
 	{
 		key: "zoe-santos",
 		name: "Zoe Santos",
-		email: "seed.zoe.santos@shiro.local",
+		email: "zoe.santos@shiro.local",
 		imageUrl: "https://api.dicebear.com/9.x/notionists/svg?seed=Zoe%20Santos",
 	},
 	{
 		key: "daniel-garcia",
 		name: "Daniel Garcia",
-		email: "seed.daniel.garcia@shiro.local",
+		email: "daniel.garcia@shiro.local",
 		imageUrl: null,
 	},
 	{
 		key: "priya-shah",
 		name: "Priya Shah",
-		email: "seed.priya.shah@shiro.local",
+		email: "priya.shah@shiro.local",
 		imageUrl: "https://api.dicebear.com/9.x/notionists/svg?seed=Priya%20Shah",
 	},
 	{
 		key: "mateo-cruz",
 		name: "Mateo Cruz",
-		email: "seed.mateo.cruz@shiro.local",
+		email: "mateo.cruz@shiro.local",
 		imageUrl: null,
 	},
 	{
 		key: "nina-park",
 		name: "Nina Park",
-		email: "seed.nina.park@shiro.local",
+		email: "nina.park@shiro.local",
 		imageUrl: "https://api.dicebear.com/9.x/notionists/svg?seed=Nina%20Park",
 	},
 ];
@@ -593,6 +593,23 @@ const TASK_TITLES = [
 	"Prepare demo data and screenshots",
 ] as const;
 
+const SEED_JOB_TITLES = [
+	"Software Engineer",
+	"Product Designer",
+	"QA Engineer",
+	"Project Coordinator",
+	"Frontend Developer",
+	"Data Analyst",
+	"Backend Developer",
+	"UX Researcher",
+	"Mobile Developer",
+	"Technical Writer",
+	"DevOps Engineer",
+	"Product Manager",
+	"Business Analyst",
+	"Student Developer",
+] as const;
+
 const TASK_DESCRIPTIONS = [
 	"Capture the expected behavior, edge cases, and acceptance criteria before implementation starts.",
 	"Keep the implementation small and reusable. Avoid introducing a second source of truth.",
@@ -650,11 +667,24 @@ async function main() {
 		email: person.email,
 		name: person.name,
 		imageUrl: person.imageUrl,
+		jobTitle: SEED_JOB_TITLES[index % SEED_JOB_TITLES.length] ?? null,
 		createdAt: dateFromNow(-980 + index * 41),
 		updatedAt: dateFromNow(-120 + (index % 11) * 9),
 	}));
 
-	await db.insert(users).values(syntheticUsers).onConflictDoNothing();
+	await db
+		.insert(users)
+		.values(syntheticUsers)
+		.onConflictDoUpdate({
+			target: users.id,
+			set: {
+				name: sql`excluded.name`,
+				email: sql`excluded.email`,
+				imageUrl: sql`excluded.image_url`,
+				jobTitle: sql`excluded.job_title`,
+				updatedAt: sql`excluded.updated_at`,
+			},
+		});
 
 	const syntheticNameById = new Map(
 		syntheticUsers.map((user) => [user.id as string, user.name ?? user.email]),
