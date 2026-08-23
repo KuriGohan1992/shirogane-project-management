@@ -236,54 +236,62 @@ export function ProjectCalendar({
 	return (
 		<>
 			<section className="overflow-hidden rounded-xl border border-border bg-card">
-				<div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-4 py-3">
-					<div className="flex items-center gap-2">
+				<div className="flex flex-wrap items-center justify-between gap-3 border-b border-primary bg-primary px-4 py-3 text-primary-foreground">
+<Button
+	type="button"
+	variant="ghost"
+	size="sm"
+	className="bg-transparent font-medium text-primary-foreground shadow-none transition-transform hover:scale-105 hover:bg-transparent hover:font-semibold hover:text-primary-foreground active:scale-95"
+	onClick={goToToday}
+>
+	Go to Today
+</Button>
+
+					<div className="flex items-center">
 						<Button
 							type="button"
-							variant="outline"
-							size="icon-sm"
+							variant="ghost"
+							size="icon-lg"
 							aria-label="Previous month"
+							className="group bg-transparent text-primary-foreground shadow-none transition-transform hover:scale-110 hover:bg-transparent hover:text-primary-foreground active:scale-95"
 							onClick={() =>
 								setVisibleMonth((current) => addMonths(current, -1))
 							}
 						>
-							<ChevronLeft aria-hidden="true" />
+							<ChevronLeft
+								aria-hidden="true"
+								className="size-5 group-hover:[stroke-width:3]"
+							/>
 						</Button>
+
+						<h2 className="px-1 text-lg font-bold">
+							{formatMonth(visibleMonth)}
+						</h2>
 
 						<Button
 							type="button"
-							variant="outline"
-							size="sm"
-							onClick={goToToday}
-						>
-							Today
-						</Button>
-
-						<Button
-							type="button"
-							variant="outline"
-							size="icon-sm"
+							variant="ghost"
+							size="icon-lg"
 							aria-label="Next month"
+							className="group bg-transparent text-primary-foreground shadow-none transition-transform hover:scale-110 hover:bg-transparent hover:text-primary-foreground active:scale-95"
 							onClick={() =>
 								setVisibleMonth((current) => addMonths(current, 1))
 							}
 						>
-							<ChevronRight aria-hidden="true" />
+							<ChevronRight
+								aria-hidden="true"
+								className="size-5 group-hover:[stroke-width:3]"
+							/>
 						</Button>
 					</div>
-
-					<h2 className="text-lg font-bold text-foreground">
-						{formatMonth(visibleMonth)}
-					</h2>
-
-					<label className="flex cursor-pointer select-none items-center gap-2 text-sm font-medium text-foreground">
+					<label className="flex cursor-pointer select-none items-center gap-2 text-sm font-medium text-primary-foreground">
 						<span>Show completed</span>
 
 						<input
 							type="checkbox"
 							checked={showCompleted}
 							onChange={(event) => setShowCompleted(event.target.checked)}
-							className="size-4 cursor-pointer accent-primary"
+							className="size-4 cursor-pointer accent-primary-foreground"
 						/>
 					</label>
 				</div>
