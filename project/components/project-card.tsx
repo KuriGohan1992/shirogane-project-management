@@ -6,22 +6,41 @@ import { ProjectActions } from "@/components/project-actions";
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { getColorHex } from "@/lib/constants/colors";
 import type { Project } from "@/lib/db/schema";
+import { cn } from "@/lib/utils";
+import type { CalendarProjectSummary } from "@/types/calendar";
 import type { EditableProject, ProjectWithAccess } from "@/types/project";
 
-type ProjectCardProps = {
+type DefaultProjectCardProps = {
 	project: ProjectWithAccess;
+	variant?: "default";
 };
 
-function formatDate(date: Date) {
+type PreviewProjectCardProps = {
+	project: CalendarProjectSummary;
+	variant: "preview";
+};
+
+type ProjectCardProps = DefaultProjectCardProps | PreviewProjectCardProps;
+
+type ProjectScheduleLike = {
+	startDate: Date | string | null;
+	dueDate: Date | string | null;
+};
+
+function toDate(value: Date | string) {
+	return value instanceof Date ? value : new Date(value);
+}
+
+function formatDate(date: Date | string) {
 	return new Intl.DateTimeFormat("en-US", {
 		month: "short",
 		day: "numeric",
 		year: "numeric",
 		timeZone: "UTC",
-	}).format(date);
+	}).format(toDate(date));
 }
 
-function formatProjectSchedule(project: Project) {
+function formatProjectSchedule(project: ProjectScheduleLike) {
 	if (project.startDate && project.dueDate) {
 		return `${formatDate(project.startDate)} – ${formatDate(project.dueDate)}`;
 	}
@@ -43,13 +62,17 @@ function toEditableProject(project: Project): EditableProject {
 		name: project.name,
 		description: project.description ?? "",
 		color: project.color,
+
 		startDate: project.startDate?.toISOString().slice(0, 10) ?? "",
+
 		dueDate: project.dueDate?.toISOString().slice(0, 10) ?? "",
 	};
 }
 
-export function ProjectCard({ project }: ProjectCardProps) {
-	const permissions = getProjectPermissions(project.accessRole);
+export function ProjectCard(props: ProjectCardProps) {
+	const project = props.project;
+
+	const isPreview = props.variant === "preview";
 
 	const color = getColorHex(project.color);
 
@@ -57,9 +80,47 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
 	const showOwner = project.accessRole !== "owner";
 
+	let actions = null;
+
+	if (!isPreview) {
+		const permissions = getProjectPermissions(props.project.accessRole);
+
+		actions = (
+			<ProjectActions
+				project={toEditableProject(props.project)}
+				canEdit={permissions.canEditProject}
+				canDelete={permissions.canDeleteProject}
+				canComplete={permissions.canCompleteProject}
+				isCompleted={props.project.completedAt !== null}
+				compact
+				menuSize="small"
+			/>
+		);
+	}
+
+	const titleContent = (
+		<>
+			<h2
+				title={project.name}
+				className="line-clamp-2 text-lg font-semibold leading-6 text-foreground transition-colors group-hover:text-[var(--project-color)]"
+			>
+				{project.name}
+			</h2>
+
+			<p className="mt-1 line-clamp-2 text-sm leading-5 text-muted-foreground">
+				{project.description || "No description yet."}
+			</p>
+		</>
+	);
+
 	return (
 		<article
-			className="group relative flex h-[15rem] overflow-hidden rounded-xl border border-border bg-card transition-all hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-md"
+			className={cn(
+				"group relative flex h-[14rem] overflow-hidden rounded-xl border border-border bg-card",
+
+				!isPreview &&
+					"transition-all hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-md",
+			)}
 			style={
 				{
 					"--project-color": color,
@@ -75,7 +136,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
 			/>
 
 			<div className="flex min-h-0 w-full flex-col px-5 pb-4 pt-6">
-				<div className="flex h-5 items-center justify-between gap-2 mt-1">
+				<div className="mt-1 flex h-5 items-center justify-between gap-2">
 					<div className="flex min-w-0 items-center gap-2">
 						<span className="shrink-0 text-xs font-semibold capitalize text-muted-foreground">
 							{project.accessRole}
@@ -88,34 +149,24 @@ export function ProjectCard({ project }: ProjectCardProps) {
 						)}
 					</div>
 
-					<ProjectActions
-						project={toEditableProject(project)}
-						canEdit={permissions.canEditProject}
-						canDelete={permissions.canDeleteProject}
-						canComplete={permissions.canCompleteProject}
-						isCompleted={project.completedAt !== null}
-						compact
-						menuSize="small"
-					/>
+					{actions}
 				</div>
 
-				<Link href={`/projects/${project.id}`} className="mt-1 block min-h-0">
-					<h2
-						title={project.name}
-						className="line-clamp-2 text-lg font-semibold leading-6 text-foreground transition-colors group-hover:text-[var(--project-color)]"
+				{isPreview ? (
+					<div className="min-h-0">{titleContent}</div>
+				) : (
+					<Link
+						href={`/projects/${project.id}`}
+						className="block min-h-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 					>
-						{project.name}
-					</h2>
-
-					<p className="mt-1.5 line-clamp-2 text-sm leading-5 text-muted-foreground">
-						{project.description || "No description yet."}
-					</p>
-				</Link>
+						{titleContent}
+					</Link>
+				)}
 
 				{showOwner && (
 					<p
 						title={ownerName}
-						className="mt-3 truncate text-right text-xs text-muted-foreground"
+						className="mt-2 truncate text-right text-xs text-muted-foreground"
 					>
 						Owned by{" "}
 						<span className="font-medium text-foreground/80">{ownerName}</span>

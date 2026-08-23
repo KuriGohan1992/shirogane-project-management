@@ -81,16 +81,16 @@ export function ProjectTimelineBar({
 				</button>
 			</PopoverAnchor>
 
-			<PopoverContent
-				side="top"
-				align="start"
-				sideOffset={8}
-				className="pointer-events-none w-80 overflow-hidden p-0"
-				onOpenAutoFocus={(event) => event.preventDefault()}
-				onCloseAutoFocus={(event) => event.preventDefault()}
-			>
-				<ProjectCalendarPreview project={project} />
-			</PopoverContent>
+<PopoverContent
+	side="top"
+	align="start"
+	sideOffset={8}
+	className="pointer-events-none w-80 overflow-visible border-0 bg-transparent p-0 shadow-none"
+	onOpenAutoFocus={(event) => event.preventDefault()}
+	onCloseAutoFocus={(event) => event.preventDefault()}
+>
+	<ProjectCalendarPreview project={project} />
+</PopoverContent>
 		</Popover>
 	);
 }
