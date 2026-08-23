@@ -1,0 +1,184 @@
+import { CalendarRange, Clock3, FolderOpen, ShieldCheck } from "lucide-react";
+import Link from "next/link";
+
+import { CalendarProjectTaskRow } from "@/components/calendar/calendar-project-task-row";
+import { Button } from "@/components/ui/button";
+import {
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+} from "@/components/ui/sheet";
+import { UserAvatar } from "@/components/user-avatar";
+import {
+	formatActivityDate,
+	formatCalendarProjectSchedule,
+} from "@/lib/calendar-dates";
+import { getColorHex } from "@/lib/constants/colors";
+import type { CalendarProjectSummary } from "@/types/calendar";
+
+type CalendarProjectSidebarProps = {
+	project: CalendarProjectSummary | null;
+	onOpenChange: (open: boolean) => void;
+};
+
+export function CalendarProjectSidebar({
+	project,
+	onOpenChange,
+}: CalendarProjectSidebarProps) {
+	return (
+		<Sheet open={project !== null} onOpenChange={onOpenChange}>
+			{project && (
+				<SheetContent className="sm:max-w-lg">
+					<SheetHeader className="relative overflow-hidden bg-card pt-7">
+						<div
+							aria-hidden="true"
+							className="absolute inset-x-0 top-0 h-4"
+							style={{
+								backgroundColor: getColorHex(project.color),
+							}}
+						/>
+
+						{project.completedAt && (
+							<div>
+								<span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
+									Completed
+								</span>
+							</div>
+						)}
+
+						<SheetTitle className="mt-2 pr-5 text-xl font-bold">
+							{project.name}
+						</SheetTitle>
+
+						<SheetDescription className="line-clamp-3 leading-5">
+							{project.description || "No description yet."}
+						</SheetDescription>
+					</SheetHeader>
+
+					<div className="border-b border-border px-6 py-4">
+						<div className="space-y-3 text-sm">
+							<div className="flex items-center gap-3">
+								<span className="flex size-7 shrink-0 items-center justify-center">
+									<CalendarRange
+										aria-hidden="true"
+										className="size-5 text-muted-foreground"
+									/>
+								</span>
+
+								<div className="min-w-0">
+									<p className="text-xs font-medium text-muted-foreground">
+										Schedule
+									</p>
+
+									<p className="truncate font-medium text-foreground">
+										{formatCalendarProjectSchedule(project)}
+									</p>
+								</div>
+							</div>
+
+							<div className="flex items-center gap-3">
+								<span className="flex size-7 shrink-0 items-center justify-center">
+									<Clock3
+										aria-hidden="true"
+										className="size-5 text-muted-foreground"
+									/>
+								</span>
+
+								<div className="min-w-0">
+									<p className="text-xs font-medium text-muted-foreground">
+										Last activity
+									</p>
+
+									<p className="truncate font-medium text-foreground">
+										{formatActivityDate(project.lastActivityAt)}
+									</p>
+								</div>
+							</div>
+
+							<div className="flex items-center gap-3">
+								<span className="flex size-7 shrink-0 items-center justify-center">
+									<ShieldCheck
+										aria-hidden="true"
+										className="size-5 text-muted-foreground"
+									/>
+								</span>
+
+								<div className="min-w-0">
+									<p className="text-xs font-medium text-muted-foreground">
+										Your role
+									</p>
+
+									<p className="truncate font-medium capitalize text-foreground">
+										{project.accessRole}
+									</p>
+								</div>
+							</div>
+
+							{project.accessRole !== "owner" && (
+								<div className="flex items-center gap-3">
+									<UserAvatar
+										user={project.owner}
+										className="size-7 shrink-0"
+									/>
+
+									<div className="min-w-0">
+										<p className="text-xs font-medium text-muted-foreground">
+											Owner
+										</p>
+
+										<p className="truncate font-medium text-foreground">
+											{project.owner.name ?? project.owner.email}
+										</p>
+									</div>
+								</div>
+							)}
+						</div>
+					</div>
+
+					<div className="flex min-h-0 flex-1 flex-col px-6 py-5">
+						<Button asChild className="w-full">
+							<Link href={`/projects/${project.id}`}>
+								<FolderOpen aria-hidden="true" />
+								Open project
+							</Link>
+						</Button>
+
+						<div className="mt-6 flex min-h-0 flex-1 flex-col">
+							<div className="flex items-center justify-between gap-4">
+								<h3 className="font-bold text-foreground">Your tasks</h3>
+
+								<span className="text-xs font-semibold text-muted-foreground">
+									{project.myTasks.length}
+								</span>
+							</div>
+
+							{project.myTasks.length === 0 ? (
+								<div className="mt-4 rounded-lg border border-dashed border-border px-4 py-8 text-center">
+									<p className="text-sm font-medium text-foreground">
+										No tasks assigned to you
+									</p>
+
+									<p className="mt-1 text-xs leading-5 text-muted-foreground">
+										Tasks assigned to you in this project will appear here.
+									</p>
+								</div>
+							) : (
+								<div className="scrollbar-thin mt-3 space-y-2 overflow-y-auto pr-1">
+									{project.myTasks.map((task) => (
+										<CalendarProjectTaskRow
+											key={task.id}
+											project={project}
+											task={task}
+										/>
+									))}
+								</div>
+							)}
+						</div>
+					</div>
+				</SheetContent>
+			)}
+		</Sheet>
+	);
+}

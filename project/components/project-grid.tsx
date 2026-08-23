@@ -304,7 +304,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 						</SelectTrigger>
 
 						<SelectContent>
-							<SelectItem value="all">All access</SelectItem>
+							<SelectItem value="all">Access</SelectItem>
 
 							<SelectItem value="owner">Owner</SelectItem>
 
@@ -329,7 +329,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 						</SelectTrigger>
 
 						<SelectContent>
-							<SelectItem value="all">All projects</SelectItem>
+							<SelectItem value="all">Status</SelectItem>
 
 							<SelectItem value="active">Active</SelectItem>
 
@@ -352,7 +352,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 						</SelectTrigger>
 
 						<SelectContent>
-							<SelectItem value="all">All colors</SelectItem>
+							<SelectItem value="all">Color</SelectItem>
 
 							{COLOR_OPTIONS.map((option) => (
 								<SelectItem key={option.value} value={option.value}>
@@ -385,7 +385,7 @@ export function ProjectGrid({ projects }: ProjectGridProps) {
 						</SelectTrigger>
 
 						<SelectContent>
-							<SelectItem value="all">All dates</SelectItem>
+							<SelectItem value="all">Due date</SelectItem>
 
 							<SelectItem value="no-dates">No project dates</SelectItem>
 

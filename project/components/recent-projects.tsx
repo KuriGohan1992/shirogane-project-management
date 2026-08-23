@@ -51,7 +51,7 @@ export function RecentProjects({ projects }: RecentProjectsProps) {
 				<Link
 					key={project.id}
 					href={`/projects/${project.id}`}
-					className="group relative flex min-w-0 flex-col overflow-hidden rounded-lg border border-border bg-background px-4 pb-3 pt-3 transition-colors hover:bg-muted"
+					className="group relative flex min-w-0 flex-col overflow-hidden rounded-lg border border-border px-4 pb-3 pt-3 transition-colors hover:bg-muted"
 				>
 					<div
 						aria-hidden="true"
