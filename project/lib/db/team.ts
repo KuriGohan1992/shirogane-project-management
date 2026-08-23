@@ -1,17 +1,18 @@
 import "server-only";
 
-import { inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { getProjectsForUser } from "@/lib/db/projects";
+import { stages, taskAssignees, tasks } from "@/lib/db/schema";
 import type {
 	TeamCollaborator,
 	TeamDirectoryData,
 	TeamSharedProject,
 } from "@/types/team";
-import type { UserSummary } from "@/types/user";
+import type { UserProfileSummary } from "@/types/user";
 
-function getDisplayName(user: UserSummary) {
+function getDisplayName(user: UserProfileSummary) {
 	return user.name?.trim() || user.email;
 }
 
@@ -45,6 +46,7 @@ export async function getTeamDirectoryForUser(
 					name: true,
 					email: true,
 					imageUrl: true,
+					jobTitle: true,
 				},
 			},
 		},
@@ -66,12 +68,12 @@ export async function getTeamDirectoryForUser(
 	const collaboratorsByUserId = new Map<string, TeamCollaborator>();
 
 	function addCollaboratorProject(
-		user: UserSummary,
+		user: UserProfileSummary,
 		project: TeamSharedProject,
 	) {
 		/*
 		 * The Team page is a collaborator directory,
-		 * so the current user is intentionally excluded.
+		 * so don't include the current user.
 		 */
 		if (user.id === userId) {
 			return;
@@ -99,8 +101,8 @@ export async function getTeamDirectoryForUser(
 
 	for (const project of accessibleProjects) {
 		/*
-		 * If someone else owns an accessible project,
-		 * they are one of the current user's collaborators.
+		 * If somebody else owns an accessible project,
+		 * they're one of the current user's collaborators.
 		 */
 		if (project.ownerId !== userId) {
 			addCollaboratorProject(project.owner, {
@@ -110,12 +112,14 @@ export async function getTeamDirectoryForUser(
 				completedAt: project.completedAt,
 				lastActivityAt: project.lastActivityAt,
 				role: "owner",
+				tasks: [],
+				canRemoveMember: project.accessRole === "owner",
+				yourRole: project.accessRole,
 			});
 		}
 
 		/*
-		 * Everyone else explicitly belonging to the project
-		 * is also part of the collaborator directory.
+		 * Explicit project members/viewers.
 		 */
 		for (const membership of membershipsByProjectId.get(project.id) ?? []) {
 			addCollaboratorProject(membership.user, {
@@ -125,6 +129,70 @@ export async function getTeamDirectoryForUser(
 				completedAt: project.completedAt,
 				lastActivityAt: project.lastActivityAt,
 				role: membership.role,
+				tasks: [],
+				canRemoveMember: project.accessRole === "owner",
+				yourRole: project.accessRole,
+			});
+		}
+	}
+
+	/*
+	 * Fetch every active task assigned to one of the collaborators
+	 * across projects the current user can access.
+	 *
+	 * This stays one query regardless of how many collaborator cards
+	 * are displayed.
+	 */
+	const collaboratorIds = Array.from(collaboratorsByUserId.keys());
+
+	if (collaboratorIds.length > 0) {
+		const assignments = await db
+			.select({
+				userId: taskAssignees.userId,
+
+				projectId: stages.projectId,
+
+				taskId: tasks.id,
+
+				title: tasks.title,
+
+				stageName: stages.name,
+
+				stagePosition: stages.position,
+
+				taskPosition: tasks.position,
+			})
+			.from(taskAssignees)
+			.innerJoin(tasks, eq(taskAssignees.taskId, tasks.id))
+			.innerJoin(stages, eq(tasks.stageId, stages.id))
+			.where(
+				and(
+					inArray(taskAssignees.userId, collaboratorIds),
+					inArray(stages.projectId, projectIds),
+					isNull(tasks.archivedAt),
+				),
+			)
+			.orderBy(asc(stages.position), asc(tasks.position));
+
+		for (const assignment of assignments) {
+			const collaborator = collaboratorsByUserId.get(assignment.userId);
+
+			if (!collaborator) {
+				continue;
+			}
+
+			const project = collaborator.projects.find(
+				(sharedProject) => sharedProject.id === assignment.projectId,
+			);
+
+			if (!project) {
+				continue;
+			}
+
+			project.tasks.push({
+				id: assignment.taskId,
+				title: assignment.title,
+				stageName: assignment.stageName,
 			});
 		}
 	}
@@ -134,8 +202,8 @@ export async function getTeamDirectoryForUser(
 			...collaborator,
 
 			/*
-			 * Put the person's most recently active shared
-			 * projects first.
+			 * Keep shared projects sorted by the project's activity.
+			 * We no longer display the timestamp in the UI.
 			 */
 			projects: collaborator.projects.sort(
 				(a, b) => b.lastActivityAt.getTime() - a.lastActivityAt.getTime(),

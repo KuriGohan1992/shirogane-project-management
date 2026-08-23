@@ -6,7 +6,13 @@ import type { ProjectMemberRoleValue } from "@/lib/constants/project-roles";
 import { db } from "@/lib/db";
 import { recordActivity } from "@/lib/db/activity";
 import { getProjectAccess } from "@/lib/db/project-access";
-import { projectMembers, taskAssignees } from "@/lib/db/schema";
+import {
+	projectMembers,
+	projects,
+	stages,
+	taskAssignees,
+	tasks,
+} from "@/lib/db/schema";
 
 type AddProjectMemberResult =
 	| "added"
@@ -274,4 +280,93 @@ export async function updateProjectMemberRoleOwnedByUser(
 	}
 
 	return "updated";
+}
+
+export type RemoveCollaboratorResult =
+	| {
+			status: "removed";
+			projectIds: string[];
+			projectCount: number;
+			assignmentCount: number;
+	  }
+	| {
+			status: "nothing_to_remove";
+	  };
+
+export async function removeCollaboratorFromOwnedProjects(
+	collaboratorUserId: string,
+	ownerId: string,
+): Promise<RemoveCollaboratorResult> {
+	if (collaboratorUserId === ownerId) {
+		return {
+			status: "nothing_to_remove",
+		};
+	}
+
+	const removableMemberships = await db
+		.select({
+			projectId: projectMembers.projectId,
+		})
+		.from(projectMembers)
+		.innerJoin(projects, eq(projectMembers.projectId, projects.id))
+		.where(
+			and(
+				eq(projectMembers.userId, collaboratorUserId),
+				eq(projects.ownerId, ownerId),
+			),
+		);
+
+	const projectIds = removableMemberships.map(
+		(membership) => membership.projectId,
+	);
+
+	if (projectIds.length === 0) {
+		return {
+			status: "nothing_to_remove",
+		};
+	}
+
+	const projectTasks = await db
+		.select({
+			id: tasks.id,
+		})
+		.from(tasks)
+		.innerJoin(stages, eq(tasks.stageId, stages.id))
+		.where(inArray(stages.projectId, projectIds));
+
+	const taskIds = projectTasks.map((task) => task.id);
+
+	let assignmentCount = 0;
+
+	if (taskIds.length > 0) {
+		const removedAssignments = await db
+			.delete(taskAssignees)
+			.where(
+				and(
+					eq(taskAssignees.userId, collaboratorUserId),
+					inArray(taskAssignees.taskId, taskIds),
+				),
+			)
+			.returning({
+				taskId: taskAssignees.taskId,
+			});
+
+		assignmentCount = removedAssignments.length;
+	}
+
+	await db
+		.delete(projectMembers)
+		.where(
+			and(
+				eq(projectMembers.userId, collaboratorUserId),
+				inArray(projectMembers.projectId, projectIds),
+			),
+		);
+
+	return {
+		status: "removed",
+		projectIds,
+		projectCount: projectIds.length,
+		assignmentCount,
+	};
 }

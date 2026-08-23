@@ -1,27 +1,31 @@
 import type { ProjectAccessRole } from "@/lib/auth/project-permissions";
-import type { ColorValue } from "@/lib/constants/colors";
-import type { UserSummary } from "@/types/user";
+import type { Project, ProjectMember, Task } from "@/lib/db/schema";
+import type { UserProfileSummary } from "@/types/user";
 
-export type TeamSharedProject = {
-	id: string;
-	name: string;
-	color: ColorValue;
-	completedAt: Date | null;
-	lastActivityAt: Date;
-	role: ProjectAccessRole;
+export type TeamAssignedTask = Pick<Task, "id" | "title"> & {
+	stageName: string;
 };
 
-export type TeamCollaborator = UserSummary & {
+export type TeamSharedProject = Pick<
+	Project,
+	"id" | "name" | "color" | "completedAt"
+> & {
+	role: ProjectMember["role"] | "owner";
+
+	lastActivityAt: Date;
+
+	tasks: TeamAssignedTask[];
+	canRemoveMember: boolean;
+	yourRole: ProjectAccessRole;
+};
+
+export type TeamCollaborator = UserProfileSummary & {
 	projects: TeamSharedProject[];
 };
 
-export type TeamProjectFilterOption = {
-	id: string;
-	name: string;
-	color: ColorValue;
-};
+export type TeamProjectOption = Pick<Project, "id" | "name" | "color">;
 
 export type TeamDirectoryData = {
 	collaborators: TeamCollaborator[];
-	projects: TeamProjectFilterOption[];
+	projects: TeamProjectOption[];
 };

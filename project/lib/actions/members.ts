@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import {
 	addProjectMemberByEmail,
+	removeCollaboratorFromOwnedProjects,
 	removeProjectMemberOwnedByUser,
 	updateProjectMemberRoleOwnedByUser,
 } from "@/lib/db/members";
@@ -161,4 +162,36 @@ export async function updateProjectMemberRole(
 	revalidatePath(`/projects/${projectIdResult.data}`);
 
 	revalidatePath("/projects");
+}
+
+export async function removeCollaboratorFromTeam(
+	collaboratorUserId: string,
+): Promise<void> {
+	const collaboratorUserIdResult = userIdSchema.safeParse(collaboratorUserId);
+
+	if (!collaboratorUserIdResult.success) {
+		throw new Error("The selected collaborator is invalid.");
+	}
+
+	const user = await getCurrentDatabaseUser();
+
+	const result = await removeCollaboratorFromOwnedProjects(
+		collaboratorUserIdResult.data,
+		user.id,
+	);
+
+	if (result.status === "nothing_to_remove") {
+		throw new Error(
+			"There are no projects you own from which this collaborator can be removed.",
+		);
+	}
+
+	for (const projectId of result.projectIds) {
+		revalidatePath(`/projects/${projectId}`);
+	}
+
+	revalidatePath("/projects");
+	revalidatePath("/team");
+	revalidatePath("/calendar");
+	revalidatePath("/dashboard");
 }
