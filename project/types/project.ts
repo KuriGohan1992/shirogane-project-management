@@ -1,7 +1,7 @@
 import type { ProjectAccessRole } from "@/lib/auth/project-permissions";
 import type { Project } from "@/lib/db/schema";
 import type { ProjectFormData } from "@/lib/validations/project";
-import type { UserSummary } from "./user";
+import type { UserProfileSummary } from "./user";
 
 export type ProjectActionState = {
 	success: boolean;
@@ -20,7 +20,7 @@ export type EditableProject = ProjectFormData & {
 };
 
 export type ProjectWithAccess = Project & {
+	owner: UserProfileSummary;
 	accessRole: ProjectAccessRole;
 	lastActivityAt: Date;
-	owner: UserSummary;
 };

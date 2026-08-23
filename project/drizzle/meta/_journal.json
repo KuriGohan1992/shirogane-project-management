@@ -57,6 +57,13 @@
 			"when": 1787414920521,
 			"tag": "0007_old_tombstone",
 			"breakpoints": true
+		},
+		{
+			"idx": 8,
+			"version": "7",
+			"when": 1787494042133,
+			"tag": "0008_tranquil_titanium_man",
+			"breakpoints": true
 		}
 	]
 }

@@ -61,6 +61,8 @@ export const users = pgTable("users", {
 
 	imageUrl: text("image_url"),
 
+	jobTitle: text("job_title"),
+
 	...timestamps,
 });
 
