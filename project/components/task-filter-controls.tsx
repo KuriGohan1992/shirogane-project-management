@@ -417,15 +417,17 @@ export function TaskFilterControls({
 									>
 										<UserAvatar user={assignee} className="size-7" />
 
-										<span className="min-w-0 flex-1 truncate">
-											{assignee.name ?? assignee.email}
-										</span>
+										<div className="min-w-0 flex-1">
+											<p className="truncate text-sm">
+												{assignee.name ?? assignee.email}
+											</p>
 
-										{assignee.isOwner && (
-											<span className="text-[10px] text-muted-foreground">
-												Owner
-											</span>
-										)}
+											{assignee.jobTitle && (
+												<p className="truncate text-xs text-muted-foreground">
+													{assignee.jobTitle}
+												</p>
+											)}
+										</div>
 									</FilterOptionButton>
 								))}
 							</div>

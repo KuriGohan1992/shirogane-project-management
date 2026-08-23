@@ -270,9 +270,17 @@ export function TaskBulkToolbar({
 								>
 									<UserAvatar user={assignee} className="size-7 shrink-0" />
 
-									<span className="min-w-0 flex-1 truncate text-sm font-medium">
-										{assignee.name ?? assignee.email}
-									</span>
+									<div className="min-w-0 flex-1">
+										<p className="truncate text-sm font-medium">
+											{assignee.name ?? assignee.email}
+										</p>
+
+										{assignee.jobTitle && (
+											<p className="truncate text-xs text-muted-foreground">
+												{assignee.jobTitle}
+											</p>
+										)}
+									</div>
 
 									<Button
 										type="button"

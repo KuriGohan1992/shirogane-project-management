@@ -42,6 +42,7 @@ export async function ProjectBoardContent({
 			...project.owner,
 			isOwner: true,
 		},
+
 		...project.members
 			.filter((member) => member.role === "member")
 			.map((member) => ({

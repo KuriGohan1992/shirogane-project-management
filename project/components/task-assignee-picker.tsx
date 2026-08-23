@@ -108,33 +108,35 @@ export function TaskAssigneePicker({
 											aria-pressed={isAssigned}
 											className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors hover:bg-muted"
 										>
-											<UserAvatar
-												user={candidate}
-												className="size-7 shrink-0"
-											/>
-
-											<div className="min-w-0 flex-1">
-												<p className="truncate text-sm font-medium">
-													{candidate.name ?? candidate.email}
-												</p>
-
-												<p className="truncate text-xs text-muted-foreground">
-													{candidate.email}
-												</p>
-											</div>
-
-											{candidate.isOwner && (
-												<span className="shrink-0 text-xs text-muted-foreground">
-													Owner
-												</span>
-											)}
-
-											{isAssigned && (
-												<Check
-													aria-hidden="true"
-													className="size-4 shrink-0 text-primary"
+											<div className="flex min-w-0 flex-1 items-center gap-3">
+												<UserAvatar
+													user={candidate}
+													className="size-9 shrink-0"
 												/>
-											)}
+
+												<div className="min-w-0 flex-1">
+													<p className="truncate text-sm font-medium text-foreground">
+														{candidate.name ?? candidate.email}
+													</p>
+
+													{candidate.jobTitle && (
+														<p className="truncate text-xs font-medium text-muted-foreground">
+															{candidate.jobTitle}
+														</p>
+													)}
+
+													<p className="truncate text-xs text-muted-foreground">
+														{candidate.email}
+													</p>
+												</div>
+
+												{isAssigned && (
+													<Check
+														aria-hidden="true"
+														className="size-4 shrink-0 text-primary"
+													/>
+												)}
+											</div>
 										</button>
 									</form>
 								);

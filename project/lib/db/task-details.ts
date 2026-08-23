@@ -2,6 +2,7 @@ import "server-only";
 
 import { db } from "@/lib/db";
 import { getProjectAccess } from "@/lib/db/project-access";
+import type { AssignmentCandidate } from "@/types/member";
 
 export async function getTaskDetailsForUser(
 	projectId: string,
@@ -69,6 +70,7 @@ export async function getTaskDetailsForUser(
 									name: true,
 									email: true,
 									imageUrl: true,
+									jobTitle: true,
 								},
 							},
 
@@ -86,6 +88,7 @@ export async function getTaskDetailsForUser(
 											name: true,
 											email: true,
 											imageUrl: true,
+											jobTitle: true,
 										},
 									},
 								},
@@ -105,6 +108,7 @@ export async function getTaskDetailsForUser(
 							name: true,
 							email: true,
 							imageUrl: true,
+							jobTitle: true,
 						},
 					},
 				},
@@ -156,7 +160,7 @@ export async function getTaskDetailsForUser(
 
 	const { stage, ...task } = result;
 
-	const assigneeCandidates = [
+	const assigneeCandidates: AssignmentCandidate[] = [
 		{
 			...stage.project.owner,
 			isOwner: true,
