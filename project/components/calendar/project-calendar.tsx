@@ -193,6 +193,8 @@ export function ProjectCalendar({
 		null,
 	);
 
+	const [showCompleted, setShowCompleted] = useState(false);
+
 	const calendarDays = useMemo(
 		() => getCalendarDays(visibleMonth),
 		[visibleMonth],
@@ -215,8 +217,13 @@ export function ProjectCalendar({
 	);
 
 	const scheduledProjects = useMemo(
-		() => projects.filter((project) => project.startDate || project.dueDate),
-		[projects],
+		() =>
+			projects.filter(
+				(project) =>
+					(project.startDate || project.dueDate) &&
+					(showCompleted || !project.completedAt),
+			),
+		[projects, showCompleted],
 	);
 
 	const selectedProject =
@@ -269,10 +276,16 @@ export function ProjectCalendar({
 						{formatMonth(visibleMonth)}
 					</h2>
 
-					<p className="text-xs font-medium text-muted-foreground">
-						{scheduledProjects.length} scheduled{" "}
-						{scheduledProjects.length === 1 ? "project" : "projects"}
-					</p>
+					<label className="flex cursor-pointer select-none items-center gap-2 text-sm font-medium text-foreground">
+						<span>Show completed</span>
+
+						<input
+							type="checkbox"
+							checked={showCompleted}
+							onChange={(event) => setShowCompleted(event.target.checked)}
+							className="size-4 cursor-pointer accent-primary"
+						/>
+					</label>
 				</div>
 
 				<div className="overflow-x-auto">

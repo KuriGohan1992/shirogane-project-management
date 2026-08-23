@@ -66,7 +66,7 @@ export function ProjectTimelineBar({
 						"flex h-7 w-full min-w-0 items-center gap-1.5 px-2 text-left text-xs font-semibold shadow-sm transition-[filter,transform] hover:brightness-105 active:scale-[0.995] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background",
 						continuesBefore ? "rounded-l-none" : "rounded-l-md",
 						continuesAfter ? "rounded-r-none" : "rounded-r-md",
-						project.completedAt && "opacity-70",
+						project.completedAt && "opacity-65",
 					)}
 					style={{
 						backgroundColor: getColorHex(project.color),
@@ -77,7 +77,7 @@ export function ProjectTimelineBar({
 						<PointIcon aria-hidden="true" className="size-3 shrink-0" />
 					)}
 
-					<span className="truncate">{project.name}</span>
+					<span className="min-w-0 flex-1 truncate">{project.name}</span>
 				</button>
 			</PopoverAnchor>
 

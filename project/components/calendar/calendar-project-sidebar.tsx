@@ -30,8 +30,8 @@ export function CalendarProjectSidebar({
 	return (
 		<Sheet open={project !== null} onOpenChange={onOpenChange}>
 			{project && (
-				<SheetContent className="sm:max-w-lg">
-					<SheetHeader className="relative overflow-hidden bg-card pt-7">
+				<SheetContent className="border-l-0 sm:max-w-lg">
+					<SheetHeader className="relative overflow-hidden bg-card pl-5 pr-6 pt-8 pb-6">
 						<div
 							aria-hidden="true"
 							className="absolute inset-x-0 top-0 h-4"
@@ -40,24 +40,27 @@ export function CalendarProjectSidebar({
 							}}
 						/>
 
-						{project.completedAt && (
-							<div>
-								<span className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-semibold text-muted-foreground">
+						<div className="flex min-w-0 items-center gap-2">
+							<SheetTitle
+								title={project.name}
+								className="min-w-0 truncate text-xl font-bold"
+							>
+								{project.name}
+							</SheetTitle>
+
+							{project.completedAt && (
+								<span className="shrink-0 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
 									Completed
 								</span>
-							</div>
-						)}
+							)}
+						</div>
 
-						<SheetTitle className="mt-2 pr-5 text-xl font-bold">
-							{project.name}
-						</SheetTitle>
-
-						<SheetDescription className="line-clamp-3 leading-5">
+						<SheetDescription className="mt-2 line-clamp-3 leading-5">
 							{project.description || "No description yet."}
 						</SheetDescription>
 					</SheetHeader>
 
-					<div className="border-b border-border px-6 py-4">
+					<div className="border-b border-border px-5 py-4">
 						<div className="space-y-3 text-sm">
 							<div className="flex items-center gap-3">
 								<span className="flex size-7 shrink-0 items-center justify-center">
@@ -72,7 +75,7 @@ export function CalendarProjectSidebar({
 										Schedule
 									</p>
 
-									<p className="truncate font-medium text-foreground">
+									<p className="mt-0.5 truncate font-medium text-foreground">
 										{formatCalendarProjectSchedule(project)}
 									</p>
 								</div>
@@ -91,7 +94,7 @@ export function CalendarProjectSidebar({
 										Last activity
 									</p>
 
-									<p className="truncate font-medium text-foreground">
+									<p className="mt-0.5 truncate font-medium text-foreground">
 										{formatActivityDate(project.lastActivityAt)}
 									</p>
 								</div>
@@ -110,7 +113,7 @@ export function CalendarProjectSidebar({
 										Your role
 									</p>
 
-									<p className="truncate font-medium capitalize text-foreground">
+									<p className="mt-0.5 truncate font-medium capitalize text-foreground">
 										{project.accessRole}
 									</p>
 								</div>
@@ -128,7 +131,7 @@ export function CalendarProjectSidebar({
 											Owner
 										</p>
 
-										<p className="truncate font-medium text-foreground">
+										<p className="mt-0.5 truncate font-medium text-foreground">
 											{project.owner.name ?? project.owner.email}
 										</p>
 									</div>
@@ -137,7 +140,7 @@ export function CalendarProjectSidebar({
 						</div>
 					</div>
 
-					<div className="flex min-h-0 flex-1 flex-col px-6 py-5">
+					<div className="flex min-h-0 flex-1 flex-col px-5 py-5">
 						<Button asChild className="w-full">
 							<Link href={`/projects/${project.id}`}>
 								<FolderOpen aria-hidden="true" />
@@ -145,27 +148,27 @@ export function CalendarProjectSidebar({
 							</Link>
 						</Button>
 
-						<div className="mt-6 flex min-h-0 flex-1 flex-col">
-							<div className="flex items-center justify-between gap-4">
+						<div className="mt-5 flex min-h-0 flex-1 flex-col">
+							<div className="flex items-center gap-2">
 								<h3 className="font-bold text-foreground">Your tasks</h3>
 
-								<span className="text-xs font-semibold text-muted-foreground">
+								<span className="text-md font-semibold text-muted-foreground">
 									{project.myTasks.length}
 								</span>
 							</div>
 
 							{project.myTasks.length === 0 ? (
-								<div className="mt-4 rounded-lg border border-dashed border-border px-4 py-8 text-center">
+								<div className="mt-3 rounded-lg border border-dashed border-border px-4 py-9 text-center">
 									<p className="text-sm font-medium text-foreground">
 										No tasks assigned to you
 									</p>
 
-									<p className="mt-1 text-xs leading-5 text-muted-foreground">
+									<p className="mt-1.5 text-xs leading-5 text-muted-foreground">
 										Tasks assigned to you in this project will appear here.
 									</p>
 								</div>
 							) : (
-								<div className="scrollbar-thin mt-3 space-y-2 overflow-y-auto pr-1">
+								<div className="scrollbar-thin mt-3 space-y-2.5 overflow-y-auto pr-1">
 									{project.myTasks.map((task) => (
 										<CalendarProjectTaskRow
 											key={task.id}

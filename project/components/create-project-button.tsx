@@ -26,8 +26,8 @@ export function CreateProjectButton({
 				}
 				onClick={() => setIsOpen(true)}
 			>
-				<Plus aria-hidden="true" />
 				{label}
+				<Plus aria-hidden="true" />
 			</Button>
 
 			{isOpen && <CreateProjectModal open={isOpen} onOpenChange={setIsOpen} />}
