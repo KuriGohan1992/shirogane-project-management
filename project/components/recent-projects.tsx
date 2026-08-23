@@ -1,6 +1,6 @@
 import { CalendarRange, Clock3 } from "lucide-react";
 import Link from "next/link";
-
+import type { CSSProperties } from "react";
 import { getColorHex } from "@/lib/constants/colors";
 import type { DashboardProjectSummary } from "@/lib/db/dashboard";
 import type { Project } from "@/lib/db/schema";
@@ -52,6 +52,11 @@ export function RecentProjects({ projects }: RecentProjectsProps) {
 					key={project.id}
 					href={`/projects/${project.id}`}
 					className="group relative flex min-w-0 flex-col overflow-hidden rounded-lg border border-border px-4 pb-3 pt-3 transition-colors hover:bg-muted"
+					style={
+						{
+							"--project-color": getColorHex(project.color),
+						} as CSSProperties
+					}
 				>
 					<div
 						aria-hidden="true"
@@ -68,7 +73,7 @@ export function RecentProjects({ projects }: RecentProjectsProps) {
 
 						<h3
 							title={project.name}
-							className="mt-0.5 line-clamp-1 text-sm font-bold leading-5 text-foreground"
+							className="mt-1 line-clamp-1 text-sm font-bold leading-5 text-foreground transition-colors group-hover:text-[var(--project-color)]"
 						>
 							{project.name}
 						</h3>

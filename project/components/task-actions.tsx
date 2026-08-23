@@ -64,14 +64,17 @@ export function TaskActions({
 		<>
 			<Popover open={isMenuOpen} onOpenChange={setIsMenuOpen}>
 				<PopoverTrigger asChild>
-					<Button
+					<button
 						type="button"
-						variant="ghost"
-						size="icon"
 						aria-label={`Actions for ${task.title}`}
+						className="group/task-actions inline-flex h-7 w-5 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 					>
-						<MoreVertical aria-hidden="true" size={16} />
-					</Button>
+						<MoreVertical
+							aria-hidden="true"
+							className="size-4 transition-[stroke-width] group-hover/task-actions:[stroke-width:3]"
+							strokeWidth={2}
+						/>
+					</button>
 				</PopoverTrigger>
 
 				<PopoverContent align="end" className="w-40 p-1">

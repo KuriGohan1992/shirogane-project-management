@@ -74,11 +74,14 @@ export function ProjectActions({
 						<button
 							type="button"
 							aria-label={`Actions for ${project.name}`}
-							className="inline-flex h-5 w-4 shrink-0 items-center justify-center p-0 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+							className="group/project-actions inline-flex h-5 w-4 shrink-0 items-center justify-center p-0 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 						>
 							<MoreVertical
 								aria-hidden="true"
-								className={menuSize === "small" ? "size-4" : "size-7"}
+								className={`${
+									menuSize === "small" ? "size-4" : "size-7"
+								} transition-[stroke-width] group-hover/project-actions:[stroke-width:3]`}
+								strokeWidth={2}
 							/>
 						</button>
 					</PopoverTrigger>
