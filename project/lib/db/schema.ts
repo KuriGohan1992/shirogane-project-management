@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 
 import {
+	boolean,
 	index,
 	integer,
 	jsonb,
@@ -21,6 +22,7 @@ import { DEFAULT_COLOR } from "@/lib/constants/colors";
 
 import { PROJECT_MEMBER_ROLE_VALUES } from "@/lib/constants/project-roles";
 import type {
+	NotificationCategory,
 	NotificationMetadata,
 	NotificationType,
 } from "../constants/notifications";
@@ -66,6 +68,13 @@ export const users = pgTable("users", {
 	imageUrl: text("image_url"),
 
 	jobTitle: text("job_title"),
+
+	notificationsMuted: boolean("notifications_muted").default(false).notNull(),
+
+	mutedNotificationCategories: jsonb("muted_notification_categories")
+		.$type<NotificationCategory[]>()
+		.default([])
+		.notNull(),
 
 	...timestamps,
 });

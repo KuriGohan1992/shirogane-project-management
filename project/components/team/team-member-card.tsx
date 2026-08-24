@@ -44,12 +44,12 @@ export function TeamMemberCard({
 	const removeAction = removeCollaboratorFromTeam.bind(null, collaborator.id);
 
 	return (
-		<div className="group relative min-h-44 w-full rounded-xl border border-border bg-card transition-colors hover:border-foreground/25 focus-within:ring-2 focus-within:ring-ring">
+		<div className="group relative min-h-44 w-full rounded-xl border border-border bg-card transition-colors hover:border-foreground/25">
 			<button
 				type="button"
 				onClick={() => onSelect(collaborator)}
 				aria-label={`View shared projects with ${displayName}`}
-				className="flex min-h-44 w-full flex-col rounded-xl px-5 py-4 text-left focus-visible:outline-none"
+				className="flex min-h-44 w-full flex-col rounded-xl px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-foreground/20"
 			>
 				<div
 					className={cn(

@@ -2,29 +2,38 @@ import "server-only";
 
 import type { AnyCreateNotificationInput } from "@/lib/constants/notifications";
 import { createNotificationRecords } from "@/lib/db/notifications";
+import { getNotificationPreferencesForUsers } from "@/lib/db/users";
+import { isNotificationAllowed } from "@/lib/notifications";
 
 export async function createNotificationsSafely(
 	inputs: AnyCreateNotificationInput[],
 ) {
-	/*
-	 * Never notify somebody about an action they
-	 * performed on themselves.
-	 */
-	const filteredInputs = inputs.filter(
+	const targetedInputs = inputs.filter(
 		(input) => !input.actorId || input.actorId !== input.recipientId,
 	);
 
-	if (filteredInputs.length === 0) {
+	if (targetedInputs.length === 0) {
 		return [];
 	}
 
 	try {
-		return await createNotificationRecords(filteredInputs);
+		const preferencesByUserId = await getNotificationPreferencesForUsers(
+			targetedInputs.map((input) => input.recipientId),
+		);
+
+		const allowedInputs = targetedInputs.filter((input) =>
+			isNotificationAllowed(
+				preferencesByUserId.get(input.recipientId),
+				input.type,
+			),
+		);
+
+		if (allowedInputs.length === 0) {
+			return [];
+		}
+
+		return await createNotificationRecords(allowedInputs);
 	} catch (error) {
-		/*
-		 * Notification delivery is secondary to the
-		 * actual project/task mutation.
-		 */
 		console.error("Failed to create notification records:", error);
 
 		return [];

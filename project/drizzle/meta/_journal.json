@@ -71,6 +71,13 @@
 			"when": 1787512150023,
 			"tag": "0009_absurd_wolverine",
 			"breakpoints": true
+		},
+		{
+			"idx": 10,
+			"version": "7",
+			"when": 1787532194036,
+			"tag": "0010_past_harpoon",
+			"breakpoints": true
 		}
 	]
 }

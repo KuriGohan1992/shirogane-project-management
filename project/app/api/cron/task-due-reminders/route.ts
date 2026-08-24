@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 
 import type { AnyCreateNotificationInput } from "@/lib/constants/notifications";
-import {
-	createNotificationRecords,
-	getTaskAssignmentsDueBetween,
-} from "@/lib/db/notifications";
+import { getTaskAssignmentsDueBetween } from "@/lib/db/notifications";
+import { createNotificationsSafely } from "@/lib/services/notifications";
 
 export async function GET(request: Request) {
 	const secret = process.env.CRON_SECRET;
@@ -62,7 +60,7 @@ export async function GET(request: Request) {
 		},
 	);
 
-	const created = await createNotificationRecords(inputs);
+	const created = await createNotificationsSafely(inputs);
 
 	return NextResponse.json({
 		checked: assignments.length,

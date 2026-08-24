@@ -27,7 +27,7 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-import { UserAvatar } from "@/components/user-avatar";
+
 import {
 	bulkAddTaskLabel,
 	bulkArchiveTasks,
@@ -40,9 +40,12 @@ import {
 } from "@/lib/actions/task-bulk";
 import { getColorHex } from "@/lib/constants/colors";
 import type { ProjectLabel, Stage, Task } from "@/lib/db/schema";
-import { cn } from "@/lib/utils";
 import type { BoardMutationResult } from "@/types/board";
 import type { AssignmentCandidate } from "@/types/member";
+import {
+	AssigneeCandidateIdentity,
+	AssigneeCandidateList,
+} from "./assignee-candidate-list";
 
 type TaskBulkToolbarProps = {
 	projectId: string;
@@ -112,14 +115,6 @@ export function TaskBulkToolbar({
 		visibleTaskIds.every((taskId) => selectedTaskIdSet.has(taskId));
 
 	const hasSelection = selectedTaskIds.length > 0;
-
-	const projectAssigneeCandidates = assigneeCandidates.filter(
-		(candidate) => candidate.source === "project",
-	);
-
-	const teamAssigneeCandidates = assigneeCandidates.filter(
-		(candidate) => candidate.source === "team",
-	);
 
 	function runMutation(action: () => Promise<BoardMutationResult>) {
 		if (!hasSelection || isPending) {
@@ -264,147 +259,56 @@ export function TaskBulkToolbar({
 					</PopoverTrigger>
 
 					<PopoverContent align="end" className="w-80 p-2">
-						<div className="max-h-72 overflow-y-auto">
-							{projectAssigneeCandidates.length > 0 && (
-								<div>
-									<p className="px-2 pb-1 pt-1 text-xs font-semibold text-muted-foreground">
-										Eligible collaborators
-									</p>
+						<AssigneeCandidateList
+							candidates={assigneeCandidates}
+							renderCandidate={(assignee) => (
+								<div className="flex items-center gap-2 rounded-md px-2 py-2 hover:bg-muted">
+									<AssigneeCandidateIdentity
+										candidate={assignee}
+										compact
+										showEmail={false}
+									/>
 
-									<div className="space-y-1">
-										{projectAssigneeCandidates.map((assignee) => (
-											<div
-												key={assignee.id}
-												className="flex items-center gap-2 rounded-md px-2 py-2 hover:bg-muted"
-											>
-												<UserAvatar
-													user={assignee}
-													className="size-7 shrink-0"
-												/>
+									<Button
+										type="button"
+										variant="ghost"
+										size="xs"
+										disabled={isPending}
+										onClick={() =>
+											runMutation(() =>
+												bulkAssignTasks(
+													projectId,
+													selectedTaskIds,
+													assignee.id,
+												),
+											)
+										}
+									>
+										Add
+									</Button>
 
-												<div className="min-w-0 flex-1">
-													<p className="truncate text-sm font-medium">
-														{assignee.name ?? assignee.email}
-													</p>
-
-													{assignee.jobTitle && (
-														<p className="truncate text-xs text-muted-foreground">
-															{assignee.jobTitle}
-														</p>
-													)}
-												</div>
-
-												<Button
-													type="button"
-													variant="ghost"
-													size="xs"
-													disabled={isPending}
-													onClick={() =>
-														runMutation(() =>
-															bulkAssignTasks(
-																projectId,
-																selectedTaskIds,
-																assignee.id,
-															),
-														)
-													}
-												>
-													Add
-												</Button>
-
-												<Button
-													type="button"
-													variant="ghost"
-													size="xs"
-													disabled={isPending}
-													onClick={() =>
-														runMutation(() =>
-															bulkUnassignTasks(
-																projectId,
-																selectedTaskIds,
-																assignee.id,
-															),
-														)
-													}
-												>
-													Remove
-												</Button>
-											</div>
-										))}
-									</div>
-								</div>
-							)}
-
-							{teamAssigneeCandidates.length > 0 && (
-								<div
-									className={cn(
-										projectAssigneeCandidates.length > 0 &&
-											"mt-2 border-t border-border pt-2",
+									{assignee.source === "project" && (
+										<Button
+											type="button"
+											variant="ghost"
+											size="xs"
+											disabled={isPending}
+											onClick={() =>
+												runMutation(() =>
+													bulkUnassignTasks(
+														projectId,
+														selectedTaskIds,
+														assignee.id,
+													),
+												)
+											}
+										>
+											Remove
+										</Button>
 									)}
-								>
-									<div className="px-2 pb-1">
-										<p className="text-xs font-semibold text-muted-foreground">
-											Your team
-										</p>
-
-										<p className="mt-0.5 text-xs text-muted-foreground">
-											Assigning someone here adds them to this project as a
-											Member.
-										</p>
-									</div>
-
-									<div className="space-y-1">
-										{teamAssigneeCandidates.map((assignee) => (
-											<div
-												key={assignee.id}
-												className="flex items-center gap-2 rounded-md px-2 py-2 hover:bg-muted"
-											>
-												<UserAvatar
-													user={assignee}
-													className="size-7 shrink-0"
-												/>
-
-												<div className="min-w-0 flex-1">
-													<p className="truncate text-sm font-medium">
-														{assignee.name ?? assignee.email}
-													</p>
-
-													{assignee.jobTitle && (
-														<p className="truncate text-xs text-muted-foreground">
-															{assignee.jobTitle}
-														</p>
-													)}
-												</div>
-
-												<Button
-													type="button"
-													variant="ghost"
-													size="xs"
-													disabled={isPending}
-													onClick={() =>
-														runMutation(() =>
-															bulkAssignTasks(
-																projectId,
-																selectedTaskIds,
-																assignee.id,
-															),
-														)
-													}
-												>
-													Add
-												</Button>
-											</div>
-										))}
-									</div>
 								</div>
 							)}
-
-							{assigneeCandidates.length === 0 && (
-								<p className="px-2 py-3 text-sm text-muted-foreground">
-									No assignable collaborators.
-								</p>
-							)}
-						</div>
+						/>
 					</PopoverContent>
 				</Popover>
 

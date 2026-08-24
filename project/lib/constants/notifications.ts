@@ -15,6 +15,36 @@ export const NOTIFICATION_TYPE_VALUES = [
 
 export type NotificationType = (typeof NOTIFICATION_TYPE_VALUES)[number];
 
+export const NOTIFICATION_CATEGORY_VALUES = [
+	"project_access",
+	"assignments",
+	"comments",
+	"deadlines",
+] as const;
+
+export type NotificationCategory =
+	(typeof NOTIFICATION_CATEGORY_VALUES)[number];
+
+export const NOTIFICATION_CATEGORY_BY_TYPE = {
+	project_member_added: "project_access",
+	project_member_removed: "project_access",
+	project_member_role_changed: "project_access",
+
+	task_assigned: "assignments",
+	task_unassigned: "assignments",
+	tasks_assigned: "assignments",
+	tasks_unassigned: "assignments",
+
+	task_comment_added: "comments",
+
+	task_due_soon: "deadlines",
+} satisfies Record<NotificationType, NotificationCategory>;
+
+export type NotificationPreferences = {
+	notificationsMuted: boolean;
+	mutedCategories: NotificationCategory[];
+};
+
 export type NotificationMetadataByType = {
 	project_member_added: {
 		projectName: string;

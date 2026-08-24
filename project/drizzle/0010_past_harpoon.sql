@@ -1,0 +1,2 @@
+ALTER TABLE "users" ADD COLUMN "notifications_muted" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "muted_notification_categories" jsonb DEFAULT '[]'::jsonb NOT NULL;
