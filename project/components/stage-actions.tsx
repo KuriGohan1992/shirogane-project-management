@@ -49,10 +49,10 @@ export function StageActions({
 						disabled={isBoardSavePending}
 						aria-label={`Delete ${stage.name}`}
 						className={cn(
-	onPrimary
-		? "text-primary-foreground/75 hover:bg-primary-foreground/10 hover:text-primary-foreground"
-		: "text-muted-foreground hover:text-destructive",
-)}
+							onPrimary
+								? "text-primary-foreground/75 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+								: "text-muted-foreground hover:text-destructive",
+						)}
 					>
 						<Trash2 aria-hidden="true" className="size-5" />
 					</Button>

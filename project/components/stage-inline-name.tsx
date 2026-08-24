@@ -129,9 +129,9 @@ export function StageInlineName({
 			<h3
 				title={stage.name}
 				className={cn(
-	"min-w-0 truncate font-semibold",
-	onPrimary ? "text-primary-foreground" : "text-foreground",
-)}
+					"min-w-0 truncate font-semibold",
+					onPrimary ? "text-primary-foreground" : "text-foreground",
+				)}
 			>
 				{stage.name}
 			</h3>
@@ -157,11 +157,11 @@ export function StageInlineName({
 			title={`Rename ${stage.name}`}
 			onClick={() => setIsEditing(true)}
 			className={cn(
-	"min-w-0 truncate rounded-md px-1 py-0.5 text-left font-semibold transition-colors disabled:pointer-events-none disabled:opacity-50",
-	onPrimary
-		? "text-primary-foreground hover:bg-primary-foreground/10"
-		: "text-foreground hover:bg-accent",
-)}
+				"min-w-0 truncate rounded-md px-1 py-0.5 text-left font-semibold transition-colors disabled:pointer-events-none disabled:opacity-50",
+				onPrimary
+					? "text-primary-foreground hover:bg-primary-foreground/10"
+					: "text-foreground hover:bg-accent",
+			)}
 		>
 			{stage.name}
 		</button>

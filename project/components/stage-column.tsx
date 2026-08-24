@@ -74,12 +74,12 @@ export function StageColumn({
 	return (
 		<section
 			ref={stageSortable.ref}
-className={cn(
-	"w-[min(20rem,85vw)] shrink-0 overflow-hidden rounded-xl border border-border bg-muted/40",
-	stageSortable.isDragging && "opacity-60",
-)}
+			className={cn(
+				"w-[min(20rem,85vw)] shrink-0 overflow-hidden rounded-xl border border-border bg-muted/40",
+				stageSortable.isDragging && "opacity-60",
+			)}
 		>
-		<div className="relative flex min-h-14 items-center border-b border-primary bg-primary px-4 py-3 text-primary-foreground">
+			<div className="relative flex min-h-14 items-center border-b border-primary bg-primary px-4 py-3 text-primary-foreground">
 				{permissions.canManageStages && (
 					<div
 						ref={stageSortable.handleRef}
@@ -99,7 +99,7 @@ className={cn(
 						onPrimary
 					/>
 
-<span className="pointer-events-none shrink-0 rounded-md bg-primary-foreground/15 px-1.5 py-0.5 text-xs font-semibold tabular-nums text-primary-foreground/85">
+					<span className="pointer-events-none shrink-0 rounded-md bg-primary-foreground/15 px-1.5 py-0.5 text-xs font-semibold tabular-nums text-primary-foreground/85">
 						{isTaskFilteringActive
 							? `${stage.tasks.length}/${totalTaskCount}`
 							: stage.tasks.length}
