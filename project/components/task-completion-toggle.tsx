@@ -12,6 +12,7 @@ type TaskCompletionToggleProps = {
 	completed: boolean;
 	canManage: boolean;
 	compact?: boolean;
+    onPrimary?: boolean;
 };
 
 export function TaskCompletionToggle({
@@ -19,6 +20,7 @@ export function TaskCompletionToggle({
 	completed,
 	canManage,
 	compact = false,
+    onPrimary,
 }: TaskCompletionToggleProps) {
 	const router = useRouter();
 
@@ -43,10 +45,13 @@ export function TaskCompletionToggle({
 		return (
 			<span
 				title="Completed"
-				className={cn(
-					"inline-flex shrink-0 items-center justify-center text-emerald-600 dark:text-emerald-400",
-					compact ? "size-6" : "size-8",
-				)}
+className={cn(
+	"inline-flex shrink-0 items-center justify-center",
+	compact ? "size-6" : "size-8",
+	onPrimary
+		? "text-primary-foreground"
+		: "text-emerald-600 dark:text-emerald-400",
+)}
 			>
 				<CircleCheckBig
 					aria-hidden="true"
@@ -98,13 +103,20 @@ export function TaskCompletionToggle({
 			aria-label={optimisticCompleted ? "Reopen task" : "Mark task complete"}
 			title={optimisticCompleted ? "Reopen task" : "Mark task complete"}
 			onClick={handleToggle}
-			className={cn(
-				"group/completion inline-flex shrink-0 items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-wait disabled:opacity-70",
-				compact ? "size-6" : "size-8",
-				optimisticCompleted
-					? "text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
-					: "text-muted-foreground hover:bg-muted hover:text-foreground",
-			)}
+className={cn(
+	"group/completion inline-flex shrink-0 items-center justify-center rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:cursor-wait disabled:opacity-70",
+	compact ? "size-6" : "size-8",
+	onPrimary
+		? "focus-visible:ring-primary-foreground/50"
+		: "focus-visible:ring-ring",
+	optimisticCompleted
+		? onPrimary
+			? "text-primary-foreground hover:bg-primary-foreground/10"
+			: "text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+		: onPrimary
+			? "text-primary-foreground/75 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+			: "text-muted-foreground hover:bg-muted hover:text-foreground",
+)}
 		>
 			{optimisticCompleted ? (
 				<CircleCheckBig

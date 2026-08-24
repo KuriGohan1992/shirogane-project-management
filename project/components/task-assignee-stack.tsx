@@ -64,7 +64,7 @@ export function TaskAssigneeStack({
 					{hiddenUserCount > 0 && (
 						<span
 							className={cn(
-								"ml-1 inline-flex items-center justify-center rounded-md border border-border bg-muted font-semibold text-muted-foreground",
+								"ml-1 inline-flex items-center justify-center rounded-full border border-border bg-muted font-semibold text-muted-foreground",
 								isLarge
 									? "h-8 min-w-8 px-1.5 text-xs"
 									: "h-6 min-w-6 px-1 text-[10px]",

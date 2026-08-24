@@ -25,6 +25,7 @@ import type { ProjectLabel } from "@/lib/db/schema";
 import type { AssignmentCandidate } from "@/types/member";
 import type { EditableTask } from "@/types/task";
 import type { UserSummary } from "@/types/user";
+import { cn } from "@/lib/utils";
 
 type TaskActionsProps = {
 	task: EditableTask;
@@ -35,6 +36,7 @@ type TaskActionsProps = {
 	canAssignTasks: boolean;
 	showCopyLink?: boolean;
 	redirectAfterRemoval?: boolean;
+	onPrimary?: boolean;
 };
 
 export function TaskActions({
@@ -46,6 +48,7 @@ export function TaskActions({
 	canAssignTasks,
 	showCopyLink = false,
 	redirectAfterRemoval = false,
+	onPrimary = false,
 }: TaskActionsProps) {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const [isEditOpen, setIsEditOpen] = useState(false);
@@ -67,7 +70,12 @@ export function TaskActions({
 					<button
 						type="button"
 						aria-label={`Actions for ${task.title}`}
-						className="group/task-actions inline-flex h-7 w-5 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+						className={cn(
+	"group/task-actions inline-flex h-7 w-5 shrink-0 items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2",
+	onPrimary
+		? "text-primary-foreground/75 hover:text-primary-foreground focus-visible:ring-primary-foreground/50"
+		: "text-muted-foreground hover:text-foreground focus-visible:ring-ring",
+)}
 					>
 						<MoreVertical
 							aria-hidden="true"
