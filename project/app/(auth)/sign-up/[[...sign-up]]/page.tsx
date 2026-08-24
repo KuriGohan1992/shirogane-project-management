@@ -1,9 +1,12 @@
 import { SignUp } from "@clerk/nextjs";
 
+import { AuthShell } from "@/components/auth/auth-shell";
+import { shiroAuthAppearance } from "@/lib/clerk-appearance";
+
 export default function SignUpPage() {
 	return (
-		<main className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
-			<SignUp />
-		</main>
+		<AuthShell>
+			<SignUp appearance={shiroAuthAppearance} />
+		</AuthShell>
 	);
 }
