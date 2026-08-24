@@ -1,242 +1,527 @@
 import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
-import { ArrowRight, CheckCircle, Kanban, Users } from "lucide-react";
+import {
+	ArrowRight,
+	CalendarDays,
+	Check,
+	CircleCheckBig,
+	Columns3,
+	Sparkles,
+	UsersRound,
+} from "lucide-react";
 import Link from "next/link";
+
+import { LandingBoardArt } from "@/components/landing/landing-board-art";
 import { ShiroBrand } from "@/components/shiro-brand";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { cn } from "@/lib/utils";
+
+const features = [
+	{
+		icon: Columns3,
+		title: "Work that stays visible",
+		description:
+			"Move tasks through clear stages, filter the noise, and keep every detail close to the work.",
+	},
+	{
+		icon: UsersRound,
+		title: "Collaboration with boundaries",
+		description:
+			"Assign work, manage project roles, and keep viewers, members, and owners in the right lane.",
+	},
+	{
+		icon: CalendarDays,
+		title: "Dates you can actually see",
+		description:
+			"Plan start dates and deadlines in a calendar built around the projects and tasks you already manage.",
+	},
+];
+
+const capabilities = [
+	"Kanban boards",
+	"Multiple assignees",
+	"Project roles",
+	"Calendar views",
+	"Notifications",
+	"Task completion",
+	"Analytics",
+	"Global search",
+];
 
 export default function HomePage() {
 	return (
-		<div className="min-h-screen bg-background">
-			{/* Header */}
-			<header className="border-b border-border bg-background/80 backdrop-blur-xs">
-				<div className="container mx-auto px-4 sm:px-6 lg:px-8">
-					<div className="flex h-16 items-center justify-between">
-						<ShiroBrand priority />
+		<div className="min-h-screen overflow-x-hidden bg-background text-foreground">
+			<header className="sticky top-0 z-50 h-16 border-b border-border bg-card/95 backdrop-blur-md">
+				<div className="mx-auto flex h-full w-full max-w-[1600px] items-center px-5 sm:px-8 lg:px-10">
+					<ShiroBrand priority />
 
-						<div className="flex items-center gap-4">
-							<Show when="signed-in">
-								<Link
-									href="/dashboard"
-									className="font-medium text-foreground hover:text-primary"
+					<nav
+						aria-label="Landing page navigation"
+						className="ml-8 hidden items-center gap-7 lg:flex"
+					>
+						<a
+							href="#product"
+							className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+						>
+							Product
+						</a>
+
+						<a
+							href="#why-shiro"
+							className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+						>
+							Why Shiro
+						</a>
+					</nav>
+
+					<div className="ml-auto flex items-center gap-2 sm:gap-3">
+						<Show when="signed-in">
+							<Link
+								href="/dashboard"
+								className="hidden text-sm font-medium text-muted-foreground pr-4 transition-colors hover:text-foreground sm:inline-flex"
+							>
+								Dashboard
+							</Link>
+
+							<Link
+								href="/projects"
+								className="hidden text-sm font-medium text-muted-foreground pr-2 transition-colors hover:text-foreground md:inline-flex"
+							>
+								Projects
+							</Link>
+						</Show>
+
+						<ThemeToggle />
+
+						<Show when="signed-out">
+							<SignInButton>
+								<button
+									type="button"
+									className="hidden h-9 items-center px-3 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
 								>
-									Dashboard
-								</Link>
+									Sign in
+								</button>
+							</SignInButton>
 
-								<Link
-									href="/projects"
-									className="font-medium text-foreground hover:text-primary"
+							<SignUpButton>
+								<button
+									type="button"
+									className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors hover:bg-brand-hover"
 								>
-									Projects
-								</Link>
-							</Show>
+									Get started
+								</button>
+							</SignUpButton>
+						</Show>
 
-							<ThemeToggle />
+						<Show when="signed-in">
+							<UserButton />
+						</Show>
+					</div>
+				</div>
+			</header>
+
+			<main>
+				<section className="relative">
+					<div
+						aria-hidden="true"
+						className="pointer-events-none absolute inset-0 overflow-hidden"
+					>
+						<div className="absolute -right-40 -top-28 size-[34rem] rounded-full bg-primary/[0.07] blur-3xl" />
+						<div className="absolute -left-48 top-80 size-[28rem] rounded-full bg-cyan-500/[0.05] blur-3xl" />
+					</div>
+
+					<div className="relative mx-auto grid min-h-[calc(100vh-4rem)] w-full max-w-[1500px] items-center gap-14 px-5 py-16 sm:px-8 lg:grid-cols-[0.86fr_1.14fr] lg:px-10 lg:py-20 xl:gap-20">
+						<div className="max-w-2xl">
+							<h1 className="text-5xl font-bold tracking-[-0.045em] text-foreground sm:text-6xl lg:text-[4.35rem] lg:leading-[1.02]">
+								Keep projects moving{" "}
+								<span className="text-primary">
+									without losing the details.
+								</span>
+							</h1>
+
+							<p className="mt-7 max-w-xl text-lg leading-8 text-muted-foreground sm:text-xl">
+								Shiro brings tasks, teammates, deadlines, and project progress
+								into one focused workspace—so everyone knows what is moving and
+								what needs attention.
+							</p>
+
+							<div className="mt-8 flex flex-wrap items-center gap-3">
+								<Show when="signed-out">
+									<SignUpButton>
+										<button
+											type="button"
+											className="group inline-flex h-12 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-bold text-primary-foreground transition-colors hover:bg-brand-hover"
+										>
+											Start with Shiro
+											<ArrowRight
+												aria-hidden="true"
+												className="size-4 transition-transform group-hover:translate-x-0.5"
+											/>
+										</button>
+									</SignUpButton>
+
+									<SignInButton>
+										<button
+											type="button"
+											className="inline-flex h-12 items-center rounded-lg border border-border bg-card px-5 text-sm font-bold text-foreground transition-colors hover:bg-muted"
+										>
+											Sign in
+										</button>
+									</SignInButton>
+								</Show>
+
+								<Show when="signed-in">
+									<Link
+										href="/dashboard"
+										className="group inline-flex h-12 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-bold text-primary-foreground transition-colors hover:bg-brand-hover"
+									>
+										Open dashboard
+										<ArrowRight
+											aria-hidden="true"
+											className="size-4 transition-transform group-hover:translate-x-0.5"
+										/>
+									</Link>
+
+									<Link
+										href="/projects"
+										className="inline-flex h-12 items-center rounded-lg border border-border bg-card px-5 text-sm font-bold text-foreground transition-colors hover:bg-muted"
+									>
+										View projects
+									</Link>
+								</Show>
+							</div>
+
+							<div className="mt-8 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
+								<div className="flex items-center gap-1.5">
+									<Check
+										aria-hidden="true"
+										className="size-4 text-emerald-500"
+									/>
+									Kanban-first
+								</div>
+
+								<div className="flex items-center gap-1.5">
+									<Check
+										aria-hidden="true"
+										className="size-4 text-emerald-500"
+									/>
+									Team-ready
+								</div>
+
+								<div className="flex items-center gap-1.5">
+									<Check
+										aria-hidden="true"
+										className="size-4 text-emerald-500"
+									/>
+									Built for focus
+								</div>
+							</div>
+						</div>
+
+						<div className="lg:pl-4">
+							<LandingBoardArt />
+						</div>
+					</div>
+				</section>
+
+				<section id="product" className="border-y border-border bg-card">
+					<div className="mx-auto grid w-full max-w-[1500px] gap-px bg-border sm:grid-cols-2 lg:grid-cols-4">
+						{[
+							{
+								value: "Board",
+								label: "Drag work through stages",
+							},
+							{
+								value: "Calendar",
+								label: "See schedules at a glance",
+							},
+							{
+								value: "Team",
+								label: "Keep ownership visible",
+							},
+							{
+								value: "Analytics",
+								label: "Measure what actually ships",
+							},
+						].map((item) => (
+							<div key={item.value} className="bg-card px-6 py-5 sm:px-8">
+								<p className="text-sm font-bold text-foreground">
+									{item.value}
+								</p>
+
+								<p className="mt-1 text-sm text-muted-foreground">
+									{item.label}
+								</p>
+							</div>
+						))}
+					</div>
+				</section>
+
+				<section
+					id="why-shiro"
+					className="mx-auto w-full max-w-[1500px] px-5 py-24 sm:px-8 lg:px-10"
+				>
+					<div className="grid gap-12 lg:grid-cols-[0.72fr_1.28fr] lg:gap-20">
+						<div className="max-w-md">
+							<p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">
+								One workspace
+							</p>
+
+							<h2 className="mt-4 text-4xl font-bold tracking-tight text-foreground">
+								Enough structure to stay aligned. Not enough to get in the way.
+							</h2>
+
+							<p className="mt-5 text-base leading-7 text-muted-foreground">
+								Shiro keeps the workflow visual and the controls close to the
+								work. No separate maze of pages just to understand what your
+								team is doing.
+							</p>
+
+							<div className="mt-8 flex flex-wrap gap-2">
+								{capabilities.map((capability) => (
+									<span
+										key={capability}
+										className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground"
+									>
+										{capability}
+									</span>
+								))}
+							</div>
+						</div>
+
+						<div className="grid gap-4 sm:grid-cols-2">
+							{features.map((feature, index) => {
+								const Icon = feature.icon;
+
+								return (
+									<article
+										key={feature.title}
+										className={`relative overflow-hidden rounded-2xl border border-border bg-card p-6 ${
+											index === 0 ? "sm:col-span-2" : ""
+										}`}
+									>
+										<div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+											<Icon aria-hidden="true" className="size-5" />
+										</div>
+
+										<h3 className="mt-5 text-lg font-bold text-foreground">
+											{feature.title}
+										</h3>
+
+										<p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+											{feature.description}
+										</p>
+
+										{index === 0 && (
+											<div className="mt-7 grid gap-2 sm:grid-cols-3">
+												{[
+													{
+														title: "Backlog",
+														count: "04",
+														width: "w-3/5",
+													},
+													{
+														title: "In Progress",
+														count: "03",
+														width: "w-4/5",
+													},
+													{
+														title: "Review",
+														count: "02",
+														width: "w-2/5",
+													},
+												].map((stage) => (
+													<div
+														key={stage.title}
+														className="overflow-hidden rounded-xl border border-border bg-muted/40"
+													>
+														<div className="flex items-center bg-primary px-3 py-2 text-primary-foreground">
+															<span className="text-xs font-bold">
+																{stage.title}
+															</span>
+
+															<span className="ml-auto text-[10px] opacity-75">
+																{stage.count}
+															</span>
+														</div>
+
+														<div className="space-y-2 p-3">
+															<div className="rounded-lg border border-border bg-card p-3">
+																<div
+																	className={`h-2 rounded-full bg-muted ${stage.width}`}
+																/>
+																<div className="mt-2 h-2 w-2/5 rounded-full bg-primary/20" />
+															</div>
+
+															<div className="rounded-lg border border-border bg-card p-3">
+																<div className="h-2 w-4/5 rounded-full bg-muted" />
+															</div>
+														</div>
+													</div>
+												))}
+											</div>
+										)}
+
+										{index === 1 && (
+											<div className="mt-7 rounded-xl border border-border bg-background p-4">
+												<div className="grid grid-cols-7 gap-1.5">
+													{[
+														["mon", "M"],
+														["tue", "T"],
+														["wed", "W"],
+														["thu", "T"],
+														["fri", "F"],
+														["sat", "S"],
+														["sun", "S"],
+													].map(([id, day]) => (
+														<span
+															key={id}
+															className="text-center text-[9px] font-semibold text-muted-foreground"
+														>
+															{day}
+														</span>
+													))}
+												</div>
+
+												<div className="mt-2 grid grid-cols-7 gap-1.5">
+													{[
+														"date-1",
+														"date-2",
+														"date-3",
+														"date-4",
+														"date-5",
+														"date-6",
+														"date-7",
+														"date-8",
+														"date-9",
+														"date-10",
+														"date-11",
+														"date-12",
+														"date-13",
+														"date-14",
+													].map((id) => (
+														<div
+															key={id}
+															className={cn(
+																"aspect-square rounded-md",
+																id === "date-10"
+																	? "bg-primary"
+																	: id === "date-11" || id === "date-12"
+																		? "bg-primary/15"
+																		: "bg-muted",
+															)}
+														/>
+													))}
+												</div>
+											</div>
+										)}
+
+										{index === 2 && (
+											<div className="mt-7 space-y-3 rounded-xl border border-border bg-background p-4">
+												{[
+													["Completed", "72%", "w-[72%]"],
+													["In progress", "46%", "w-[46%]"],
+													["Due soon", "24%", "w-[24%]"],
+												].map(([label, value, width]) => (
+													<div key={label}>
+														<div className="flex justify-between text-[10px]">
+															<span className="text-muted-foreground">
+																{label}
+															</span>
+															<span className="font-semibold text-foreground">
+																{value}
+															</span>
+														</div>
+
+														<div className="mt-1.5 h-1.5 rounded-full bg-muted">
+															<div
+																className={`h-full rounded-full bg-primary ${width}`}
+															/>
+														</div>
+													</div>
+												))}
+											</div>
+										)}
+									</article>
+								);
+							})}
+						</div>
+					</div>
+				</section>
+
+				<section className="px-5 pb-24 sm:px-8 lg:px-10">
+					<div className="relative mx-auto max-w-[1420px] overflow-hidden rounded-3xl bg-primary px-6 py-12 text-primary-foreground sm:px-10 lg:px-14 lg:py-14">
+						<div
+							aria-hidden="true"
+							className="absolute -right-16 -top-28 size-72 rounded-full bg-white/10"
+						/>
+
+						<div
+							aria-hidden="true"
+							className="absolute -bottom-32 right-40 size-64 rounded-full border-[36px] border-white/[0.07]"
+						/>
+
+						<div className="relative flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-center">
+							<div className="max-w-2xl">
+								<div className="flex items-center gap-2 text-primary-foreground/75">
+									<CircleCheckBig aria-hidden="true" className="size-5" />
+									<span className="text-sm font-semibold">
+										Ready when the work is
+									</span>
+								</div>
+
+								<h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
+									Give every project a clearer next step.
+								</h2>
+
+								<p className="mt-3 max-w-xl text-base leading-7 text-primary-foreground/75">
+									Bring the board, the people, the dates, and the progress into
+									one place.
+								</p>
+							</div>
 
 							<Show when="signed-out">
-								<SignInButton>
-									<button
-										type="button"
-										className="font-medium text-foreground hover:text-primary"
-									>
-										Sign In
-									</button>
-								</SignInButton>
-
 								<SignUpButton>
 									<button
 										type="button"
-										className="rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground hover:bg-brand-hover"
+										className="group inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-white px-5 text-sm font-bold text-blue-700 transition-transform hover:scale-[1.02]"
 									>
-										Sign Up
+										Get started
+										<ArrowRight
+											aria-hidden="true"
+											className="size-4 transition-transform group-hover:translate-x-0.5"
+										/>
 									</button>
 								</SignUpButton>
 							</Show>
 
 							<Show when="signed-in">
-								<UserButton />
+								<Link
+									href="/dashboard"
+									className="group inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-white px-5 text-sm font-bold text-blue-700 transition-transform hover:scale-[1.02]"
+								>
+									Open Shiro
+									<ArrowRight
+										aria-hidden="true"
+										className="size-4 transition-transform group-hover:translate-x-0.5"
+									/>
+								</Link>
 							</Show>
 						</div>
 					</div>
-				</div>
-			</header>
+				</section>
+			</main>
 
-			{/* Hero Section */}
-			<section className="py-20 px-4 sm:px-6 lg:px-8">
-				<div className="container mx-auto text-center">
-					<h1 className="text-5xl md:text-6xl font-bold text-foreground mb-6">
-						Manage Projects with
-						<span className="text-primary"> Kanban Boards</span>
-					</h1>
+			<footer className="border-t border-border bg-card">
+				<div className="mx-auto flex w-full max-w-[1500px] flex-col gap-4 px-5 py-7 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:px-10">
+					<ShiroBrand />
 
-					<p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-						Organize tasks, collaborate with teams, and track progress with our
-						intuitive drag-and-drop project management platform.
+					<p className="text-sm text-muted-foreground">
+						Project management without the clutter.
 					</p>
 
-					<div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-						<Link
-							href="/dashboard"
-							className="inline-flex items-center px-8 py-4 bg-primary text-white rounded-lg hover:bg-brand-hover text-lg font-semibold"
-						>
-							Start Managing Projects
-							<ArrowRight className="ml-2" size={20} />
-						</Link>
-						<Link
-							href="/projects"
-							className="inline-flex items-center px-8 py-4 border-2 border-primary text-primary rounded-lg hover:bg-brand-soft dark:hover:bg-primary/15 text-lg font-semibold"
-						>
-							View Projects
-						</Link>
-					</div>
-
-					{/* Feature highlights */}
-					<div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto">
-						<div className="flex items-center justify-center space-x-2 text-foreground">
-							<Kanban className="text-primary" size={20} />
-							<span>Drag & Drop Boards</span>
-						</div>
-						<div className="flex items-center justify-center space-x-2 text-foreground">
-							<Users className="text-primary" size={20} />
-							<span>Team Collaboration</span>
-						</div>
-						<div className="flex items-center justify-center space-x-2 text-foreground">
-							<CheckCircle className="text-primary" size={20} />
-							<span>Task Management</span>
-						</div>
-					</div>
+					<p className="text-xs text-muted-foreground">© 2026 Shiro</p>
 				</div>
-			</section>
-
-			{/* Navigation Demo Section */}
-			<section className="py-16 px-4 sm:px-6 lg:px-8 bg-background/50">
-				<div className="container mx-auto text-center">
-					<h2 className="text-3xl font-bold text-foreground mb-8">
-						🚀 Navigate the Mock Site
-					</h2>
-
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-4xl mx-auto">
-						<Link
-							href="/dashboard"
-							className="p-4 bg-card rounded-lg border border-border hover:shadow-lg transition-shadow"
-						>
-							<h3 className="font-semibold text-foreground mb-2">Dashboard</h3>
-							<p className="text-sm text-muted-foreground">
-								Main dashboard view
-							</p>
-						</Link>
-
-						<Link
-							href="/projects"
-							className="p-4 bg-card rounded-lg border border-border hover:shadow-lg transition-shadow"
-						>
-							<h3 className="font-semibold text-foreground mb-2">Projects</h3>
-							<p className="text-sm text-muted-foreground">
-								Projects listing page
-							</p>
-						</Link>
-
-						<Link
-							href="/projects/1"
-							className="p-4 bg-card rounded-lg border border-border hover:shadow-lg transition-shadow"
-						>
-							<h3 className="font-semibold text-foreground mb-2">
-								Kanban Board
-							</h3>
-							<p className="text-sm text-muted-foreground">
-								Project board view
-							</p>
-						</Link>
-
-						<Link
-							href="/sign-in"
-							className="p-4 bg-card rounded-lg border border-border hover:shadow-lg transition-shadow"
-						>
-							<h3 className="font-semibold text-foreground mb-2">Auth Pages</h3>
-							<p className="text-sm text-muted-foreground">
-								Sign in/up placeholders
-							</p>
-						</Link>
-					</div>
-				</div>
-			</section>
-
-			{/* Task Implementation Status */}
-			<section className="py-16 px-4 sm:px-6 lg:px-8">
-				<div className="container mx-auto">
-					<h2 className="text-3xl font-bold text-center text-foreground mb-12">
-						Implementation Roadmap
-					</h2>
-
-					<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-						{[
-							{
-								phase: "1.0",
-								title: "Project Setup",
-								status: "pending",
-								tasks: 6,
-							},
-							{
-								phase: "2.0",
-								title: "Authentication",
-								status: "pending",
-								tasks: 6,
-							},
-							{
-								phase: "3.0",
-								title: "Database Setup",
-								status: "pending",
-								tasks: 6,
-							},
-							{
-								phase: "4.0",
-								title: "Core Features",
-								status: "pending",
-								tasks: 6,
-							},
-							{
-								phase: "5.0",
-								title: "Kanban Board",
-								status: "pending",
-								tasks: 6,
-							},
-							{
-								phase: "6.0",
-								title: "Advanced Features",
-								status: "pending",
-								tasks: 6,
-							},
-							{ phase: "7.0", title: "Testing", status: "pending", tasks: 6 },
-							{
-								phase: "8.0",
-								title: "Deployment",
-								status: "pending",
-								tasks: 6,
-							},
-						].map((item) => (
-							<div
-								key={item.phase}
-								className="bg-card p-6 rounded-lg border border-border"
-							>
-								<div className="text-sm text-primary font-semibold mb-2">
-									Phase {item.phase}
-								</div>
-								<h3 className="font-semibold text-foreground mb-2">
-									{item.title}
-								</h3>
-								<div className="text-sm text-muted-foreground mb-3">
-									{item.tasks} tasks
-								</div>
-								<div className="flex items-center">
-									<div className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
-									<span className="text-sm text-muted-foreground capitalize">
-										{item.status}
-									</span>
-								</div>
-							</div>
-						))}
-					</div>
-				</div>
-			</section>
+			</footer>
 		</div>
 	);
 }
