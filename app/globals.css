@@ -217,12 +217,7 @@ html.theme-transition,
 html.theme-transition *,
 html.theme-transition *::before,
 html.theme-transition *::after {
-	transition-property:
-		background-color,
-		border-color,
-		color,
-		fill,
-		stroke;
+	transition-property: background-color, border-color, color, fill, stroke;
 	transition-duration: 200ms;
 	transition-timing-function: ease-out;
 }

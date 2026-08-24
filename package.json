@@ -15,7 +15,14 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
 		"db:check": "drizzle-kit check",
-		"db:seed": "tsx scripts/seed.ts"
+		"db:seed": "tsx scripts/seed.ts",
+		"test": "vitest run --config vitest.config.mts",
+		"test:watch": "vitest --config vitest.config.mts",
+		"test:db": "vitest run --config vitest.db.config.mts",
+		"db:test:migrate": "drizzle-kit migrate --config drizzle.test.config.ts",
+		"test:e2e": "playwright test",
+		"test:e2e:ui": "playwright test --ui",
+		"test:all": "pnpm test && pnpm test:db && pnpm test:e2e"
 	},
 	"dependencies": {
 		"@clerk/nextjs": "^7.6.3",
@@ -43,16 +50,20 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.5.6",
+		"@clerk/testing": "^2.2.29",
+		"@playwright/test": "^1.62.1",
 		"@tailwindcss/postcss": "^4.3.3",
 		"@types/node": "^22",
 		"@types/react": "^19",
 		"@types/react-dom": "^19",
 		"dotenv": "^17.4.2",
 		"drizzle-kit": "^0.31.10",
+		"jsdom": "^30.0.1",
 		"postcss": "^8.5",
 		"tailwindcss": "^4.3.3",
 		"tsx": "^4.23.12",
-		"typescript": "5.9.3"
+		"typescript": "5.9.3",
+		"vitest": "^4.1.11"
 	},
 	"packageManager": "pnpm@10.10.0+sha512.d615db246fe70f25dcfea6d8d73dee782ce23e2245e3c4f6f888249fb568149318637dca73c2c5c8ef2a4ca0d5657fb9567188bfab47f566d1ee6ce987815c39"
 }

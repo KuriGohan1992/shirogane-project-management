@@ -32,3 +32,9 @@ next-env.d.ts
 /dist/
 # Local project archives
 /shiro-*.tar.gz
+
+# Test environment and generated artifacts
+.env.test.local
+playwright/.clerk/
+playwright-report/
+test-results/
