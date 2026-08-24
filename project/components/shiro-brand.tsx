@@ -1,18 +1,25 @@
 import Image from "next/image";
 import Link from "next/link";
+import type { MouseEventHandler } from "react";
 
 import { cn } from "@/lib/utils";
 
 type ShiroBrandProps = {
 	className?: string;
 	priority?: boolean;
+	onClick?: MouseEventHandler<HTMLAnchorElement>;
 };
 
-export function ShiroBrand({ className, priority = false }: ShiroBrandProps) {
+export function ShiroBrand({
+	className,
+	priority = false,
+	onClick,
+}: ShiroBrandProps) {
 	return (
 		<Link
 			href="/"
 			aria-label="Shiro home"
+			onClick={onClick}
 			className={cn("flex items-center gap-0.75", className)}
 		>
 			<Image

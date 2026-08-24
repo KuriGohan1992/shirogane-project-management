@@ -5,6 +5,9 @@ import {
 	Check,
 	CircleCheckBig,
 	Columns3,
+	PlayCircle,
+	Search,
+	ShieldCheck,
 	Sparkles,
 	UsersRound,
 } from "lucide-react";
@@ -14,6 +17,10 @@ import { LandingBoardArt } from "@/components/landing/landing-board-art";
 import { ShiroBrand } from "@/components/shiro-brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
+import { LandingBrand } from "@/components/landing/landing-brand";
+
+const DEMO_VIDEO_URL =
+	"https://www.youtube-nocookie.com/embed/YOUR_VIDEO_ID";
 
 const features = [
 	{
@@ -47,12 +54,33 @@ const capabilities = [
 	"Global search",
 ];
 
+const whyShiroPoints = [
+	{
+		icon: Search,
+		title: "Keep the context together",
+		description:
+			"Projects, tasks, people, dates, and activity stay connected instead of disappearing into separate workflows.",
+	},
+	{
+		icon: ShieldCheck,
+		title: "Make ownership explicit",
+		description:
+			"Owner, Member, and Viewer roles make access predictable without turning permissions into another project to manage.",
+	},
+	{
+		icon: Sparkles,
+		title: "Keep the interface quiet",
+		description:
+			"Controls appear where they matter while secondary information stays out of the way until you actually need it.",
+	},
+];
+
 export default function HomePage() {
 	return (
-		<div className="min-h-screen overflow-x-hidden bg-background text-foreground">
+		<div className="min-h-screen overflow-x-clip bg-background text-foreground">
 			<header className="sticky top-0 z-50 h-16 border-b border-border bg-card/95 backdrop-blur-md">
 				<div className="mx-auto flex h-full w-full max-w-[1600px] items-center px-5 sm:px-8 lg:px-10">
-					<ShiroBrand priority />
+				<LandingBrand />
 
 					<nav
 						aria-label="Landing page navigation"
@@ -71,20 +99,27 @@ export default function HomePage() {
 						>
 							Why Shiro
 						</a>
+
+						<a
+							href="#demo"
+							className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+						>
+							Demo
+						</a>
 					</nav>
 
 					<div className="ml-auto flex items-center gap-2 sm:gap-3">
 						<Show when="signed-in">
 							<Link
 								href="/dashboard"
-								className="hidden text-sm font-medium text-muted-foreground pr-4 transition-colors hover:text-foreground sm:inline-flex"
+								className="hidden pr-4 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
 							>
 								Dashboard
 							</Link>
 
 							<Link
 								href="/projects"
-								className="hidden text-sm font-medium text-muted-foreground pr-2 transition-colors hover:text-foreground md:inline-flex"
+								className="hidden pr-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground md:inline-flex"
 							>
 								Projects
 							</Link>
@@ -151,7 +186,8 @@ export default function HomePage() {
 											type="button"
 											className="group inline-flex h-12 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-bold text-primary-foreground transition-colors hover:bg-brand-hover"
 										>
-											Start with Shiro
+											Start using Shiro
+
 											<ArrowRight
 												aria-hidden="true"
 												className="size-4 transition-transform group-hover:translate-x-0.5"
@@ -175,6 +211,7 @@ export default function HomePage() {
 										className="group inline-flex h-12 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-bold text-primary-foreground transition-colors hover:bg-brand-hover"
 									>
 										Open dashboard
+
 										<ArrowRight
 											aria-hidden="true"
 											className="size-4 transition-transform group-hover:translate-x-0.5"
@@ -223,7 +260,7 @@ export default function HomePage() {
 					</div>
 				</section>
 
-				<section id="product" className="border-y border-border bg-card">
+				<section className="border-y border-border bg-card">
 					<div className="mx-auto grid w-full max-w-[1500px] gap-px bg-border sm:grid-cols-2 lg:grid-cols-4">
 						{[
 							{
@@ -257,23 +294,22 @@ export default function HomePage() {
 				</section>
 
 				<section
-					id="why-shiro"
-					className="mx-auto w-full max-w-[1500px] px-5 py-24 sm:px-8 lg:px-10"
+					id="product"
+					className="scroll-mt-24 mx-auto w-full max-w-[1500px] px-5 py-24 sm:px-8 lg:px-10"
 				>
 					<div className="grid gap-12 lg:grid-cols-[0.72fr_1.28fr] lg:gap-20">
 						<div className="max-w-md">
 							<p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">
-								One workspace
+								Product
 							</p>
 
 							<h2 className="mt-4 text-4xl font-bold tracking-tight text-foreground">
-								Enough structure to stay aligned. Not enough to get in the way.
+								Everything around the work, in one place.
 							</h2>
 
 							<p className="mt-5 text-base leading-7 text-muted-foreground">
-								Shiro keeps the workflow visual and the controls close to the
-								work. No separate maze of pages just to understand what your
-								team is doing.
+								Shiro connects the board, deadlines, collaborators, and
+								progress instead of making each one feel like a separate tool.
 							</p>
 
 							<div className="mt-8 flex flex-wrap gap-2">
@@ -349,6 +385,7 @@ export default function HomePage() {
 																<div
 																	className={`h-2 rounded-full bg-muted ${stage.width}`}
 																/>
+
 																<div className="mt-2 h-2 w-2/5 rounded-full bg-primary/20" />
 															</div>
 
@@ -427,6 +464,7 @@ export default function HomePage() {
 															<span className="text-muted-foreground">
 																{label}
 															</span>
+
 															<span className="font-semibold text-foreground">
 																{value}
 															</span>
@@ -448,6 +486,109 @@ export default function HomePage() {
 					</div>
 				</section>
 
+				<section
+					id="why-shiro"
+					className="scroll-mt-24 border-y border-border bg-card"
+				>
+					<div className="mx-auto w-full max-w-[1500px] px-5 py-24 sm:px-8 lg:px-10">
+						<div className="grid gap-12 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
+							<div className="max-w-lg">
+								<p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">
+									Why Shiro
+								</p>
+
+								<h2 className="mt-4 text-4xl font-bold tracking-tight text-foreground">
+									Less time managing the tool. More time moving the work.
+								</h2>
+
+								<p className="mt-5 text-base leading-7 text-muted-foreground">
+									Shiro is built around a small number of connected ideas:
+									clear ownership, visible progress, focused collaboration, and
+									predictable workflows.
+								</p>
+							</div>
+
+							<div className="grid gap-4 sm:grid-cols-3">
+								{whyShiroPoints.map((point) => {
+									const Icon = point.icon;
+
+									return (
+										<article
+											key={point.title}
+											className="rounded-2xl border border-border bg-background p-6"
+										>
+											<div className="flex size-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+												<Icon aria-hidden="true" className="size-5" />
+											</div>
+
+											<h3 className="mt-5 text-lg font-bold text-foreground">
+												{point.title}
+											</h3>
+
+											<p className="mt-2 text-sm leading-6 text-muted-foreground">
+												{point.description}
+											</p>
+										</article>
+									);
+								})}
+							</div>
+						</div>
+					</div>
+				</section>
+
+				<section
+					id="demo"
+					className="scroll-mt-24 px-5 py-24 sm:px-8 lg:px-10"
+				>
+					<div className="mx-auto w-full max-w-[1280px]">
+						<div className="mx-auto max-w-2xl text-center">
+							<div className="flex items-center justify-center gap-2 text-primary">
+								<PlayCircle aria-hidden="true" className="size-5" />
+
+								<p className="text-sm font-bold uppercase tracking-[0.16em]">
+									Demo
+								</p>
+							</div>
+
+							<h2 className="mt-4 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+								See Shiro in action.
+							</h2>
+
+							<p className="mt-5 text-base leading-7 text-muted-foreground">
+								Walk through the core Shiro workflow—from organizing projects
+								and Kanban tasks to collaboration, calendar planning, and
+								analytics.
+							</p>
+						</div>
+
+						<div className="relative mt-12">
+							<div
+								aria-hidden="true"
+								className="absolute -inset-5 -z-10 rounded-[2rem] bg-primary/[0.06]"
+							/>
+
+							<div className="overflow-hidden rounded-2xl border border-border bg-card shadow-xl">
+								<div className="aspect-video bg-muted">
+									<iframe
+										src={DEMO_VIDEO_URL}
+										title="Shiro product demonstration"
+										className="h-full w-full"
+										allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+										referrerPolicy="strict-origin-when-cross-origin"
+										allowFullScreen
+									/>
+								</div>
+							</div>
+
+							<div className="pointer-events-none absolute -bottom-4 -right-3 hidden rotate-2 rounded-xl border border-border bg-card px-4 py-2 shadow-lg md:block">
+								<p className="text-xs font-bold text-foreground">
+									From project → shipped
+								</p>
+							</div>
+						</div>
+					</div>
+				</section>
+
 				<section className="px-5 pb-24 sm:px-8 lg:px-10">
 					<div className="relative mx-auto max-w-[1420px] overflow-hidden rounded-3xl bg-primary px-6 py-12 text-primary-foreground sm:px-10 lg:px-14 lg:py-14">
 						<div
@@ -464,6 +605,7 @@ export default function HomePage() {
 							<div className="max-w-2xl">
 								<div className="flex items-center gap-2 text-primary-foreground/75">
 									<CircleCheckBig aria-hidden="true" className="size-5" />
+
 									<span className="text-sm font-semibold">
 										Ready when the work is
 									</span>
@@ -486,6 +628,7 @@ export default function HomePage() {
 										className="group inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-white px-5 text-sm font-bold text-blue-700 transition-transform hover:scale-[1.02]"
 									>
 										Get started
+
 										<ArrowRight
 											aria-hidden="true"
 											className="size-4 transition-transform group-hover:translate-x-0.5"
@@ -500,6 +643,7 @@ export default function HomePage() {
 									className="group inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-white px-5 text-sm font-bold text-blue-700 transition-transform hover:scale-[1.02]"
 								>
 									Open Shiro
+
 									<ArrowRight
 										aria-hidden="true"
 										className="size-4 transition-transform group-hover:translate-x-0.5"
