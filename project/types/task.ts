@@ -21,7 +21,10 @@ export type EditableTask = TaskFormData & {
 	id: string;
 };
 
-export type ArchivedTaskSummary = Pick<Task, "id" | "title" | "priority"> & {
+export type ArchivedTaskSummary = Pick<
+	Task,
+	"id" | "title" | "priority" | "completedAt"
+> & {
 	stageName: string;
 	archivedAt: Date;
 };

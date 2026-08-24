@@ -246,7 +246,7 @@ export function TaskFilterControls({
 	return (
 		<div className="space-y-2">
 			<div className="flex flex-col gap-3 xl:flex-row xl:items-center">
-				<div className="relative min-w-0 flex-1 xl:max-w-sm">
+				<div className="relative w-full min-w-0 xl:flex-1">
 					<Search
 						aria-hidden="true"
 						size={16}
@@ -283,7 +283,7 @@ export function TaskFilterControls({
 					)}
 				</div>
 
-				<div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+				<div className="flex flex-wrap items-center gap-2">
 					<Popover>
 						<PopoverTrigger asChild>
 							<Button
@@ -546,18 +546,21 @@ export function TaskFilterControls({
 							Clear filters
 						</Button>
 					)}
-					{canManageTasks && (
-						<Button
-							type="button"
-							variant={selectionMode ? "secondary" : "outline"}
-							size="sm"
-							onClick={onToggleSelectionMode}
-							className="bg-card ml-auto"
-						>
-							<SquareCheckBig aria-hidden="true" className="size-4" />
 
-							{selectionMode ? "Done selecting" : "Select tasks"}
-						</Button>
+					{canManageTasks && (
+						<div className="shrink-0 xl:ml-auto">
+							<Button
+								type="button"
+								variant={selectionMode ? "secondary" : "outline"}
+								size="sm"
+								onClick={onToggleSelectionMode}
+								className="bg-card"
+							>
+								<SquareCheckBig aria-hidden="true" className="size-4" />
+
+								{selectionMode ? "Done selecting" : "Select tasks"}
+							</Button>
+						</div>
 					)}
 				</div>
 			</div>

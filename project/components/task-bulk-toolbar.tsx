@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
+import { toast } from "sonner";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -29,7 +30,6 @@ import {
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/ui/popover";
-
 import {
 	bulkAddTaskLabel,
 	bulkArchiveTasks,
@@ -38,7 +38,6 @@ import {
 	bulkMoveTasks,
 	bulkRemoveTaskLabel,
 	bulkSetTaskPriority,
-	bulkSetTasksCompletedState,
 	bulkUnassignTasks,
 } from "@/lib/actions/task-bulk";
 import { getColorHex } from "@/lib/constants/colors";
@@ -63,6 +62,7 @@ type TaskBulkToolbarProps = {
 	onArchiveDialogOpenChange: (open: boolean) => void;
 	deleteDialogOpen: boolean;
 	onDeleteDialogOpenChange: (open: boolean) => void;
+	onSetCompletion: (completed: boolean) => void;
 };
 
 type PriorityValue = NonNullable<Task["priority"]> | null;
@@ -106,6 +106,7 @@ export function TaskBulkToolbar({
 	onArchiveDialogOpenChange,
 	deleteDialogOpen,
 	onDeleteDialogOpenChange,
+	onSetCompletion,
 }: TaskBulkToolbarProps) {
 	const router = useRouter();
 
@@ -125,23 +126,35 @@ export function TaskBulkToolbar({
 		}
 
 		startTransition(async () => {
-			const result = await action();
+			try {
+				const result = await action();
 
-			if (!result.success) {
-				console.error(
-					result.message ?? "The selected tasks could not be updated.",
+				if (!result.success) {
+					toast.error(
+						result.message ?? "The selected tasks could not be updated.",
+					);
+
+					router.refresh();
+
+					return;
+				}
+
+				router.refresh();
+			} catch (error) {
+				console.error("Failed to update selected tasks:", error);
+
+				toast.error(
+					"The selected tasks could not be updated. The page was refreshed.",
 				);
 
-				return;
+				router.refresh();
 			}
-
-			router.refresh();
 		});
 	}
 
 	return (
-		<div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-card px-3 py-2">
-			<div className="flex flex-wrap items-center gap-2">
+		<div className="flex flex-col gap-2 rounded-lg border border-border bg-card px-3 py-2 xl:flex-row xl:items-center xl:justify-between">
+			<div className="flex min-w-0 flex-wrap items-center gap-2">
 				<span className="text-sm font-semibold text-foreground">
 					{isPending ? "Updating..." : `${selectedTaskIds.length} selected`}
 				</span>
@@ -171,7 +184,7 @@ export function TaskBulkToolbar({
 				</Button>
 			</div>
 
-			<div className="flex flex-wrap items-center gap-2">
+			<div className="flex shrink-0 flex-nowrap items-center gap-2">
 				<Popover>
 					<PopoverTrigger asChild>
 						<Button
@@ -179,9 +192,11 @@ export function TaskBulkToolbar({
 							variant="outline"
 							size="sm"
 							disabled={!hasSelection || isPending}
+							aria-label="Completion"
+							title="Completion"
 						>
 							<CircleCheckBig aria-hidden="true" className="size-4" />
-							Completion
+							<span className="hidden 2xl:inline">Completion</span>
 						</Button>
 					</PopoverTrigger>
 
@@ -193,11 +208,7 @@ export function TaskBulkToolbar({
 						<button
 							type="button"
 							disabled={isPending}
-							onClick={() =>
-								runMutation(() =>
-									bulkSetTasksCompletedState(projectId, selectedTaskIds, true),
-								)
-							}
+							onClick={() => onSetCompletion(true)}
 							className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors hover:bg-muted disabled:opacity-50"
 						>
 							<CircleCheckBig aria-hidden="true" className="size-4" />
@@ -207,11 +218,7 @@ export function TaskBulkToolbar({
 						<button
 							type="button"
 							disabled={isPending}
-							onClick={() =>
-								runMutation(() =>
-									bulkSetTasksCompletedState(projectId, selectedTaskIds, false),
-								)
-							}
+							onClick={() => onSetCompletion(false)}
 							className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors hover:bg-muted disabled:opacity-50"
 						>
 							<RotateCcw aria-hidden="true" className="size-4" />
@@ -226,9 +233,11 @@ export function TaskBulkToolbar({
 							variant="outline"
 							size="sm"
 							disabled={!hasSelection || isPending}
+							aria-label="Move"
+							title="Move"
 						>
 							<MoveRight aria-hidden="true" className="size-4" />
-							Move
+							<span className="hidden 2xl:inline">Move</span>
 						</Button>
 					</PopoverTrigger>
 
@@ -262,9 +271,11 @@ export function TaskBulkToolbar({
 							variant="outline"
 							size="sm"
 							disabled={!hasSelection || isPending}
+							aria-label="Priority"
+							title="Priority"
 						>
 							<Flag aria-hidden="true" className="size-4" />
-							Priority
+							<span className="hidden 2xl:inline">Priority</span>
 						</Button>
 					</PopoverTrigger>
 
@@ -302,9 +313,11 @@ export function TaskBulkToolbar({
 							variant="outline"
 							size="sm"
 							disabled={!hasSelection || isPending}
+							aria-label="Assignee"
+							title="Assignee"
 						>
 							<UserPlus aria-hidden="true" className="size-4" />
-							Assignee
+							<span className="hidden 2xl:inline">Assignee</span>
 						</Button>
 					</PopoverTrigger>
 
@@ -369,9 +382,11 @@ export function TaskBulkToolbar({
 							variant="outline"
 							size="sm"
 							disabled={!hasSelection || isPending}
+							aria-label="Label"
+							title="Label"
 						>
 							<Tag aria-hidden="true" className="size-4" />
-							Label
+							<span className="hidden 2xl:inline">Label</span>
 						</Button>
 					</PopoverTrigger>
 
@@ -457,9 +472,11 @@ export function TaskBulkToolbar({
 							variant="outline"
 							size="sm"
 							disabled={!hasSelection || isPending}
+							aria-label="Archive"
+							title="Archive"
 						>
 							<Archive aria-hidden="true" className="size-4" />
-							Archive
+							<span className="hidden 2xl:inline">Archive</span>
 						</Button>
 					</AlertDialogTrigger>
 
@@ -504,10 +521,12 @@ export function TaskBulkToolbar({
 							variant="outline"
 							size="sm"
 							disabled={!hasSelection || isPending}
+							aria-label="Delete selected tasks"
+							title="Delete"
 							className="text-destructive hover:bg-destructive/10 hover:text-destructive"
 						>
 							<Trash2 aria-hidden="true" className="size-4" />
-							Delete
+							<span className="hidden 2xl:inline">Delete</span>
 						</Button>
 					</AlertDialogTrigger>
 

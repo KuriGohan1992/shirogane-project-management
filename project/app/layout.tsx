@@ -7,6 +7,7 @@ import type React from "react";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
+import { Toaster } from "sonner";
 
 const manrope = Manrope({
 	subsets: ["latin"],
@@ -33,6 +34,8 @@ export default function RootLayout({
 				<ClerkProvider>
 					<ThemeProvider>
 						{children}
+
+						<Toaster position="bottom-center" richColors />
 
 						<Analytics />
 					</ThemeProvider>

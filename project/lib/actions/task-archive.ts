@@ -6,9 +6,12 @@ import { redirect } from "next/navigation";
 import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import {
 	archiveTaskForUser,
+	deleteAllArchivedTasksForUser,
 	deleteArchivedTaskForUser,
+	restoreAllArchivedTasksForUser,
 	restoreArchivedTaskForUser,
 } from "@/lib/db/task-archive";
+import { projectIdSchema } from "@/lib/validations/project";
 import { taskIdSchema } from "@/lib/validations/task";
 
 export async function archiveTask(
@@ -89,4 +92,62 @@ export async function deleteArchivedTask(
 
 	revalidatePath(`/projects/${projectId}`, "layout");
 	revalidatePath("/projects");
+}
+
+export async function restoreAllArchivedTasks(
+	projectId: string,
+	_formData: FormData,
+): Promise<void> {
+	const projectIdResult = projectIdSchema.safeParse(projectId);
+
+	if (!projectIdResult.success) {
+		throw new Error("The selected project is invalid.");
+	}
+
+	const user = await getCurrentDatabaseUser();
+
+	const restoredCount = await restoreAllArchivedTasksForUser(
+		projectIdResult.data,
+		user.id,
+	);
+
+	if (restoredCount === undefined) {
+		throw new Error(
+			"The project could not be found or you do not have permission to restore its tasks.",
+		);
+	}
+
+	revalidatePath(`/projects/${projectIdResult.data}`, "layout");
+	revalidatePath("/projects");
+	revalidatePath("/dashboard");
+	revalidatePath("/calendar");
+}
+
+export async function deleteAllArchivedTasks(
+	projectId: string,
+	_formData: FormData,
+): Promise<void> {
+	const projectIdResult = projectIdSchema.safeParse(projectId);
+
+	if (!projectIdResult.success) {
+		throw new Error("The selected project is invalid.");
+	}
+
+	const user = await getCurrentDatabaseUser();
+
+	const deletedCount = await deleteAllArchivedTasksForUser(
+		projectIdResult.data,
+		user.id,
+	);
+
+	if (deletedCount === undefined) {
+		throw new Error(
+			"The project could not be found or you do not have permission to delete its archived tasks.",
+		);
+	}
+
+	revalidatePath(`/projects/${projectIdResult.data}`, "layout");
+	revalidatePath("/projects");
+	revalidatePath("/dashboard");
+	revalidatePath("/calendar");
 }

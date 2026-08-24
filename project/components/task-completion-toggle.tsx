@@ -3,7 +3,7 @@
 import { Circle, CircleCheckBig } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useOptimistic, useState, useTransition } from "react";
-
+import { toast } from "sonner";
 import { setTaskCompletedState } from "@/lib/actions/tasks";
 import { cn } from "@/lib/utils";
 
@@ -64,16 +64,29 @@ export function TaskCompletionToggle({
 		startTransition(async () => {
 			setOptimisticCompleted(nextCompleted);
 
-			const result = await setTaskCompletedState(taskId, nextCompleted);
+			try {
+				const result = await setTaskCompletedState(taskId, nextCompleted);
 
-			if (!result.success) {
-				console.error(result.message ?? "The task could not be updated.");
+				if (!result.success) {
+					toast.error(
+						"Your access or the task may have changed. The page was refreshed.",
+					);
+
+					router.refresh();
+
+					return;
+				}
+
+				setConfirmedCompleted(nextCompleted);
+
 				router.refresh();
-				return;
-			}
+			} catch (error) {
+				console.error("Failed to update task completion:", error);
 
-			setConfirmedCompleted(nextCompleted);
-			router.refresh();
+				toast.error("The task could not be updated. The page was refreshed.");
+
+				router.refresh();
+			}
 		});
 	}
 

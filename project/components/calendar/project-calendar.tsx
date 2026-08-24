@@ -542,6 +542,7 @@ export function ProjectCalendar({
 			</section>
 
 			<CalendarProjectSidebar
+				key={selectedProject?.id ?? "closed"}
 				project={selectedProject}
 				onOpenChange={(open) => {
 					if (!open) {

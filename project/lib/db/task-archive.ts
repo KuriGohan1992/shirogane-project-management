@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { db } from "@/lib/db";
@@ -60,6 +60,7 @@ export async function getArchivedTasksForProject(
 			priority: tasks.priority,
 			archivedAt: tasks.archivedAt,
 			stageName: stages.name,
+			completedAt: tasks.completedAt,
 		})
 		.from(tasks)
 		.innerJoin(stages, eq(tasks.stageId, stages.id))
@@ -207,4 +208,189 @@ export async function deleteArchivedTaskForUser(
 	});
 
 	return task.stage.projectId;
+}
+
+export async function restoreAllArchivedTasksForUser(
+	projectId: string,
+	userId: string,
+): Promise<number | undefined> {
+	const accessRole = await getProjectAccess(projectId, userId);
+
+	if (!accessRole || !getProjectPermissions(accessRole).canManageTasks) {
+		return undefined;
+	}
+
+	const projectStages = await db.query.stages.findMany({
+		columns: {
+			id: true,
+			name: true,
+		},
+
+		where: (stage, { eq }) => eq(stage.projectId, projectId),
+	});
+
+	const stageIds = projectStages.map((stage) => stage.id);
+
+	if (stageIds.length === 0) {
+		return 0;
+	}
+
+	const archivedTasks = await db.query.tasks.findMany({
+		columns: {
+			id: true,
+			stageId: true,
+			title: true,
+			archivedAt: true,
+			position: true,
+		},
+
+		where: (task, { and, inArray, isNotNull }) =>
+			and(inArray(task.stageId, stageIds), isNotNull(task.archivedAt)),
+
+		orderBy: (task, { asc }) => [asc(task.archivedAt)],
+	});
+
+	if (archivedTasks.length === 0) {
+		return 0;
+	}
+
+	const affectedStageIds = [
+		...new Set(archivedTasks.map((task) => task.stageId)),
+	];
+
+	const activeTasks = await db.query.tasks.findMany({
+		columns: {
+			stageId: true,
+			position: true,
+		},
+
+		where: (task, { and, inArray, isNull }) =>
+			and(inArray(task.stageId, affectedStageIds), isNull(task.archivedAt)),
+	});
+
+	const nextPositionByStage = new Map<string, number>();
+
+	for (const stageId of affectedStageIds) {
+		const highestPosition = activeTasks
+			.filter((task) => task.stageId === stageId)
+			.reduce((highest, task) => Math.max(highest, task.position), -1000);
+
+		nextPositionByStage.set(stageId, highestPosition + 1000);
+	}
+
+	const restoredAt = new Date();
+
+	const updates = archivedTasks.map((task) => {
+		const position = nextPositionByStage.get(task.stageId) ?? 0;
+
+		nextPositionByStage.set(task.stageId, position + 1000);
+
+		return db
+			.update(tasks)
+			.set({
+				archivedAt: null,
+				position,
+				updatedAt: restoredAt,
+			})
+			.where(and(eq(tasks.id, task.id), isNotNull(tasks.archivedAt)));
+	});
+
+	const [firstUpdate, ...remainingUpdates] = updates;
+
+	if (firstUpdate) {
+		await db.batch([firstUpdate, ...remainingUpdates]);
+	}
+
+	const stageNameById = new Map(
+		projectStages.map((stage) => [stage.id, stage.name]),
+	);
+
+	await Promise.all(
+		archivedTasks.map((task) =>
+			recordTaskActivity({
+				projectId,
+				taskId: task.id,
+				actorId: userId,
+				action: "task_restored",
+				taskTitle: task.title,
+				metadata: {
+					stageName: stageNameById.get(task.stageId),
+				},
+			}),
+		),
+	);
+
+	return archivedTasks.length;
+}
+
+export async function deleteAllArchivedTasksForUser(
+	projectId: string,
+	userId: string,
+): Promise<number | undefined> {
+	const accessRole = await getProjectAccess(projectId, userId);
+
+	if (!accessRole || !getProjectPermissions(accessRole).canManageTasks) {
+		return undefined;
+	}
+
+	const projectStages = await db.query.stages.findMany({
+		columns: {
+			id: true,
+			name: true,
+		},
+
+		where: (stage, { eq }) => eq(stage.projectId, projectId),
+	});
+
+	const stageIds = projectStages.map((stage) => stage.id);
+
+	if (stageIds.length === 0) {
+		return 0;
+	}
+
+	const archivedTasks = await db.query.tasks.findMany({
+		columns: {
+			id: true,
+			stageId: true,
+			title: true,
+		},
+
+		where: (task, { and, inArray, isNotNull }) =>
+			and(inArray(task.stageId, stageIds), isNotNull(task.archivedAt)),
+	});
+
+	if (archivedTasks.length === 0) {
+		return 0;
+	}
+
+	await db.delete(tasks).where(
+		and(
+			inArray(
+				tasks.id,
+				archivedTasks.map((task) => task.id),
+			),
+			isNotNull(tasks.archivedAt),
+		),
+	);
+
+	const stageNameById = new Map(
+		projectStages.map((stage) => [stage.id, stage.name]),
+	);
+
+	await Promise.all(
+		archivedTasks.map((task) =>
+			recordTaskActivity({
+				projectId,
+				taskId: null,
+				actorId: userId,
+				action: "task_deleted",
+				taskTitle: task.title,
+				metadata: {
+					stageName: stageNameById.get(task.stageId),
+				},
+			}),
+		),
+	);
+
+	return archivedTasks.length;
 }

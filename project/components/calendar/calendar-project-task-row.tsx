@@ -1,5 +1,5 @@
+import { CircleCheckBig } from "lucide-react";
 import Link from "next/link";
-
 import { TaskPriorityBadge } from "@/components/task-priority-badge";
 import { formatDateKey } from "@/lib/calendar-dates";
 import { getTaskHref } from "@/lib/task-route";
@@ -27,6 +27,13 @@ export function CalendarProjectTaskRow({
 			)}
 		>
 			<div className="flex min-w-0 items-center gap-2">
+				{task.completedAt && (
+					<CircleCheckBig
+						aria-hidden="true"
+						className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400"
+					/>
+				)}
+
 				<p
 					className={cn(
 						"min-w-0 flex-1 truncate text-sm font-semibold text-foreground",

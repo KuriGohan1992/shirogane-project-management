@@ -63,6 +63,7 @@ export async function ProjectBoardContent({
 						<ProjectActivityButton activities={projectActivities} />
 
 						<ArchivedTasksButton
+							projectId={project.id}
 							tasks={archivedTasks}
 							canManage={permissions.canManageTasks}
 						/>

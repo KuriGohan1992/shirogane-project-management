@@ -36,7 +36,7 @@ export function CalendarProjectSidebar({
 	project,
 	onOpenChange,
 }: CalendarProjectSidebarProps) {
-	const [taskFilter, setTaskFilter] = useState<CalendarTaskFilter>("open");
+	const [taskFilter, setTaskFilter] = useState<CalendarTaskFilter>("all");
 
 	const visibleTasks =
 		project?.myTasks.filter((task) => {
@@ -193,7 +193,7 @@ export function CalendarProjectSidebar({
 									<SelectTrigger
 										size="sm"
 										aria-label="Filter your calendar tasks"
-										className="ml-auto w-28 bg-background"
+										className="ml-auto w-32 bg-background"
 									>
 										<SelectValue />
 									</SelectTrigger>
@@ -208,11 +208,9 @@ export function CalendarProjectSidebar({
 
 							{visibleTasks.length === 0 ? (
 								<div className="mt-3 rounded-lg border border-dashed border-border px-4 py-9 text-center">
-									<div className="mt-3 rounded-lg border border-dashed border-border px-4 py-9 text-center">
-										<p className="text-sm font-medium text-foreground">
-											{emptyTaskMessage}
-										</p>
-									</div>
+									<p className="text-sm font-medium text-foreground">
+										{emptyTaskMessage}
+									</p>
 								</div>
 							) : (
 								<div className="scrollbar-thin mt-3 space-y-2.5 overflow-y-auto pr-1">

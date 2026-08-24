@@ -181,7 +181,7 @@ export function TaskCard({
 			)}
 		>
 			{!selectionMode && (permissions.canManageTasks || task.completedAt) && (
-				<div className="absolute left-2.5 top-2.5 z-20">
+				<div className="absolute left-2.5 top-3.5 z-20">
 					<TaskCompletionToggle
 						taskId={task.id}
 						completed={task.completedAt !== null}
@@ -222,7 +222,7 @@ export function TaskCard({
 							"line-clamp-2 break-words pr-8 text-sm font-semibold leading-5 text-foreground",
 							!selectionMode &&
 								(permissions.canManageTasks || task.completedAt) &&
-								"pl-7",
+								"pl-5",
 							task.completedAt &&
 								"text-muted-foreground line-through decoration-muted-foreground/60",
 						)}

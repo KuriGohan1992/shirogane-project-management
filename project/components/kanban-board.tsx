@@ -13,7 +13,7 @@ import {
 	useState,
 	useTransition,
 } from "react";
-
+import { toast } from "sonner";
 import {
 	BoardStoreProvider,
 	useBoardStore,
@@ -23,6 +23,7 @@ import { StageColumn } from "@/components/stage-column";
 import { TaskBulkToolbar } from "@/components/task-bulk-toolbar";
 import { TaskFilterControls } from "@/components/task-filter-controls";
 import { reorderStage } from "@/lib/actions/stages";
+import { bulkSetTasksCompletedState } from "@/lib/actions/task-bulk";
 import { moveTaskOnBoard } from "@/lib/actions/tasks";
 import type { ProjectPermissions } from "@/lib/auth/project-permissions";
 import { moveTaskInBoard, reorderStageInBoard } from "@/lib/board/board-order";
@@ -196,6 +197,10 @@ function KanbanBoardContent({
 
 	const queueGenerationRef = useRef(0);
 
+	const confirmedBoardStagesRef = useRef<StageWithTasks[]>([]);
+
+	const latestBoardStagesRef = useRef<StageWithTasks[]>([]);
+
 	const stages = useBoardStore((state) => state.stages);
 
 	const syncStages = useBoardStore((state) => state.syncStages);
@@ -210,6 +215,14 @@ function KanbanBoardContent({
 	>(null);
 
 	const [isBoardSavePending, startBoardTransition] = useTransition();
+
+	useEffect(() => {
+		confirmedBoardStagesRef.current = stages;
+
+		if (!isBoardSavePending) {
+			latestBoardStagesRef.current = stages;
+		}
+	}, [stages, isBoardSavePending]);
 
 	const [boardError, setBoardError] = useState<string>();
 
@@ -510,7 +523,10 @@ function KanbanBoardContent({
 	function runOptimisticBoardAction(
 		nextStages: StageWithTasks[],
 		action: () => Promise<BoardMutationResult>,
+		feedbackMode: "inline" | "toast" = "inline",
 	) {
+		latestBoardStagesRef.current = nextStages;
+
 		startBoardTransition(async () => {
 			setBoardError(undefined);
 
@@ -524,26 +540,82 @@ function KanbanBoardContent({
 				}
 
 				if (queuedResult.status === "failed") {
-					setBoardError(
-						queuedResult.result.message ?? "Could not save the board changes.",
-					);
+					latestBoardStagesRef.current = confirmedBoardStagesRef.current;
+
+					setOptimisticStages(confirmedBoardStagesRef.current);
+
+					const message =
+						queuedResult.result.message ?? "Could not save the board changes.";
+
+					if (feedbackMode === "toast") {
+						toast.error(message);
+					} else {
+						setBoardError(message);
+					}
 
 					router.refresh();
 
 					return;
 				}
 
+				confirmedBoardStagesRef.current = nextStages;
+
 				syncStages(nextStages);
 			} catch (error) {
-				console.error("Failed to save board movement:", error);
+				console.error("Failed to save board changes:", error);
 
-				setBoardError(
-					"Could not save the board changes. The board was refreshed.",
-				);
+				latestBoardStagesRef.current = confirmedBoardStagesRef.current;
+
+				setOptimisticStages(confirmedBoardStagesRef.current);
+
+				const message =
+					"Could not save the board changes. The board was refreshed.";
+
+				if (feedbackMode === "toast") {
+					toast.error(message);
+				} else {
+					setBoardError(message);
+				}
 
 				router.refresh();
 			}
 		});
+	}
+
+	function setSelectedTasksCompleted(completed: boolean) {
+		const taskIds = selectedTaskIdsInBoardOrder;
+
+		if (taskIds.length === 0) {
+			return;
+		}
+
+		const selectedTaskIdSet = new Set(taskIds);
+
+		const changedAt = new Date();
+
+		const nextStages = latestBoardStagesRef.current.map((stage) => ({
+			...stage,
+
+			tasks: stage.tasks.map((task) => {
+				if (!selectedTaskIdSet.has(task.id)) {
+					return task;
+				}
+
+				return {
+					...task,
+					completedAt: completed ? changedAt : null,
+					updatedAt: changedAt,
+				};
+			}),
+		}));
+
+		runOptimisticBoardAction(
+			nextStages,
+
+			() => bulkSetTasksCompletedState(projectId, taskIds, completed),
+
+			"toast",
+		);
 	}
 
 	useEffect(() => {
@@ -945,6 +1017,7 @@ function KanbanBoardContent({
 							visibleTaskIds={visibleTaskIds}
 							onSelectVisible={selectVisibleTasks}
 							onClearSelection={clearSelection}
+							onSetCompletion={setSelectedTasksCompleted}
 							archiveDialogOpen={archiveDialogOpen}
 							onArchiveDialogOpenChange={setArchiveDialogOpen}
 							deleteDialogOpen={deleteDialogOpen}
