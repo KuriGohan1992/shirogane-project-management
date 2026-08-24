@@ -233,6 +233,14 @@ function KanbanBoardContent({
 
 	const renderedStages = dragPreviewStages ?? optimisticStages;
 
+	const projectAssigneeCandidates = useMemo(
+		() =>
+			assigneeCandidates.filter(
+				(candidate) => !candidate.needsProjectMembership,
+			),
+		[assigneeCandidates],
+	);
+
 	const filters = useMemo(
 		() =>
 			parseTaskFilters(
@@ -240,10 +248,10 @@ function KanbanBoardContent({
 
 				labelCandidates.map((label) => label.id),
 
-				assigneeCandidates.map((assignee) => assignee.id),
+				projectAssigneeCandidates.map((assignee) => assignee.id),
 			),
 
-		[searchParams, labelCandidates, assigneeCandidates],
+		[searchParams, labelCandidates, projectAssigneeCandidates],
 	);
 
 	const taskFiltersActive = hasTaskFilters(filters);
@@ -675,7 +683,7 @@ function KanbanBoardContent({
 					<TaskFilterControls
 						filters={filters}
 						labelCandidates={labelCandidates}
-						assigneeCandidates={assigneeCandidates}
+						assigneeCandidates={projectAssigneeCandidates}
 						canManageTasks={permissions.canManageTasks}
 						selectionMode={selectionMode}
 						onToggleSelectionMode={toggleSelectionMode}

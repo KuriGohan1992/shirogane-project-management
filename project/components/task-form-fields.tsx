@@ -334,6 +334,7 @@ export function TaskFormFields({
 							assignedUsers={assignees.assignedUsers}
 							canManage={assignees.canManage}
 							fieldStyle
+							modal
 						/>
 					)}
 				</div>

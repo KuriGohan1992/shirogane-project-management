@@ -8,8 +8,8 @@ import { recordTaskActivity } from "@/lib/db/activity";
 import { getProjectAccess } from "@/lib/db/project-access";
 import type { TaskComment } from "@/lib/db/schema";
 import { taskComments } from "@/lib/db/schema";
-import { getTaskAssigneeUserIds } from "./notifications";
 import { createNotificationsSafely } from "../services/notifications";
+import { getTaskAssigneeUserIds } from "./notifications";
 
 type CommentMutationResult = {
 	comment: TaskComment;
@@ -27,20 +27,20 @@ async function getCommentableTask(taskId: string, userId: string) {
 			and(eq(task.id, taskId), isNull(task.archivedAt)),
 
 		with: {
-stage: {
-	columns: {
-		projectId: true,
-	},
+			stage: {
+				columns: {
+					projectId: true,
+				},
 
-	with: {
-		project: {
-			columns: {
-				id: true,
-				name: true,
+				with: {
+					project: {
+						columns: {
+							id: true,
+							name: true,
+						},
+					},
+				},
 			},
-		},
-	},
-},
 		},
 	});
 
@@ -116,41 +116,29 @@ export async function createCommentForTask(
 		taskTitle: task.title,
 	});
 
-	const assigneeUserIds =
-	await getTaskAssigneeUserIds(
-		task.id,
-	);
+	const assigneeUserIds = await getTaskAssigneeUserIds(task.id);
 
-await createNotificationsSafely(
-	assigneeUserIds.map(
-		(recipientId) => ({
-			type:
-				"task_comment_added" as const,
+	await createNotificationsSafely(
+		assigneeUserIds.map((recipientId) => ({
+			type: "task_comment_added" as const,
 
 			recipientId,
 
-			actorId:
-				userId,
+			actorId: userId,
 
-			projectId:
-				task.stage.projectId,
+			projectId: task.stage.projectId,
 
-			taskId:
-				task.id,
+			taskId: task.id,
 
-			dedupeKey:
-				`task-comment:${comment.id}`,
+			dedupeKey: `task-comment:${comment.id}`,
 
 			metadata: {
-				projectName:
-					task.stage.project.name,
+				projectName: task.stage.project.name,
 
-				taskTitle:
-					task.title,
+				taskTitle: task.title,
 			},
-		}),
-	),
-);
+		})),
+	);
 
 	return {
 		comment,

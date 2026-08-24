@@ -1,8 +1,10 @@
 import "server-only";
 
+import { buildAssignmentCandidates } from "@/lib/assignment-candidates";
+import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { db } from "@/lib/db";
 import { getProjectAccess } from "@/lib/db/project-access";
-import type { AssignmentCandidate } from "@/types/member";
+import { getTeamCollaboratorProfilesForUser } from "@/lib/db/team";
 
 export async function getTaskDetailsForUser(
 	projectId: string,
@@ -75,10 +77,6 @@ export async function getTaskDetailsForUser(
 							},
 
 							members: {
-								columns: {
-									role: true,
-								},
-
 								orderBy: (member, { asc }) => [asc(member.joinedAt)],
 
 								with: {
@@ -160,19 +158,26 @@ export async function getTaskDetailsForUser(
 
 	const { stage, ...task } = result;
 
-	const assigneeCandidates: AssignmentCandidate[] = [
-		{
-			...stage.project.owner,
-			isOwner: true,
-		},
+	const permissions = getProjectPermissions(accessRole);
 
-		...stage.project.members
-			.filter((member) => member.role === "member")
-			.map((member) => ({
-				...member.user,
-				isOwner: false,
-			})),
-	];
+	/*
+	 * Only project owners can pull somebody from their broader
+	 * Team into this project.
+	 *
+	 * Regular project Members can still assign the owner and
+	 * existing project Members, so there's no reason to perform
+	 * the additional Team lookup for them.
+	 */
+	const teamCollaborators = permissions.canManageMembers
+		? await getTeamCollaboratorProfilesForUser(userId)
+		: [];
+
+	const assigneeCandidates = buildAssignmentCandidates({
+		owner: stage.project.owner,
+		members: stage.project.members,
+		teamCollaborators,
+		canManageMembers: permissions.canManageMembers,
+	});
 
 	return {
 		status: "success",

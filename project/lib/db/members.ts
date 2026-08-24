@@ -31,34 +31,36 @@ function getDisplayName(user: { name: string | null; email: string }) {
 	return user.name ?? user.email;
 }
 
-export async function addProjectMemberByEmail(
+export async function addProjectMemberByUserIdOwnedByUser(
 	projectId: string,
 	ownerId: string,
-	email: string,
+	memberUserId: string,
 ): Promise<AddProjectMemberResult> {
-	const project = await db.query.projects.findFirst({
-		columns: {
-			id: true,
-			name: true,
-		},
+	const [project, targetUser] = await Promise.all([
+		db.query.projects.findFirst({
+			columns: {
+				id: true,
+				name: true,
+			},
 
-		where: (project, { and, eq }) =>
-			and(eq(project.id, projectId), eq(project.ownerId, ownerId)),
-	});
+			where: (project, { and, eq }) =>
+				and(eq(project.id, projectId), eq(project.ownerId, ownerId)),
+		}),
+
+		db.query.users.findFirst({
+			columns: {
+				id: true,
+				name: true,
+				email: true,
+			},
+
+			where: (user, { eq }) => eq(user.id, memberUserId),
+		}),
+	]);
 
 	if (!project) {
 		return "project_not_found";
 	}
-
-	const targetUser = await db.query.users.findFirst({
-		columns: {
-			id: true,
-			name: true,
-			email: true,
-		},
-
-		where: (user) => sql`lower(${user.email}) = ${email}`,
-	});
 
 	if (!targetUser) {
 		return "user_not_found";
@@ -90,6 +92,7 @@ export async function addProjectMemberByEmail(
 		action: "member_added",
 		metadata: {
 			memberName: getDisplayName(targetUser),
+
 			memberRole: "member",
 		},
 	});
@@ -115,6 +118,25 @@ export async function addProjectMemberByEmail(
 	return "added";
 }
 
+export async function addProjectMemberByEmail(
+	projectId: string,
+	ownerId: string,
+	email: string,
+): Promise<AddProjectMemberResult> {
+	const targetUser = await db.query.users.findFirst({
+		columns: {
+			id: true,
+		},
+
+		where: (user) => sql`lower(${user.email}) = ${email}`,
+	});
+
+	if (!targetUser) {
+		return "user_not_found";
+	}
+
+	return addProjectMemberByUserIdOwnedByUser(projectId, ownerId, targetUser.id);
+}
 export async function removeProjectMemberOwnedByUser(
 	projectId: string,
 	memberUserId: string,
@@ -435,27 +457,20 @@ export async function removeCollaboratorFromOwnedProjects(
 		);
 
 	await createNotificationsSafely(
-	removableMemberships.map(
-		(membership) => ({
-			type:
-				"project_member_removed" as const,
+		removableMemberships.map((membership) => ({
+			type: "project_member_removed" as const,
 
-			recipientId:
-				collaboratorUserId,
+			recipientId: collaboratorUserId,
 
-			actorId:
-				ownerId,
+			actorId: ownerId,
 
-			projectId:
-				membership.projectId,
+			projectId: membership.projectId,
 
 			metadata: {
-				projectName:
-					membership.projectName,
+				projectName: membership.projectName,
 			},
-		}),
-	),
-);
+		})),
+	);
 
 	return {
 		status: "removed",

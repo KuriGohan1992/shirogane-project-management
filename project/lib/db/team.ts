@@ -16,15 +16,13 @@ function getDisplayName(user: UserProfileSummary) {
 	return user.name?.trim() || user.email;
 }
 
-export async function getTeamDirectoryForUser(
-	userId: string,
-): Promise<TeamDirectoryData> {
+async function getTeamBaseForUser(userId: string) {
 	const accessibleProjects = await getProjectsForUser(userId);
 
 	if (accessibleProjects.length === 0) {
 		return {
-			collaborators: [],
-			projects: [],
+			accessibleProjects,
+			collaboratorsByUserId: new Map<string, TeamCollaborator>(),
 		};
 	}
 
@@ -71,10 +69,6 @@ export async function getTeamDirectoryForUser(
 		user: UserProfileSummary,
 		project: TeamSharedProject,
 	) {
-		/*
-		 * The Team page is a collaborator directory,
-		 * so don't include the current user.
-		 */
 		if (user.id === userId) {
 			return;
 		}
@@ -100,10 +94,6 @@ export async function getTeamDirectoryForUser(
 	}
 
 	for (const project of accessibleProjects) {
-		/*
-		 * If somebody else owns an accessible project,
-		 * they're one of the current user's collaborators.
-		 */
 		if (project.ownerId !== userId) {
 			addCollaboratorProject(project.owner, {
 				id: project.id,
@@ -118,9 +108,6 @@ export async function getTeamDirectoryForUser(
 			});
 		}
 
-		/*
-		 * Explicit project members/viewers.
-		 */
 		for (const membership of membershipsByProjectId.get(project.id) ?? []) {
 			addCollaboratorProject(membership.user, {
 				id: project.id,
@@ -136,13 +123,41 @@ export async function getTeamDirectoryForUser(
 		}
 	}
 
-	/*
-	 * Fetch every active task assigned to one of the collaborators
-	 * across projects the current user can access.
-	 *
-	 * This stays one query regardless of how many collaborator cards
-	 * are displayed.
-	 */
+	return {
+		accessibleProjects,
+		collaboratorsByUserId,
+	};
+}
+
+export async function getTeamCollaboratorProfilesForUser(
+	userId: string,
+): Promise<UserProfileSummary[]> {
+	const { collaboratorsByUserId } = await getTeamBaseForUser(userId);
+
+	return Array.from(collaboratorsByUserId.values())
+		.map(({ projects: _projects, ...collaborator }) => collaborator)
+		.sort((a, b) =>
+			getDisplayName(a).localeCompare(getDisplayName(b), "en-US", {
+				sensitivity: "base",
+			}),
+		);
+}
+
+export async function getTeamDirectoryForUser(
+	userId: string,
+): Promise<TeamDirectoryData> {
+	const { accessibleProjects, collaboratorsByUserId } =
+		await getTeamBaseForUser(userId);
+
+	if (accessibleProjects.length === 0) {
+		return {
+			collaborators: [],
+			projects: [],
+		};
+	}
+
+	const projectIds = accessibleProjects.map((project) => project.id);
+
 	const collaboratorIds = Array.from(collaboratorsByUserId.keys());
 
 	if (collaboratorIds.length > 0) {
@@ -168,7 +183,9 @@ export async function getTeamDirectoryForUser(
 			.where(
 				and(
 					inArray(taskAssignees.userId, collaboratorIds),
+
 					inArray(stages.projectId, projectIds),
+
 					isNull(tasks.archivedAt),
 				),
 			)
@@ -201,10 +218,6 @@ export async function getTeamDirectoryForUser(
 		.map((collaborator) => ({
 			...collaborator,
 
-			/*
-			 * Keep shared projects sorted by the project's activity.
-			 * We no longer display the timestamp in the UI.
-			 */
 			projects: collaborator.projects.sort(
 				(a, b) => b.lastActivityAt.getTime() - a.lastActivityAt.getTime(),
 			),

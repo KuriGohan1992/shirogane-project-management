@@ -21,6 +21,7 @@ type TaskAssigneePickerProps = {
 	assignedUsers: UserSummary[];
 	canManage: boolean;
 	fieldStyle?: boolean;
+	modal?: boolean;
 };
 
 export function TaskAssigneePicker({
@@ -29,8 +30,17 @@ export function TaskAssigneePicker({
 	assignedUsers,
 	canManage,
 	fieldStyle = false,
+	modal = false,
 }: TaskAssigneePickerProps) {
 	const assignedUserIds = new Set(assignedUsers.map((user) => user.id));
+
+	const projectCandidates = candidates.filter(
+		(candidate) => candidate.source === "project",
+	);
+
+	const teamCandidates = candidates.filter(
+		(candidate) => candidate.source === "team",
+	);
 
 	if (!canManage) {
 		if (assignedUsers.length === 0) {
@@ -39,10 +49,61 @@ export function TaskAssigneePicker({
 			);
 		}
 
-		<TaskAssigneeStack
-			users={assignedUsers}
-			size={fieldStyle ? "large" : "small"}
-		/>;
+		return (
+			<TaskAssigneeStack
+				users={assignedUsers}
+				size={fieldStyle ? "large" : "small"}
+			/>
+		);
+	}
+
+	function renderCandidate(candidate: AssignmentCandidate) {
+		const isAssigned = assignedUserIds.has(candidate.id);
+
+		const action = isAssigned
+			? unassignTask.bind(null, taskId, candidate.id)
+			: assignTask.bind(null, taskId, candidate.id);
+
+		return (
+			<form key={candidate.id} action={action}>
+				<button
+					type="submit"
+					aria-pressed={isAssigned}
+					className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors hover:bg-muted"
+				>
+					<UserAvatar user={candidate} className="size-9 shrink-0" />
+
+					<div className="min-w-0 flex-1">
+						<p className="truncate text-sm font-medium text-foreground">
+							{candidate.name ?? candidate.email}
+						</p>
+
+						{candidate.jobTitle && (
+							<p className="truncate text-xs font-medium text-muted-foreground">
+								{candidate.jobTitle}
+							</p>
+						)}
+
+						<p className="truncate text-xs text-muted-foreground">
+							{candidate.email}
+						</p>
+					</div>
+
+					{candidate.isOwner && (
+						<span className="shrink-0 text-xs text-muted-foreground">
+							Owner
+						</span>
+					)}
+
+					{isAssigned && (
+						<Check
+							aria-hidden="true"
+							className="size-4 shrink-0 text-primary"
+						/>
+					)}
+				</button>
+			</form>
+		);
 	}
 
 	return (
@@ -52,7 +113,7 @@ export function TaskAssigneePicker({
 				size={fieldStyle ? "large" : "small"}
 			/>
 
-			<Popover>
+			<Popover modal={modal}>
 				<PopoverTrigger asChild>
 					{assignedUsers.length === 0 ? (
 						<Button
@@ -90,57 +151,45 @@ export function TaskAssigneePicker({
 				>
 					{candidates.length === 0 ? (
 						<p className="px-2 py-4 text-center text-sm text-muted-foreground">
-							No assignable project members.
+							No assignable collaborators.
 						</p>
 					) : (
-						<div className="max-h-72 space-y-1 overflow-y-auto">
-							{candidates.map((candidate) => {
-								const isAssigned = assignedUserIds.has(candidate.id);
+						<div className="max-h-72 overflow-y-auto">
+							{projectCandidates.length > 0 && (
+								<div>
+									<p className="px-2 pb-1 pt-1 text-xs font-semibold text-muted-foreground">
+										Eligible collaborators
+									</p>
 
-								const action = isAssigned
-									? unassignTask.bind(null, taskId, candidate.id)
-									: assignTask.bind(null, taskId, candidate.id);
+									<div className="space-y-1">
+										{projectCandidates.map(renderCandidate)}
+									</div>
+								</div>
+							)}
 
-								return (
-									<form key={candidate.id} action={action}>
-										<button
-											type="submit"
-											aria-pressed={isAssigned}
-											className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors hover:bg-muted"
-										>
-											<div className="flex min-w-0 flex-1 items-center gap-3">
-												<UserAvatar
-													user={candidate}
-													className="size-9 shrink-0"
-												/>
+							{teamCandidates.length > 0 && (
+								<div
+									className={cn(
+										projectCandidates.length > 0 &&
+											"mt-2 border-t border-border pt-2",
+									)}
+								>
+									<div className="px-2 pb-1">
+										<p className="text-xs font-semibold text-muted-foreground">
+											Your team
+										</p>
 
-												<div className="min-w-0 flex-1">
-													<p className="truncate text-sm font-medium text-foreground">
-														{candidate.name ?? candidate.email}
-													</p>
+										<p className="mt-0.5 text-xs text-muted-foreground">
+											Assigning someone here adds them to this project as a
+											Member.
+										</p>
+									</div>
 
-													{candidate.jobTitle && (
-														<p className="truncate text-xs font-medium text-muted-foreground">
-															{candidate.jobTitle}
-														</p>
-													)}
-
-													<p className="truncate text-xs text-muted-foreground">
-														{candidate.email}
-													</p>
-												</div>
-
-												{isAssigned && (
-													<Check
-														aria-hidden="true"
-														className="size-4 shrink-0 text-primary"
-													/>
-												)}
-											</div>
-										</button>
-									</form>
-								);
-							})}
+									<div className="space-y-1">
+										{teamCandidates.map(renderCandidate)}
+									</div>
+								</div>
+							)}
 						</div>
 					)}
 				</PopoverContent>

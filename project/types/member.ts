@@ -1,5 +1,5 @@
 import type { ProjectMember } from "@/lib/db/schema";
-import type { UserProfileSummary, UserSummary } from "@/types/user";
+import type { UserProfileSummary } from "@/types/user";
 
 export type ProjectMemberActionState = {
 	success: boolean;
@@ -10,9 +10,11 @@ export type ProjectMemberActionState = {
 };
 
 export type ProjectMemberWithUser = ProjectMember & {
-	user: UserSummary;
+	user: UserProfileSummary;
 };
 
 export type AssignmentCandidate = UserProfileSummary & {
 	isOwner: boolean;
+	source: "project" | "team";
+	needsProjectMembership: boolean;
 };

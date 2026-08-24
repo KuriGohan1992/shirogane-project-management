@@ -23,7 +23,7 @@ export function ProjectMembersButton({
 }: ProjectMembersButtonProps) {
 	const [isOpen, setIsOpen] = useState(false);
 
-	const memberCount = members.length + 1;
+	const collaboratorCount = members.length + 1;
 
 	return (
 		<>
@@ -36,10 +36,10 @@ export function ProjectMembersButton({
 			>
 				<Users aria-hidden="true" className="size-4" />
 
-				<span>Members</span>
+				<span>Collaborators</span>
 
 				<span className="inline-flex min-w-5 items-center justify-center rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
-					{memberCount}
+					{collaboratorCount}
 				</span>
 			</Button>
 			{isOpen && (

@@ -74,7 +74,7 @@ export async function addProjectMember(
 			case "already_member":
 				return {
 					success: false,
-					message: "That user is already a project member.",
+					message: "That user is already a project collaborator.",
 				};
 
 			case "added":
@@ -88,11 +88,11 @@ export async function addProjectMember(
 				};
 		}
 	} catch (error) {
-		console.error("Failed to add project member:", error);
+		console.error("Failed to add project collaborator:", error);
 
 		return {
 			success: false,
-			message: "Something went wrong while adding the member.",
+			message: "Something went wrong while adding the collaborator.",
 		};
 	}
 }
@@ -107,7 +107,7 @@ export async function removeProjectMember(
 	const userIdResult = userIdSchema.safeParse(memberUserId);
 
 	if (!projectIdResult.success || !userIdResult.success) {
-		throw new Error("The project member could not be found.");
+		throw new Error("The project collaborator could not be found.");
 	}
 
 	const user = await getCurrentDatabaseUser();
@@ -119,7 +119,7 @@ export async function removeProjectMember(
 	);
 
 	if (!affectedProjectId) {
-		throw new Error("The project member could not be removed.");
+		throw new Error("The project collaborator could not be removed.");
 	}
 
 	revalidatePath(`/projects/${affectedProjectId}`);
@@ -143,7 +143,7 @@ export async function updateProjectMemberRole(
 		!userIdResult.success ||
 		!roleResult.success
 	) {
-		throw new Error("The member role could not be updated.");
+		throw new Error("The collaborator role could not be updated.");
 	}
 
 	const user = await getCurrentDatabaseUser();
@@ -156,7 +156,7 @@ export async function updateProjectMemberRole(
 	);
 
 	if (result !== "updated") {
-		throw new Error("The member role could not be updated.");
+		throw new Error("The collaborator role could not be updated.");
 	}
 
 	revalidatePath(`/projects/${projectIdResult.data}`);

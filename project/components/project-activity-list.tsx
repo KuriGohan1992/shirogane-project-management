@@ -21,8 +21,8 @@ export function ProjectActivityList({
 				<p className="mt-3 text-sm font-medium">No activity recorded yet</p>
 
 				<p className="mt-1 max-w-64 text-xs leading-5 text-muted-foreground">
-					Changes to this project, its stages, tasks, members, and labels will
-					appear here.
+					Changes to this project, its stages, tasks, collaborators, and labels
+					will appear here.
 				</p>
 			</div>
 		);
@@ -32,7 +32,9 @@ export function ProjectActivityList({
 		<div className="space-y-5">
 			{activities.map((activity) => {
 				const actorName =
-					activity.actor?.name ?? activity.actor?.email ?? "Former member";
+					activity.actor?.name ??
+					activity.actor?.email ??
+					"Former collaborator";
 
 				return (
 					<div key={activity.id} className="flex gap-3">

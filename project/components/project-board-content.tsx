@@ -5,11 +5,12 @@ import { KanbanBoard } from "@/components/kanban-board";
 import { ProjectActivityButton } from "@/components/project-activity-button";
 import { ProjectHeader } from "@/components/project-header";
 import { ProjectMembersButton } from "@/components/project-members-button";
+import { buildAssignmentCandidates } from "@/lib/assignment-candidates";
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { getProjectActivityForUser } from "@/lib/db/activity";
 import { getProjectForUser } from "@/lib/db/projects";
 import { getArchivedTasksForProject } from "@/lib/db/task-archive";
-import type { AssignmentCandidate } from "@/types/member";
+import { getTeamCollaboratorProfilesForUser } from "@/lib/db/team";
 
 type ProjectBoardContentProps = {
 	projectId: string;
@@ -26,30 +27,28 @@ export async function ProjectBoardContent({
 		notFound();
 	}
 
-	const [archivedTasks, activities] = await Promise.all([
+	const permissions = getProjectPermissions(project.accessRole);
+
+	const [archivedTasks, activities, teamCollaborators] = await Promise.all([
 		getArchivedTasksForProject(projectId, currentUserId),
+
 		getProjectActivityForUser(projectId, currentUserId),
+
+		permissions.canManageMembers
+			? getTeamCollaboratorProfilesForUser(currentUserId)
+			: Promise.resolve([]),
 	]);
 
 	const projectActivities = activities ?? [];
 
 	const lastActivityAt = projectActivities[0]?.createdAt ?? project.updatedAt;
 
-	const permissions = getProjectPermissions(project.accessRole);
-
-	const assigneeCandidates: AssignmentCandidate[] = [
-		{
-			...project.owner,
-			isOwner: true,
-		},
-
-		...project.members
-			.filter((member) => member.role === "member")
-			.map((member) => ({
-				...member.user,
-				isOwner: false,
-			})),
-	];
+	const assigneeCandidates = buildAssignmentCandidates({
+		owner: project.owner,
+		members: project.members,
+		teamCollaborators,
+		canManageMembers: permissions.canManageMembers,
+	});
 
 	return (
 		<div className="space-y-6">

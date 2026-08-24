@@ -62,6 +62,14 @@ export function ProjectActions({
 		!isCompleted,
 	);
 
+	function copyProjectLink() {
+		const url = new URL(`/projects/${project.id}`, window.location.origin);
+
+		void navigator.clipboard.writeText(url.toString());
+
+		setIsMenuOpen(false);
+	}
+
 	if (!canEdit && !canDelete && !canComplete) {
 		return null;
 	}

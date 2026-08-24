@@ -225,6 +225,7 @@ export function TaskDetailsView({
 										candidates={assigneeCandidates}
 										assignedUsers={assignedUsers}
 										canManage={permissions.canAssignTasks}
+										modal
 									/>
 								)}
 							</MetadataItem>

@@ -34,8 +34,10 @@ export async function assignTask(
 		);
 	}
 
-	if (result.status === "assignee_not_project_member") {
-		throw new Error("Only project members can be assigned to this task.");
+	if (result.status === "assignee_not_assignable") {
+		throw new Error(
+			"Only project collaborators or people from your Team can be assigned to this task.",
+		);
 	}
 
 	revalidatePath(`/projects/${result.projectId}`, "layout");

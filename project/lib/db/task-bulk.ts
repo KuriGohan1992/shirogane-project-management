@@ -5,9 +5,10 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { db } from "@/lib/db";
 import { recordTaskActivity } from "@/lib/db/activity";
+import { ensureAssignableProjectUsers } from "@/lib/db/assignees";
 import { getProjectAccess } from "@/lib/db/project-access";
 import { type Task, taskAssignees, taskLabels, tasks } from "@/lib/db/schema";
-import { createNotificationsSafely } from "../services/notifications";
+import { createNotificationsSafely } from "@/lib/services/notifications";
 
 type BulkTaskMutationResult = {
 	projectId: string;
@@ -15,6 +16,18 @@ type BulkTaskMutationResult = {
 };
 
 type BulkPermission = "manage" | "assign";
+
+type AssigneeIdentity = {
+	id: string;
+	name: string | null;
+	email: string;
+};
+
+type ProjectIdentity = {
+	id: string;
+	ownerId: string;
+	name: string;
+};
 
 async function getBulkTaskContext(
 	projectId: string,
@@ -80,15 +93,16 @@ async function getBulkTaskContext(
 	};
 }
 
-async function getAssignableProjectUser(
+async function getExistingProjectAndUser(
 	projectId: string,
 	assigneeUserId: string,
 ) {
 	const [project, assignee] = await Promise.all([
 		db.query.projects.findFirst({
 			columns: {
+				id: true,
 				ownerId: true,
-			name: true,
+				name: true,
 			},
 
 			where: (project, { eq }) => eq(project.id, projectId),
@@ -109,32 +123,10 @@ async function getAssignableProjectUser(
 		return undefined;
 	}
 
-if (project.ownerId === assignee.id) {
 	return {
-		user: assignee,
 		project,
+		user: assignee,
 	};
-}
-
-	const member = await db.query.projectMembers.findFirst({
-		columns: {
-			userId: true,
-		},
-
-		where: (member, { and, eq }) =>
-			and(
-				eq(member.projectId, projectId),
-				eq(member.userId, assignee.id),
-				eq(member.role, "member"),
-			),
-	});
-
-return member
-	? {
-			user: assignee,
-			project,
-		}
-	: undefined;
 }
 
 function getUserDisplayName(user: { name: string | null; email: string }) {
@@ -353,20 +345,29 @@ async function changeTaskAssigneeForUser(
 		return undefined;
 	}
 
-const assignable =
-	await getAssignableProjectUser(
-		projectId,
-		assigneeUserId,
-	);
+	let assignee: AssigneeIdentity | undefined;
 
-if (!assignable) {
-	return undefined;
-}
+	let project: ProjectIdentity | undefined;
 
-const {
-	user: assignee,
-	project,
-} = assignable;
+	if (mode === "assign") {
+		const assignable = await ensureAssignableProjectUsers(
+			projectId,
+			[assigneeUserId],
+			userId,
+		);
+
+		assignee = assignable?.users[0];
+		project = assignable?.project;
+	} else {
+		const existing = await getExistingProjectAndUser(projectId, assigneeUserId);
+
+		assignee = existing?.user;
+		project = existing?.project;
+	}
+
+	if (!assignee || !project) {
+		return undefined;
+	}
 
 	const changedRows =
 		mode === "assign"
@@ -417,107 +418,62 @@ const {
 	);
 
 	if (changedTasks.length === 1) {
-	const [task] =
-		changedTasks;
+		const [task] = changedTasks;
 
-	if (task) {
+		if (task) {
+			await createNotificationsSafely([
+				mode === "assign"
+					? {
+							type: "task_assigned",
+							recipientId: assignee.id,
+							actorId: userId,
+							projectId,
+							taskId: task.id,
+							metadata: {
+								projectName: project.name,
+								taskTitle: task.title,
+							},
+						}
+					: {
+							type: "task_unassigned",
+							recipientId: assignee.id,
+							actorId: userId,
+							projectId,
+							taskId: task.id,
+							metadata: {
+								projectName: project.name,
+								taskTitle: task.title,
+							},
+						},
+			]);
+		}
+	}
+
+	if (changedTasks.length > 1) {
 		await createNotificationsSafely([
 			mode === "assign"
 				? {
-						type:
-							"task_assigned",
-
-						recipientId:
-							assignee.id,
-
-						actorId:
-							userId,
-
+						type: "tasks_assigned",
+						recipientId: assignee.id,
+						actorId: userId,
 						projectId,
-
-						taskId:
-							task.id,
-
 						metadata: {
-							projectName:
-								project.name,
-
-							taskTitle:
-								task.title,
+							projectName: project.name,
+							taskCount: changedTasks.length,
 						},
 					}
 				: {
-						type:
-							"task_unassigned",
-
-						recipientId:
-							assignee.id,
-
-						actorId:
-							userId,
-
+						type: "tasks_unassigned",
+						recipientId: assignee.id,
+						actorId: userId,
 						projectId,
-
-						taskId:
-							task.id,
-
 						metadata: {
-							projectName:
-								project.name,
-
-							taskTitle:
-								task.title,
+							projectName: project.name,
+							taskCount: changedTasks.length,
 						},
 					},
 		]);
 	}
-}
-
-if (changedTasks.length > 1) {
-	await createNotificationsSafely([
-		mode === "assign"
-			? {
-					type:
-						"tasks_assigned",
-
-					recipientId:
-						assignee.id,
-
-					actorId:
-						userId,
-
-					projectId,
-
-					metadata: {
-						projectName:
-							project.name,
-
-						taskCount:
-							changedTasks.length,
-					},
-				}
-			: {
-					type:
-						"tasks_unassigned",
-
-					recipientId:
-						assignee.id,
-
-					actorId:
-						userId,
-
-					projectId,
-
-					metadata: {
-						projectName:
-							project.name,
-
-						taskCount:
-							changedTasks.length,
-					},
-				},
-	]);
-}
 
 	return {
 		projectId,

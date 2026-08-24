@@ -6,24 +6,13 @@ import {
 	getTaskAssignmentsDueBetween,
 } from "@/lib/db/notifications";
 
-export async function GET(
-	request: Request,
-) {
-	const secret =
-		process.env.CRON_SECRET;
+export async function GET(request: Request) {
+	const secret = process.env.CRON_SECRET;
 
-	if (
-		!secret ||
-		request.headers.get(
-			"authorization",
-		) !== `Bearer ${secret}`
-	) {
-		return new NextResponse(
-			"Unauthorized",
-			{
-				status: 401,
-			},
-		);
+	if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
+		return new NextResponse("Unauthorized", {
+			status: 401,
+		});
 	}
 
 	const now = new Date();
@@ -34,74 +23,50 @@ export async function GET(
 	 * the current UTC calendar day as well.
 	 */
 	const start = new Date(
-		Date.UTC(
-			now.getUTCFullYear(),
-			now.getUTCMonth(),
-			now.getUTCDate(),
-		),
+		Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
 	);
 
 	const end = new Date(start);
 
-	end.setUTCDate(
-		end.getUTCDate() + 1,
+	end.setUTCDate(end.getUTCDate() + 1);
+
+	const assignments = await getTaskAssignmentsDueBetween(start, end);
+
+	const inputs: AnyCreateNotificationInput[] = assignments.flatMap(
+		(assignment) => {
+			if (!assignment.dueDate) {
+				return [];
+			}
+
+			return [
+				{
+					type: "task_due_soon",
+
+					recipientId: assignment.recipientId,
+
+					projectId: assignment.projectId,
+
+					taskId: assignment.taskId,
+
+					dedupeKey: `task-due-soon:${assignment.taskId}:${assignment.dueDate.toISOString()}`,
+
+					metadata: {
+						projectName: assignment.projectName,
+
+						taskTitle: assignment.taskTitle,
+
+						dueDate: assignment.dueDate.toISOString(),
+					},
+				},
+			];
+		},
 	);
 
-	const assignments =
-		await getTaskAssignmentsDueBetween(
-			start,
-			end,
-		);
-
-	const inputs: AnyCreateNotificationInput[] =
-		assignments.flatMap(
-			(assignment) => {
-				if (!assignment.dueDate) {
-					return [];
-				}
-
-				return [
-					{
-						type:
-							"task_due_soon",
-
-						recipientId:
-							assignment.recipientId,
-
-						projectId:
-							assignment.projectId,
-
-						taskId:
-							assignment.taskId,
-
-						dedupeKey:
-							`task-due-soon:${assignment.taskId}:${assignment.dueDate.toISOString()}`,
-
-						metadata: {
-							projectName:
-								assignment.projectName,
-
-							taskTitle:
-								assignment.taskTitle,
-
-							dueDate:
-								assignment.dueDate.toISOString(),
-						},
-					},
-				];
-			},
-		);
-
-	const created =
-		await createNotificationRecords(
-			inputs,
-		);
+	const created = await createNotificationRecords(inputs);
 
 	return NextResponse.json({
-		checked:
-			assignments.length,
+		checked: assignments.length,
 
-		created:
-			created.length,
+		created: created.length,
 	});
 }

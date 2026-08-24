@@ -178,14 +178,14 @@ export function ProjectMembersModal({
 
 				setRoleSaveFeedback({
 					type: "success",
-					message: "Member roles updated.",
+					message: "Collaborator roles updated.",
 				});
 
 				onOpenChange(false);
 			} catch {
 				setRoleSaveFeedback({
 					type: "error",
-					message: "Could not save member role changes.",
+					message: "Could not save collaborator role changes.",
 				});
 			}
 		});
@@ -195,16 +195,16 @@ export function ProjectMembersModal({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className="min-w-0 sm:max-w-xl">
 				<DialogHeader>
-					<DialogTitle>Project members</DialogTitle>
+					<DialogTitle>Project collaborators</DialogTitle>
 
 					<DialogDescription>
 						{canManageMembers
-							? "Add existing Shiro users and manage who belongs to this project."
-							: "View the people who belong to this project."}
+							? "Add existing Shiro users and manage their roles in this project."
+							: "View the people collaborating on this project."}
 					</DialogDescription>
 				</DialogHeader>
 
-				{/* Add member */}
+				{/* Add collaborator */}
 				{canManageMembers && (
 					<form
 						ref={addMemberFormRef}
@@ -216,7 +216,7 @@ export function ProjectMembersModal({
 							htmlFor="project-member-email"
 							className="block text-sm font-medium"
 						>
-							Add member by email
+							Add collaborator by email
 						</label>
 
 						<div className="flex min-w-0 items-start gap-2">
@@ -228,7 +228,7 @@ export function ProjectMembersModal({
 									required
 									disabled={pending}
 									autoComplete="email"
-									placeholder="member@example.com"
+									placeholder="collaborator@example.com"
 									onChange={() => clearFieldError("email")}
 									aria-invalid={Boolean(emailErrors)}
 									aria-describedby={emailErrors ? emailErrorId : undefined}
@@ -246,7 +246,7 @@ export function ProjectMembersModal({
 								disabled={pending}
 								className="h-9 shrink-0 px-5"
 							>
-								{pending ? "Adding..." : "Add member"}
+								{pending ? "Adding..." : "Add collaborator"}
 							</Button>
 						</div>
 
@@ -267,14 +267,14 @@ export function ProjectMembersModal({
 					</form>
 				)}
 
-				{/* Current members */}
+				{/* Current collaborators */}
 				<div
 					className={cn(
 						"min-w-0 space-y-3",
 						canManageMembers && "border-t border-border pt-4",
 					)}
 				>
-					<p className="text-sm font-medium">Current members</p>
+					<p className="text-sm font-medium">Current collaborators</p>
 
 					<div className="max-h-64 min-w-0 space-y-2 overflow-y-auto pr-1">
 						{/* Owner */}
@@ -296,7 +296,7 @@ export function ProjectMembersModal({
 							</span>
 						</div>
 
-						{/* Members */}
+						{/* Collaborators */}
 						{members.map((member) => {
 							const removeAction = removeProjectMember.bind(
 								null,
@@ -371,7 +371,7 @@ export function ProjectMembersModal({
 														</AlertDialogTitle>
 
 														<AlertDialogDescription>
-															They will lose their project membership, and their
+															They will lose access to this project, and their
 															task assignments in this project will be removed.
 														</AlertDialogDescription>
 													</AlertDialogHeader>
@@ -381,7 +381,7 @@ export function ProjectMembersModal({
 
 														<form action={removeAction}>
 															<Button type="submit" variant="destructive">
-																Remove member
+																Remove collaborator
 															</Button>
 														</form>
 													</AlertDialogFooter>

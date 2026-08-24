@@ -9,7 +9,7 @@ const stats = [
 		icon: TrendingUp,
 	},
 	{
-		name: "Team Members",
+		name: "Team Collaborators",
 		value: "24",
 		change: "+4.1%",
 		changeType: "positive",

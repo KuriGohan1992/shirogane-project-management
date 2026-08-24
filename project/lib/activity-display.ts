@@ -71,7 +71,7 @@ export function getActivityMessage(activity: ActivityWithActor) {
 		case "member_added":
 			return metadata.memberName
 				? `added ${metadata.memberName} to the project`
-				: "added a project member";
+				: "added a project collaborator";
 
 		case "member_role_updated": {
 			const previousRole = formatRole(metadata.previousMemberRole);
@@ -84,13 +84,13 @@ export function getActivityMessage(activity: ActivityWithActor) {
 
 			return metadata.memberName
 				? `changed ${metadata.memberName}’s project role`
-				: "changed a project member’s role";
+				: "changed a project collaborator’s role";
 		}
 
 		case "member_removed":
 			return metadata.memberName
 				? `removed ${metadata.memberName} from the project`
-				: "removed a project member";
+				: "removed a project collaborator";
 
 		case "label_created":
 			return metadata.labelName

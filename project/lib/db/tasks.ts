@@ -5,17 +5,17 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { db } from "@/lib/db";
 import { recordTaskActivity } from "@/lib/db/activity";
+import { ensureAssignableProjectUsers } from "@/lib/db/assignees";
 import { getProjectAccess } from "@/lib/db/project-access";
 import {
 	type NewTask,
 	projectLabels,
-	projectMembers,
 	type Task,
 	taskAssignees,
 	taskLabels,
 	tasks,
 } from "@/lib/db/schema";
-import { createNotificationsSafely } from "../services/notifications";
+import { createNotificationsSafely } from "@/lib/services/notifications";
 
 type TaskMutationData = Pick<
 	NewTask,
@@ -56,6 +56,7 @@ function getChangedTaskFields(task: Task, data: TaskMutationData) {
 
 	return changedFields;
 }
+
 async function getEditableStage(stageId: string, userId: string) {
 	const stage = await db.query.stages.findFirst({
 		columns: {
@@ -67,12 +68,12 @@ async function getEditableStage(stageId: string, userId: string) {
 		where: (stage, { eq }) => eq(stage.id, stageId),
 
 		with: {
-project: {
-	columns: {
-		ownerId: true,
-		name: true,
-	},
-},
+			project: {
+				columns: {
+					ownerId: true,
+					name: true,
+				},
+			},
 		},
 	});
 
@@ -152,6 +153,9 @@ export async function createTaskInStage(
 		throw new Error("Failed to create task.");
 	}
 
+	/*
+	 * Labels
+	 */
 	const uniqueLabelIds = [...new Set(labelIds)];
 
 	if (uniqueLabelIds.length > 0) {
@@ -185,62 +189,29 @@ export async function createTaskInStage(
 	const uniqueAssigneeIds = [...new Set(assigneeIds)];
 
 	if (uniqueAssigneeIds.length > 0) {
-		const validAssigneeIds = new Set<string>();
-
-		// Project owners are valid assignees even though
-		// they are not stored in projectMembers.
-		if (uniqueAssigneeIds.includes(stage.project.ownerId)) {
-			validAssigneeIds.add(stage.project.ownerId);
-		}
-
-		const memberIds = uniqueAssigneeIds.filter(
-			(userId) => userId !== stage.project.ownerId,
+		const assignable = await ensureAssignableProjectUsers(
+			stage.projectId,
+			uniqueAssigneeIds,
+			userId,
 		);
 
-		if (memberIds.length > 0) {
-			const validMembers = await db
-				.select({
-					userId: projectMembers.userId,
-				})
-				.from(projectMembers)
-				.where(
-					and(
-						eq(projectMembers.projectId, stage.projectId),
-						eq(projectMembers.role, "member"),
-						inArray(projectMembers.userId, memberIds),
-					),
-				);
+		if (assignable && assignable.users.length > 0) {
+			const insertedAssignments = await db
+				.insert(taskAssignees)
+				.values(
+					assignable.users.map((assignee) => ({
+						taskId: task.id,
+						userId: assignee.id,
+					})),
+				)
+				.onConflictDoNothing()
+				.returning({
+					userId: taskAssignees.userId,
+				});
 
-			for (const member of validMembers) {
-				validAssigneeIds.add(member.userId);
-			}
-		}
-
-		if (validAssigneeIds.size > 0) {
-			const insertedAssignments =
-	await db
-		.insert(taskAssignees)
-		.values(
-			[...validAssigneeIds].map(
-				(userId) => ({
-					taskId:
-						task.id,
-
-					userId,
-				}),
-			),
-		)
-		.onConflictDoNothing()
-		.returning({
-			userId:
-				taskAssignees.userId,
-		});
-
-insertedAssigneeIds =
-	insertedAssignments.map(
-		(assignment) =>
-			assignment.userId,
-	);
+			insertedAssigneeIds = insertedAssignments.map(
+				(assignment) => assignment.userId,
+			);
 		}
 	}
 
@@ -256,32 +227,18 @@ insertedAssigneeIds =
 	});
 
 	await createNotificationsSafely(
-	insertedAssigneeIds.map(
-		(recipientId) => ({
-			type:
-				"task_assigned" as const,
-
+		insertedAssigneeIds.map((recipientId) => ({
+			type: "task_assigned" as const,
 			recipientId,
-
-			actorId:
-				userId,
-
-			projectId:
-				stage.projectId,
-
-			taskId:
-				task.id,
-
+			actorId: userId,
+			projectId: stage.projectId,
+			taskId: task.id,
 			metadata: {
-				projectName:
-					stage.project.name,
-
-				taskTitle:
-					task.title,
+				projectName: stage.project.name,
+				taskTitle: task.title,
 			},
-		}),
-	),
-);
+		})),
+	);
 
 	return {
 		task,
@@ -397,7 +354,9 @@ export async function moveTaskForUser(
 
 	const sourceStageId = existingTask.stageId;
 
-	// Reorder inside the same Stage.
+	/*
+	 * Reorder inside the same Stage.
+	 */
 	if (sourceStageId === targetStage.id) {
 		const stageTasks = await db.query.tasks.findMany({
 			where: (task, { and, eq, isNull }) =>
@@ -456,7 +415,9 @@ export async function moveTaskForUser(
 		return targetStage.projectId;
 	}
 
-	// Move between different Stages.
+	/*
+	 * Move between different Stages.
+	 */
 	const [sourceTasks, targetTasks] = await Promise.all([
 		db.query.tasks.findMany({
 			where: (task, { and, eq, isNull }) =>

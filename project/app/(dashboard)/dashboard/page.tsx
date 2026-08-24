@@ -136,7 +136,9 @@ function DashboardActivityList({
 		<div className="divide-y divide-border">
 			{activities.map((activity) => {
 				const actorName =
-					activity.actor?.name ?? activity.actor?.email ?? "Former member";
+					activity.actor?.name ??
+					activity.actor?.email ??
+					"Former collaborator";
 
 				return (
 					<div key={activity.id} className="flex gap-3 px-4 py-3">
@@ -205,7 +207,8 @@ export default async function DashboardPage() {
 					<h2 className="mt-4 text-xl font-bold">Create your first project</h2>
 
 					<p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-						Projects organize your stages, tasks, members, labels, and activity.
+						Projects organize your stages, tasks, collaborators, labels, and
+						activity.
 					</p>
 
 					<div className="mt-5">
