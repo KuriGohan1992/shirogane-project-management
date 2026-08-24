@@ -31,11 +31,14 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body className={`${manrope.variable} font-sans antialiased`}>
-			<ClerkProvider
-	appearance={{
-		cssLayerName: "clerk",
-	}}
->
+				<ClerkProvider
+					appearance={{
+						cssLayerName: "clerk",
+						options: {
+							unsafe_disableDevelopmentModeWarnings: true,
+						},
+					}}
+				>
 					<ThemeProvider>
 						{children}
 

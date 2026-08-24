@@ -24,7 +24,7 @@ export const shiroAuthAppearance = {
 		formFieldInput:
 			"border-input bg-background text-foreground shadow-none focus:border-primary",
 		formButtonPrimary:
-			"bg-primary text-primary-foreground shadow-none hover:bg-brand-hover",
+			"bg-primary text-primary-foreground shadow-none hover:bg-brand-hover [&_svg]:hidden",
 		footer: "border-t border-border bg-muted/30",
 		footerActionText: "text-muted-foreground",
 		footerActionLink: "font-semibold text-primary hover:text-primary",
