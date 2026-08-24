@@ -44,39 +44,39 @@ export function TeamMemberCard({
 	const removeAction = removeCollaboratorFromTeam.bind(null, collaborator.id);
 
 	return (
-		<div className="group relative min-h-44 w-full rounded-xl border border-border bg-card transition-colors hover:border-foreground/25">
+		<div className="group relative min-h-44 w-full overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-foreground/25">
 			<button
 				type="button"
 				onClick={() => onSelect(collaborator)}
 				aria-label={`View shared projects with ${displayName}`}
-				className="flex min-h-44 w-full flex-col rounded-xl px-5 py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-foreground/20"
+				className="flex min-h-44 w-full flex-col text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-foreground/20"
 			>
 				<div
 					className={cn(
-						"flex min-h-[3.75rem] min-w-0 items-start gap-3",
-						canRemove && "pr-9",
+						"flex min-h-20 w-full min-w-0 items-start gap-3 bg-primary px-5 py-4 text-primary-foreground",
+						canRemove && "pr-14",
 					)}
 				>
 					<UserAvatar user={collaborator} className="size-11 shrink-0" />
 
 					<div className="min-w-0">
-						<h2 className="truncate font-semibold leading-tight text-foreground">
+						<h2 className="truncate font-semibold leading-tight text-primary-foreground">
 							{displayName}
 						</h2>
 
 						{collaborator.jobTitle && (
-							<p className="truncate text-sm font-medium leading-tight text-muted-foreground">
+							<p className="truncate text-sm font-medium leading-tight text-primary-foreground/80">
 								{collaborator.jobTitle}
 							</p>
 						)}
 
-						<p className="mt-1 truncate text-xs text-muted-foreground">
+						<p className="mt-1 truncate text-xs text-primary-foreground/70">
 							{collaborator.email}
 						</p>
 					</div>
 				</div>
 
-				<div className="mt-3 w-full border-t border-border pt-3">
+				<div className="w-full flex-1 px-5 pb-4 pt-3">
 					<div className="flex items-center gap-2">
 						<p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
 							Shared projects
@@ -127,7 +127,7 @@ export function TeamMemberCard({
 							type="button"
 							aria-label={`Remove ${displayName} from your projects`}
 							title="Remove collaborator"
-							className="group/remove absolute right-4 top-4 z-10 inline-flex size-7 items-center justify-center text-muted-foreground transition-colors hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+							className="group/remove absolute right-4 top-4 z-10 inline-flex size-7 items-center justify-center text-primary-foreground/70 transition-colors hover:text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-foreground/50"
 						>
 							<X
 								aria-hidden="true"
