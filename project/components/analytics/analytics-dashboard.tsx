@@ -235,19 +235,19 @@ function Contributors({ data }: { data: AnalyticsData }) {
 				);
 
 				return (
-<div
-	key={contributor.user.id}
-	className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 border-b border-border py-2.5 pl-2 pr-4 last:border-b-0"
->
-	<div className="flex items-center gap-2">
-		<span className="w-5 text-center text-xs font-medium tabular-nums text-muted-foreground">
-			{index + 1}
-		</span>
+					<div
+						key={contributor.user.id}
+						className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 border-b border-border py-2.5 pl-2 pr-4 last:border-b-0"
+					>
+						<div className="flex items-center gap-2">
+							<span className="w-5 text-center text-xs font-medium tabular-nums text-muted-foreground">
+								{index + 1}
+							</span>
 
-		<UserAvatar user={contributor.user} className="size-8 shrink-0" />
-	</div>
+							<UserAvatar user={contributor.user} className="size-8 shrink-0" />
+						</div>
 
-	<div className="min-w-0">
+						<div className="min-w-0">
 							<div className="flex min-w-0 items-start justify-between gap-4">
 								<div className="min-w-0 flex-1">
 									<p className="truncate text-sm font-semibold leading-tight text-foreground">

@@ -8,12 +8,7 @@ const PRIORITY_ROWS = [
 	"priority-5",
 ];
 
-const PROJECT_ROWS = [
-	"project-1",
-	"project-2",
-	"project-3",
-	"project-4",
-];
+const PROJECT_ROWS = ["project-1", "project-2", "project-3", "project-4"];
 
 const COLLABORATOR_ROWS = [
 	"collaborator-1",
@@ -23,16 +18,10 @@ const COLLABORATOR_ROWS = [
 	"collaborator-5",
 ];
 
-function PanelHeaderSkeleton({
-	width = "w-36",
-}: {
-	width?: string;
-}) {
+function PanelHeaderSkeleton({ width = "w-36" }: { width?: string }) {
 	return (
 		<div className="shrink-0 border-b border-primary bg-primary px-5 py-3">
-			<Skeleton
-				className={`h-6 ${width} bg-primary-foreground/25`}
-			/>
+			<Skeleton className={`h-6 ${width} bg-primary-foreground/25`} />
 		</div>
 	);
 }
@@ -80,14 +69,9 @@ function CompletionTrendSkeleton() {
 
 				<div className="relative min-h-0 flex-1">
 					<div className="absolute inset-0 flex flex-col justify-between">
-						{["line-1", "line-2", "line-3", "line-4"].map(
-							(id) => (
-								<div
-									key={id}
-									className="border-t border-dashed border-border"
-								/>
-							),
-						)}
+						{["line-1", "line-2", "line-3", "line-4"].map((id) => (
+							<div key={id} className="border-t border-dashed border-border" />
+						))}
 					</div>
 
 					<div className="absolute inset-x-8 bottom-3 flex items-end gap-2">
@@ -123,10 +107,7 @@ function TaskHealthSkeleton() {
 
 				<div className="space-y-3">
 					{["health-1", "health-2", "health-3"].map((id) => (
-						<div
-							key={id}
-							className="flex items-center gap-2.5"
-						>
+						<div key={id} className="flex items-center gap-2.5">
 							<Skeleton className="size-2.5 shrink-0 rounded-full" />
 							<Skeleton className="h-3 flex-1" />
 							<Skeleton className="h-3 w-7 shrink-0" />
@@ -149,13 +130,7 @@ function PrioritySkeleton() {
 						<div className="mb-1.5 flex items-center justify-between gap-4">
 							<div className="flex items-center gap-2">
 								<Skeleton className="size-2.5 rounded-full" />
-								<Skeleton
-									className={
-										index === 4
-											? "h-3 w-16"
-											: "h-3 w-12"
-									}
-								/>
+								<Skeleton className={index === 4 ? "h-3 w-16" : "h-3 w-12"} />
 							</div>
 
 							<Skeleton className="h-3 w-14" />
@@ -202,11 +177,7 @@ function ProjectProgressSkeleton() {
 
 							<div className="min-w-0 flex-1">
 								<Skeleton
-									className={`h-4 ${
-										index % 2 === 0
-											? "w-44"
-											: "w-36"
-									}`}
+									className={`h-4 ${index % 2 === 0 ? "w-44" : "w-36"}`}
 								/>
 
 								<Skeleton className="mt-2 h-3 w-32" />
@@ -253,11 +224,7 @@ function CollaboratorSkeleton() {
 							<div className="flex items-start justify-between gap-4">
 								<div className="min-w-0 flex-1">
 									<Skeleton
-										className={`h-4 ${
-											index % 2 === 0
-												? "w-28"
-												: "w-24"
-										}`}
+										className={`h-4 ${index % 2 === 0 ? "w-28" : "w-24"}`}
 									/>
 
 									<Skeleton className="mt-1.5 h-3 w-24" />
