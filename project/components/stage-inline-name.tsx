@@ -15,6 +15,7 @@ type StageInlineNameProps = {
 	};
 	canManage: boolean;
 	disabled: boolean;
+	onPrimary: boolean;
 };
 
 type StageRenameFormProps = {
@@ -119,6 +120,7 @@ export function StageInlineName({
 	stage,
 	canManage,
 	disabled,
+	onPrimary = false,
 }: StageInlineNameProps) {
 	const [isEditing, setIsEditing] = useState(false);
 
@@ -126,7 +128,10 @@ export function StageInlineName({
 		return (
 			<h3
 				title={stage.name}
-				className="min-w-0 truncate font-semibold text-foreground"
+				className={cn(
+	"min-w-0 truncate font-semibold",
+	onPrimary ? "text-primary-foreground" : "text-foreground",
+)}
 			>
 				{stage.name}
 			</h3>
@@ -151,7 +156,12 @@ export function StageInlineName({
 			disabled={disabled}
 			title={`Rename ${stage.name}`}
 			onClick={() => setIsEditing(true)}
-			className="min-w-0 truncate rounded-md px-1 py-0.5 text-left font-semibold text-foreground transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-50"
+			className={cn(
+	"min-w-0 truncate rounded-md px-1 py-0.5 text-left font-semibold transition-colors disabled:pointer-events-none disabled:opacity-50",
+	onPrimary
+		? "text-primary-foreground hover:bg-primary-foreground/10"
+		: "text-foreground hover:bg-accent",
+)}
 		>
 			{stage.name}
 		</button>

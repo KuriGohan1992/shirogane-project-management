@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { deleteStage } from "@/lib/actions/stages";
+import { cn } from "@/lib/utils";
 
 type StageActionsProps = {
 	projectId: string;
@@ -23,12 +24,14 @@ type StageActionsProps = {
 		name: string;
 	};
 	isBoardSavePending: boolean;
+	onPrimary: boolean;
 };
 
 export function StageActions({
 	projectId,
 	stage,
 	isBoardSavePending,
+	onPrimary,
 }: StageActionsProps) {
 	const deleteAction = deleteStage.bind(null, projectId, stage.id);
 
@@ -45,7 +48,11 @@ export function StageActions({
 						size="icon-sm"
 						disabled={isBoardSavePending}
 						aria-label={`Delete ${stage.name}`}
-						className="text-muted-foreground hover:text-destructive"
+						className={cn(
+	onPrimary
+		? "text-primary-foreground/75 hover:bg-primary-foreground/10 hover:text-primary-foreground"
+		: "text-muted-foreground hover:text-destructive",
+)}
 					>
 						<Trash2 aria-hidden="true" className="size-5" />
 					</Button>
