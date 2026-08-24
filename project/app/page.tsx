@@ -14,13 +14,12 @@ import {
 import Link from "next/link";
 
 import { LandingBoardArt } from "@/components/landing/landing-board-art";
+import { LandingBrand } from "@/components/landing/landing-brand";
 import { ShiroBrand } from "@/components/shiro-brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
-import { LandingBrand } from "@/components/landing/landing-brand";
 
-const DEMO_VIDEO_URL =
-	"https://www.youtube-nocookie.com/embed/YOUR_VIDEO_ID";
+const DEMO_VIDEO_URL = "https://www.youtube-nocookie.com/embed/YOUR_VIDEO_ID";
 
 const features = [
 	{
@@ -80,7 +79,7 @@ export default function HomePage() {
 		<div className="min-h-screen overflow-x-clip bg-background text-foreground">
 			<header className="sticky top-0 z-50 h-16 border-b border-border bg-card/95 backdrop-blur-md">
 				<div className="mx-auto flex h-full w-full max-w-[1600px] items-center px-5 sm:px-8 lg:px-10">
-				<LandingBrand />
+					<LandingBrand />
 
 					<nav
 						aria-label="Landing page navigation"
@@ -187,7 +186,6 @@ export default function HomePage() {
 											className="group inline-flex h-12 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-bold text-primary-foreground transition-colors hover:bg-brand-hover"
 										>
 											Start using Shiro
-
 											<ArrowRight
 												aria-hidden="true"
 												className="size-4 transition-transform group-hover:translate-x-0.5"
@@ -211,7 +209,6 @@ export default function HomePage() {
 										className="group inline-flex h-12 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-bold text-primary-foreground transition-colors hover:bg-brand-hover"
 									>
 										Open dashboard
-
 										<ArrowRight
 											aria-hidden="true"
 											className="size-4 transition-transform group-hover:translate-x-0.5"
@@ -308,8 +305,8 @@ export default function HomePage() {
 							</h2>
 
 							<p className="mt-5 text-base leading-7 text-muted-foreground">
-								Shiro connects the board, deadlines, collaborators, and
-								progress instead of making each one feel like a separate tool.
+								Shiro connects the board, deadlines, collaborators, and progress
+								instead of making each one feel like a separate tool.
 							</p>
 
 							<div className="mt-8 flex flex-wrap gap-2">
@@ -502,8 +499,8 @@ export default function HomePage() {
 								</h2>
 
 								<p className="mt-5 text-base leading-7 text-muted-foreground">
-									Shiro is built around a small number of connected ideas:
-									clear ownership, visible progress, focused collaboration, and
+									Shiro is built around a small number of connected ideas: clear
+									ownership, visible progress, focused collaboration, and
 									predictable workflows.
 								</p>
 							</div>
@@ -536,10 +533,7 @@ export default function HomePage() {
 					</div>
 				</section>
 
-				<section
-					id="demo"
-					className="scroll-mt-24 px-5 py-24 sm:px-8 lg:px-10"
-				>
+				<section id="demo" className="scroll-mt-24 px-5 py-24 sm:px-8 lg:px-10">
 					<div className="mx-auto w-full max-w-[1280px]">
 						<div className="mx-auto max-w-2xl text-center">
 							<div className="flex items-center justify-center gap-2 text-primary">
@@ -628,7 +622,6 @@ export default function HomePage() {
 										className="group inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-white px-5 text-sm font-bold text-blue-700 transition-transform hover:scale-[1.02]"
 									>
 										Get started
-
 										<ArrowRight
 											aria-hidden="true"
 											className="size-4 transition-transform group-hover:translate-x-0.5"
@@ -643,7 +636,6 @@ export default function HomePage() {
 									className="group inline-flex h-11 shrink-0 items-center gap-2 rounded-lg bg-white px-5 text-sm font-bold text-blue-700 transition-transform hover:scale-[1.02]"
 								>
 									Open Shiro
-
 									<ArrowRight
 										aria-hidden="true"
 										className="size-4 transition-transform group-hover:translate-x-0.5"
