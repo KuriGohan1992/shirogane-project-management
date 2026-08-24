@@ -212,3 +212,26 @@
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
 	background-color: var(--muted-foreground);
 }
+
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+	transition-property:
+		background-color,
+		border-color,
+		color,
+		fill,
+		stroke;
+	transition-duration: 200ms;
+	transition-timing-function: ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html.theme-transition,
+	html.theme-transition *,
+	html.theme-transition *::before,
+	html.theme-transition *::after {
+		transition-duration: 0ms;
+	}
+}

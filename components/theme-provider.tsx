@@ -5,6 +5,7 @@ import {
 	type ReactNode,
 	useContext,
 	useEffect,
+	useRef,
 	useState,
 } from "react";
 
@@ -23,6 +24,8 @@ const ThemeProviderContext = createContext<ThemeProviderState | undefined>(
 	undefined,
 );
 
+let transitionTimeout: ReturnType<typeof setTimeout> | undefined;
+
 function isTheme(value: string | null): value is Theme {
 	return value === "light" || value === "dark" || value === "system";
 }
@@ -33,31 +36,52 @@ function getSystemTheme() {
 		: "light";
 }
 
-function applyTheme(theme: Theme) {
+function applyTheme(theme: Theme, animate = false) {
 	const root = document.documentElement;
-
 	const resolvedTheme = theme === "system" ? getSystemTheme() : theme;
+
+	if (animate) {
+		root.classList.add("theme-transition");
+
+		if (transitionTimeout) {
+			clearTimeout(transitionTimeout);
+		}
+	}
 
 	root.classList.remove("light", "dark");
 	root.classList.add(resolvedTheme);
+
+	if (animate) {
+		transitionTimeout = setTimeout(() => {
+			root.classList.remove("theme-transition");
+		}, 200);
+	}
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-	const [theme, setTheme] = useState<Theme>("light");
+	const [theme, setThemeState] = useState<Theme>("light");
+	const shouldAnimateRef = useRef(false);
+
+	function setTheme(theme: Theme) {
+		shouldAnimateRef.current = true;
+		setThemeState(theme);
+	}
 
 	useEffect(() => {
 		const savedTheme = localStorage.getItem("theme");
 
 		if (isTheme(savedTheme)) {
-			setTheme(savedTheme);
+			setThemeState(savedTheme);
 			return;
 		}
 
-		setTheme("system");
+		setThemeState("system");
 	}, []);
 
 	useEffect(() => {
-		applyTheme(theme);
+		applyTheme(theme, shouldAnimateRef.current);
+		shouldAnimateRef.current = false;
+
 		localStorage.setItem("theme", theme);
 
 		if (theme !== "system") {
@@ -67,7 +91,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
 		const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
 		function handleSystemThemeChange() {
-			applyTheme("system");
+			applyTheme("system", true);
 		}
 
 		mediaQuery.addEventListener("change", handleSystemThemeChange);
