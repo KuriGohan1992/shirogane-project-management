@@ -35,6 +35,7 @@
 		"react": "^19",
 		"react-day-picker": "^10.0.1",
 		"react-dom": "^19",
+		"recharts": "^3.10.1",
 		"sonner": "^2.0.8",
 		"tailwind-merge": "^2.5.5",
 		"zod": "^4.4.3",
