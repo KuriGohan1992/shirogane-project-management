@@ -79,7 +79,7 @@ export function TaskAssigneePicker({
 							type="button"
 							aria-label="Manage task assignees"
 							className={cn(
-								"inline-flex shrink-0 items-center justify-center rounded-md border border-border bg-card transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+								"inline-flex shrink-0 items-center justify-center rounded-full border border-border bg-card transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
 								fieldStyle ? "size-8" : "size-6",
 							)}
 						>

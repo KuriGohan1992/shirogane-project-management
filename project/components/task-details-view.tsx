@@ -352,9 +352,7 @@ export function TaskDetailsView({
 										className="text-muted-foreground"
 									/>
 
-									<p className="mt-3 text-sm font-semibold">
-										No comments yet
-									</p>
+									<p className="mt-3 text-sm font-semibold">No comments yet</p>
 
 									<p className="mt-1 max-w-56 text-xs leading-5 text-muted-foreground">
 										Start a conversation about this task.

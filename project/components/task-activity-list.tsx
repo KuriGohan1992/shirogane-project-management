@@ -84,16 +84,16 @@ export function TaskActivityList({
 	return (
 		<section>
 			{showHeader && (
-	<div className="mb-4 flex items-center gap-2">
-		<History
-			aria-hidden="true"
-			size={17}
-			className="text-muted-foreground"
-		/>
+				<div className="mb-4 flex items-center gap-2">
+					<History
+						aria-hidden="true"
+						size={17}
+						className="text-muted-foreground"
+					/>
 
-		<h2 className="text-sm font-semibold">Activity</h2>
-	</div>
-)}
+					<h2 className="text-sm font-semibold">Activity</h2>
+				</div>
+			)}
 			{activities.length === 0 ? (
 				<p className="text-sm text-muted-foreground">
 					No activity recorded yet.

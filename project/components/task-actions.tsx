@@ -22,10 +22,10 @@ import {
 import { archiveTask } from "@/lib/actions/task-archive";
 import { deleteTask } from "@/lib/actions/tasks";
 import type { ProjectLabel } from "@/lib/db/schema";
+import { cn } from "@/lib/utils";
 import type { AssignmentCandidate } from "@/types/member";
 import type { EditableTask } from "@/types/task";
 import type { UserSummary } from "@/types/user";
-import { cn } from "@/lib/utils";
 
 type TaskActionsProps = {
 	task: EditableTask;
@@ -71,11 +71,11 @@ export function TaskActions({
 						type="button"
 						aria-label={`Actions for ${task.title}`}
 						className={cn(
-	"group/task-actions inline-flex h-7 w-5 shrink-0 items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2",
-	onPrimary
-		? "text-primary-foreground/75 hover:text-primary-foreground focus-visible:ring-primary-foreground/50"
-		: "text-muted-foreground hover:text-foreground focus-visible:ring-ring",
-)}
+							"group/task-actions inline-flex h-7 w-5 shrink-0 items-center justify-center transition-colors focus-visible:outline-none focus-visible:ring-2",
+							onPrimary
+								? "text-primary-foreground/75 hover:text-primary-foreground focus-visible:ring-primary-foreground/50"
+								: "text-muted-foreground hover:text-foreground focus-visible:ring-ring",
+						)}
 					>
 						<MoreVertical
 							aria-hidden="true"
