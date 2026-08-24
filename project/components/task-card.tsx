@@ -13,6 +13,7 @@ import { getTaskHref } from "@/lib/task-route";
 import { cn } from "@/lib/utils";
 import type { AssignmentCandidate } from "@/types/member";
 import type { EditableTask, TaskWithBoardDetails } from "@/types/task";
+import { TaskCompletionToggle } from "./task-completion-toggle";
 
 type TaskCardProps = {
 	task: TaskWithBoardDetails;
@@ -172,12 +173,23 @@ export function TaskCard({
 			ref={sortable.ref}
 			className={cn(
 				"relative overflow-hidden rounded-xl border border-border bg-card pt-4 px-4 pb-2 shadow-sm transition-[border-color,box-shadow,transform] hover:border-foreground/30 hover:shadow-md",
+				task.completedAt && "bg-muted/20",
 				sortable.isDragging && "opacity-50",
 				selected && "border-primary ring-2 ring-primary/15",
 				keyboardFocused &&
 					"outline outline-2 outline-offset-2 outline-foreground/35",
 			)}
 		>
+			{!selectionMode && (permissions.canManageTasks || task.completedAt) && (
+				<div className="absolute left-2.5 top-2.5 z-20">
+					<TaskCompletionToggle
+						taskId={task.id}
+						completed={task.completedAt !== null}
+						canManage={permissions.canManageTasks}
+						compact
+					/>
+				</div>
+			)}
 			<div
 				ref={sortable.handleRef}
 				className={cn(
@@ -206,7 +218,14 @@ export function TaskCard({
 				>
 					<h4
 						title={task.title}
-						className="line-clamp-2 break-words pr-8 text-sm font-semibold leading-5 text-foreground"
+						className={cn(
+							"line-clamp-2 break-words pr-8 text-sm font-semibold leading-5 text-foreground",
+							!selectionMode &&
+								(permissions.canManageTasks || task.completedAt) &&
+								"pl-7",
+							task.completedAt &&
+								"text-muted-foreground line-through decoration-muted-foreground/60",
+						)}
 					>
 						{task.title}
 					</h4>

@@ -41,21 +41,19 @@ export function AppearanceSettings() {
 						onClick={() => setTheme(option.value)}
 						className={cn(
 							"flex h-14 items-center gap-3 rounded-lg border px-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-100",
-selected
-	? "cursor-default border-2 border-foreground/30 bg-muted/50"
-	: "border border-border hover:border-foreground/25 hover:bg-muted/40"
+							selected
+								? "cursor-default border-2 border-foreground/30 bg-muted/50"
+								: "border border-border hover:border-foreground/25 hover:bg-muted/40",
 						)}
 					>
-<Icon
-	aria-hidden="true"
-	className="size-4 shrink-0 text-muted-foreground"
-/>
+						<Icon
+							aria-hidden="true"
+							className="size-4 shrink-0 text-muted-foreground"
+						/>
 
 						<span className="min-w-0 flex-1 text-sm font-medium text-foreground">
 							{option.label}
 						</span>
-
-
 					</button>
 				);
 			})}

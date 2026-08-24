@@ -195,6 +195,7 @@ export async function getAssignedTasksDueBetween(
 			and(
 				eq(taskAssignees.userId, userId),
 				isNull(tasks.archivedAt),
+				isNull(tasks.completedAt),
 				isNull(projects.completedAt),
 				gte(tasks.dueDate, start),
 				lt(tasks.dueDate, end),
@@ -231,6 +232,7 @@ export async function getTaskAssignmentsDueBetween(start: Date, end: Date) {
 		.where(
 			and(
 				isNull(tasks.archivedAt),
+				isNull(tasks.completedAt),
 				isNull(projects.completedAt),
 				gte(tasks.dueDate, start),
 				lt(tasks.dueDate, end),

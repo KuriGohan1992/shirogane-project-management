@@ -3,6 +3,7 @@ import Link from "next/link";
 import { TaskPriorityBadge } from "@/components/task-priority-badge";
 import { formatDateKey } from "@/lib/calendar-dates";
 import { getTaskHref } from "@/lib/task-route";
+import { cn } from "@/lib/utils";
 import type {
 	CalendarProjectSummary,
 	CalendarProjectTask,
@@ -20,10 +21,19 @@ export function CalendarProjectTaskRow({
 	return (
 		<Link
 			href={getTaskHref(project.id, task.id, task.title)}
-			className="block rounded-lg border border-border bg-background px-3 py-3 transition-colors hover:bg-muted"
+			className={cn(
+				"block rounded-lg border border-border bg-background px-3 py-3 transition-colors hover:bg-muted",
+				task.completedAt && "bg-muted/25",
+			)}
 		>
 			<div className="flex min-w-0 items-center gap-2">
-				<p className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">
+				<p
+					className={cn(
+						"min-w-0 flex-1 truncate text-sm font-semibold text-foreground",
+						task.completedAt &&
+							"text-muted-foreground line-through decoration-muted-foreground/60",
+					)}
+				>
 					{task.title}
 				</p>
 

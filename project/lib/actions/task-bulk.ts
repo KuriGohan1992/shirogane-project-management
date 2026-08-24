@@ -12,6 +12,7 @@ import {
 	moveTasksForUser,
 	removeLabelFromTasksForUser,
 	setTaskPriorityForUser,
+	setTasksCompletedForUser,
 	unassignUserFromTasksForUser,
 } from "@/lib/db/task-bulk";
 import { labelIdSchema } from "@/lib/validations/label";
@@ -152,6 +153,68 @@ export async function bulkSetTaskPriority(
 		return {
 			success: false,
 			message: "Something went wrong while updating task priority.",
+		};
+	}
+}
+
+export async function bulkSetTasksCompletedState(
+	projectId: string,
+	taskIds: string[],
+	completed: boolean,
+): Promise<BoardMutationResult> {
+	const projectIdResult = projectIdSchema.safeParse(projectId);
+	const taskIdsResult = taskIdsSchema.safeParse(taskIds);
+	const completedResult = z.boolean().safeParse(completed);
+
+	if (
+		!projectIdResult.success ||
+		!taskIdsResult.success ||
+		!completedResult.success
+	) {
+		return invalidBulkSelection();
+	}
+
+	try {
+		const user = await getCurrentDatabaseUser();
+
+		const result = await setTasksCompletedForUser(
+			projectIdResult.data,
+			taskIdsResult.data,
+			completedResult.data,
+			user.id,
+		);
+
+		if (!result) {
+			return bulkMutationFailed();
+		}
+
+		revalidateProject(result.projectId);
+		revalidatePath("/dashboard");
+		revalidatePath("/calendar");
+		revalidatePath("/team");
+		revalidatePath("/analytics");
+
+		return {
+			success: true,
+			message:
+				result.affectedCount === 0
+					? completedResult.data
+						? "The selected tasks are already complete."
+						: "The selected tasks are already open."
+					: completedResult.data
+						? `${result.affectedCount} ${
+								result.affectedCount === 1 ? "task" : "tasks"
+							} completed.`
+						: `${result.affectedCount} ${
+								result.affectedCount === 1 ? "task" : "tasks"
+							} reopened.`,
+		};
+	} catch (error) {
+		console.error("Failed to update selected task completion:", error);
+
+		return {
+			success: false,
+			message: "Something went wrong while updating task completion.",
 		};
 	}
 }

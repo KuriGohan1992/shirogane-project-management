@@ -1,4 +1,4 @@
-import { ShieldCheck } from "lucide-react";
+import { CircleCheckBig, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import {
@@ -11,6 +11,7 @@ import {
 import { UserAvatar } from "@/components/user-avatar";
 import { getColorHex } from "@/lib/constants/colors";
 import { getTaskHref } from "@/lib/task-route";
+import { cn } from "@/lib/utils";
 import type { TeamCollaborator } from "@/types/team";
 
 type TeamMemberSidebarProps = {
@@ -151,9 +152,22 @@ export function TeamMemberSidebar({
 														key={task.id}
 														href={getTaskHref(project.id, task.id, task.title)}
 														onClick={() => onOpenChange(false)}
-														className="-mx-2 flex min-w-0 items-center gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+														className="-mx-2 flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
 													>
-														<span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground">
+														{task.completedAt && (
+															<CircleCheckBig
+																aria-hidden="true"
+																className="size-4 shrink-0 text-emerald-600 dark:text-emerald-400"
+															/>
+														)}
+
+														<span
+															className={cn(
+																"min-w-0 flex-1 truncate text-sm font-medium text-foreground",
+																task.completedAt &&
+																	"text-muted-foreground line-through decoration-muted-foreground/60",
+															)}
+														>
 															{task.title}
 														</span>
 

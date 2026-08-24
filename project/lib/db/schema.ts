@@ -232,6 +232,11 @@ export const tasks = pgTable(
 			mode: "date",
 		}),
 
+		completedAt: timestamp("completed_at", {
+			withTimezone: true,
+			mode: "date",
+		}),
+
 		archivedAt: timestamp("archived_at", {
 			withTimezone: true,
 			mode: "date",
@@ -243,6 +248,8 @@ export const tasks = pgTable(
 		index("tasks_stage_position_idx").on(table.stageId, table.position),
 
 		index("tasks_due_date_idx").on(table.dueDate),
+
+		index("tasks_completed_at_idx").on(table.completedAt),
 	],
 );
 

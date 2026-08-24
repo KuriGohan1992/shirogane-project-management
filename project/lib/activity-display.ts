@@ -130,6 +130,12 @@ export function getActivityMessage(activity: ActivityWithActor) {
 
 			return `moved ${taskName}`;
 
+		case "task_completed":
+			return `completed ${taskName}`;
+
+		case "task_reopened":
+			return `reopened ${taskName}`;
+
 		case "task_archived":
 			return `archived ${taskName}`;
 

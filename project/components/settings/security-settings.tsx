@@ -14,9 +14,7 @@ export function SecuritySettings({ email }: SecuritySettingsProps) {
 	return (
 		<div className="flex h-full items-center gap-4">
 			<div className="min-w-0 flex-1">
-				<p className="truncate text-sm font-medium text-foreground">
-					{email}
-				</p>
+				<p className="truncate text-sm font-medium text-foreground">{email}</p>
 
 				<p className="mt-0.5 text-xs text-muted-foreground">
 					Email, password, sign-in methods, and account security.

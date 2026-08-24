@@ -2,10 +2,9 @@ import type { ProjectAccessRole } from "@/lib/auth/project-permissions";
 import type { Project, ProjectMember, Task } from "@/lib/db/schema";
 import type { UserProfileSummary } from "@/types/user";
 
-export type TeamAssignedTask = Pick<Task, "id" | "title"> & {
+export type TeamAssignedTask = Pick<Task, "id" | "title" | "completedAt"> & {
 	stageName: string;
 };
-
 export type TeamSharedProject = Pick<
 	Project,
 	"id" | "name" | "color" | "completedAt"

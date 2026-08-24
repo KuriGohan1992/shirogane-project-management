@@ -78,6 +78,13 @@
 			"when": 1787532194036,
 			"tag": "0010_past_harpoon",
 			"breakpoints": true
+		},
+		{
+			"idx": 11,
+			"version": "7",
+			"when": 1787540204292,
+			"tag": "0011_friendly_miss_america",
+			"breakpoints": true
 		}
 	]
 }

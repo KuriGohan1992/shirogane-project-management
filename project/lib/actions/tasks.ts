@@ -8,6 +8,7 @@ import {
 	createTaskInStage,
 	deleteTaskForUser,
 	moveTaskForUser,
+	setTaskCompletedForUser,
 	updateTaskForUser,
 } from "@/lib/db/tasks";
 import { labelIdSchema } from "@/lib/validations/label";
@@ -175,6 +176,58 @@ export async function updateTask(
 		};
 	} catch (error) {
 		console.error("Failed to update task:", error);
+
+		return {
+			success: false,
+			message: "Something went wrong while updating the task.",
+		};
+	}
+}
+
+export async function setTaskCompletedState(
+	taskId: string,
+	completed: boolean,
+): Promise<BoardMutationResult> {
+	const taskIdResult = taskIdSchema.safeParse(taskId);
+	const completedResult = z.boolean().safeParse(completed);
+
+	if (!taskIdResult.success || !completedResult.success) {
+		return {
+			success: false,
+			message: "The selected task is invalid.",
+		};
+	}
+
+	try {
+		const user = await getCurrentDatabaseUser();
+
+		const updated = await setTaskCompletedForUser(
+			taskIdResult.data,
+			user.id,
+			completedResult.data,
+		);
+
+		if (!updated) {
+			return {
+				success: false,
+				message:
+					"The task could not be found or you do not have permission to update it.",
+			};
+		}
+
+		revalidatePath(`/projects/${updated.projectId}`, "layout");
+		revalidatePath("/projects");
+		revalidatePath("/dashboard");
+		revalidatePath("/calendar");
+		revalidatePath("/team");
+		revalidatePath("/analytics");
+
+		return {
+			success: true,
+			message: completedResult.data ? "Task completed." : "Task reopened.",
+		};
+	} catch (error) {
+		console.error("Failed to change task completion state:", error);
 
 		return {
 			success: false,

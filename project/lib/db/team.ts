@@ -176,6 +176,7 @@ export async function getTeamDirectoryForUser(
 				stagePosition: stages.position,
 
 				taskPosition: tasks.position,
+				completedAt: tasks.completedAt,
 			})
 			.from(taskAssignees)
 			.innerJoin(tasks, eq(taskAssignees.taskId, tasks.id))
@@ -209,6 +210,7 @@ export async function getTeamDirectoryForUser(
 			project.tasks.push({
 				id: assignment.taskId,
 				title: assignment.title,
+				completedAt: assignment.completedAt,
 				stageName: assignment.stageName,
 			});
 		}

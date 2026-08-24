@@ -19,6 +19,7 @@ import { SEARCH_LIMITS } from "@/lib/constants/search";
 import type { ProjectLabel } from "@/lib/db/schema";
 import {
 	hasTaskFilters,
+	TASK_COMPLETION_FILTER_OPTIONS,
 	TASK_DUE_FILTER_OPTIONS,
 	TASK_FILTER_PARAMS,
 	TASK_PRIORITY_FILTER_OPTIONS,
@@ -207,6 +208,18 @@ function getDueDateFilterLabel(filters: TaskFilters) {
 	return `${filters.dueDates.length} date filters`;
 }
 
+function getCompletionFilterLabel(filters: TaskFilters) {
+	if (!filters.completion) {
+		return "Completion";
+	}
+
+	return (
+		TASK_COMPLETION_FILTER_OPTIONS.find(
+			(option) => option.value === filters.completion,
+		)?.label ?? "Completion"
+	);
+}
+
 export function TaskFilterControls({
 	filters,
 	labelCandidates,
@@ -227,6 +240,8 @@ export function TaskFilterControls({
 	);
 
 	const dueDateFilterLabel = getDueDateFilterLabel(filters);
+
+	const completionFilterLabel = getCompletionFilterLabel(filters);
 
 	return (
 		<div className="space-y-2">
@@ -462,6 +477,56 @@ export function TaskFilterControls({
 									selected={filters.dueDates.includes(option.value)}
 									onClick={() =>
 										toggleTaskFilterParam(TASK_FILTER_PARAMS.due, option.value)
+									}
+								>
+									<span>{option.label}</span>
+								</FilterOptionButton>
+							))}
+						</PopoverContent>
+					</Popover>
+
+					<Popover>
+						<PopoverTrigger asChild>
+							<Button
+								type="button"
+								variant="outline"
+								size="sm"
+								className={cn(
+									"bg-card",
+									filters.completion && "border-primary/40",
+								)}
+							>
+								<span className="max-w-36 truncate">
+									{completionFilterLabel}
+								</span>
+
+								<ChevronDown
+									aria-hidden="true"
+									size={14}
+									className="text-muted-foreground"
+								/>
+							</Button>
+						</PopoverTrigger>
+
+						<PopoverContent align="start" className="w-48 p-2">
+							<FilterOptionButton
+								selected={filters.completion === null}
+								onClick={() =>
+									updateTaskFilterParam(TASK_FILTER_PARAMS.completion, "")
+								}
+							>
+								<span>All tasks</span>
+							</FilterOptionButton>
+
+							{TASK_COMPLETION_FILTER_OPTIONS.map((option) => (
+								<FilterOptionButton
+									key={option.value}
+									selected={filters.completion === option.value}
+									onClick={() =>
+										updateTaskFilterParam(
+											TASK_FILTER_PARAMS.completion,
+											option.value,
+										)
 									}
 								>
 									<span>{option.label}</span>

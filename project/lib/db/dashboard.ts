@@ -139,6 +139,7 @@ export async function getDashboardForUser(
 						eq(taskAssignees.userId, userId),
 						inArray(stages.projectId, activeProjectIds),
 						isNull(tasks.archivedAt),
+						isNull(tasks.completedAt),
 					),
 				),
 
@@ -152,6 +153,7 @@ export async function getDashboardForUser(
 					and(
 						inArray(stages.projectId, activeProjectIds),
 						isNull(tasks.archivedAt),
+						isNull(tasks.completedAt),
 						eq(tasks.priority, "urgent"),
 					),
 				),
@@ -176,6 +178,7 @@ export async function getDashboardForUser(
 						eq(taskAssignees.userId, userId),
 						inArray(projects.id, activeProjectIds),
 						isNull(tasks.archivedAt),
+						isNull(tasks.completedAt),
 					),
 				)
 				.orderBy(

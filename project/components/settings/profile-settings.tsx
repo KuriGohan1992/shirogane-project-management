@@ -52,25 +52,25 @@ export function ProfileSettings({
 	);
 
 	return (
-        <form action={formAction} className="flex h-full flex-col gap-4" noValidate>
+		<form action={formAction} className="flex h-full flex-col gap-4" noValidate>
 			<div className="flex items-center gap-3">
 				<UserAvatar user={user} className="size-11 shrink-0" />
 
-<div className="min-w-0 flex-1">
-	<p className="truncate text-sm font-semibold leading-tight text-foreground">
-		{user.name?.trim() || user.email}
-	</p>
+				<div className="min-w-0 flex-1">
+					<p className="truncate text-sm font-semibold leading-tight text-foreground">
+						{user.name?.trim() || user.email}
+					</p>
 
-	{user.jobTitle && (
-		<p className="truncate text-sm font-medium leading-tight text-muted-foreground">
-			{user.jobTitle}
-		</p>
-	)}
+					{user.jobTitle && (
+						<p className="truncate text-sm font-medium leading-tight text-muted-foreground">
+							{user.jobTitle}
+						</p>
+					)}
 
-	<p className="mt-1 truncate text-xs text-muted-foreground">
-		{user.email}
-	</p>
-</div>
+					<p className="mt-1 truncate text-xs text-muted-foreground">
+						{user.email}
+					</p>
+				</div>
 
 				<Button
 					type="button"
@@ -198,27 +198,27 @@ export function ProfileSettings({
 				/>
 			</div>
 
-<div className="mt-auto flex min-h-8 items-center justify-between gap-3 pt-3">
-	<div className="min-w-0">
-		{state.message && !hasFieldErrors && (
-			<p
-				aria-live="polite"
-				className={cn(
-					"truncate text-xs",
-					state.success
-						? "text-emerald-600 dark:text-emerald-400"
-						: "text-destructive",
-				)}
-			>
-				{state.message}
-			</p>
-		)}
-	</div>
+			<div className="mt-auto flex min-h-8 items-center justify-between gap-3 pt-3">
+				<div className="min-w-0">
+					{state.message && !hasFieldErrors && (
+						<p
+							aria-live="polite"
+							className={cn(
+								"truncate text-xs",
+								state.success
+									? "text-emerald-600 dark:text-emerald-400"
+									: "text-destructive",
+							)}
+						>
+							{state.message}
+						</p>
+					)}
+				</div>
 
-	<Button type="submit" size="sm" disabled={pending}>
-		{pending ? "Saving..." : "Save"}
-	</Button>
-</div>
+				<Button type="submit" size="sm" disabled={pending}>
+					{pending ? "Saving..." : "Save"}
+				</Button>
+			</div>
 		</form>
 	);
 }

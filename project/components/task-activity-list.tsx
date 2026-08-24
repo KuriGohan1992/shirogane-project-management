@@ -34,6 +34,12 @@ function getActivityMessage(activity: TaskActivityWithActor) {
 
 			return "moved this task";
 
+		case "task_completed":
+			return "completed this task";
+
+		case "task_reopened":
+			return "reopened this task";
+
 		case "task_archived":
 			return "archived this task";
 

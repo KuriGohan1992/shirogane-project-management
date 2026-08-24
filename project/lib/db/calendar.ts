@@ -30,6 +30,7 @@ export async function getCalendarProjectsForUser(
 			dueDate: tasks.dueDate,
 			projectId: stages.projectId,
 			stageName: stages.name,
+			completedAt: tasks.completedAt,
 		})
 		.from(taskAssignees)
 		.innerJoin(tasks, eq(taskAssignees.taskId, tasks.id))
@@ -53,9 +54,9 @@ export async function getCalendarProjectsForUser(
 			title: task.title,
 			priority: task.priority,
 			dueDate: task.dueDate ? toDateKey(task.dueDate) : null,
+			completedAt: task.completedAt?.toISOString() ?? null,
 			stageName: task.stageName,
 		});
-
 		tasksByProjectId.set(task.projectId, projectTasks);
 	}
 

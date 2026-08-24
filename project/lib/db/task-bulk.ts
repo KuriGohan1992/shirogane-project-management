@@ -327,6 +327,68 @@ export async function setTaskPriorityForUser(
 	};
 }
 
+export async function setTasksCompletedForUser(
+	projectId: string,
+	taskIds: string[],
+	completed: boolean,
+	userId: string,
+): Promise<BulkTaskMutationResult | undefined> {
+	const context = await getBulkTaskContext(
+		projectId,
+		taskIds,
+		userId,
+		"manage",
+	);
+
+	if (!context) {
+		return undefined;
+	}
+
+	const changedTasks = context.tasks.filter(
+		(task) => (task.completedAt !== null) !== completed,
+	);
+
+	if (changedTasks.length === 0) {
+		return {
+			projectId,
+			affectedCount: 0,
+		};
+	}
+
+	const changedAt = new Date();
+
+	await db
+		.update(tasks)
+		.set({
+			completedAt: completed ? changedAt : null,
+			updatedAt: changedAt,
+		})
+		.where(
+			and(
+				inArray(
+					tasks.id,
+					changedTasks.map((task) => task.id),
+				),
+				isNull(tasks.archivedAt),
+			),
+		);
+
+	await recordTaskActivities(
+		changedTasks.map((task) => ({
+			projectId,
+			taskId: task.id,
+			actorId: userId,
+			action: completed ? "task_completed" : "task_reopened",
+			taskTitle: task.title,
+		})),
+	);
+
+	return {
+		projectId,
+		affectedCount: changedTasks.length,
+	};
+}
+
 async function changeTaskAssigneeForUser(
 	mode: "assign" | "unassign",
 	projectId: string,

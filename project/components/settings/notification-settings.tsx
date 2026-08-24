@@ -1,11 +1,6 @@
 "use client";
 
-import {
-	useOptimistic,
-	useRef,
-	useState,
-	useTransition,
-} from "react";
+import { useOptimistic, useRef, useState, useTransition } from "react";
 
 import { Switch } from "@/components/ui/switch";
 import { updateNotificationSettings } from "@/lib/actions/settings";
@@ -102,15 +97,13 @@ export function NotificationSettings({
 
 				if (!result.success) {
 					if (version === changeVersionRef.current) {
-						latestPreferencesRef.current =
-							confirmedPreferencesRef.current;
+						latestPreferencesRef.current = confirmedPreferencesRef.current;
 					}
 
 					setFeedback({
 						type: "error",
 						message:
-							result.message ??
-							"Notification preferences could not be saved.",
+							result.message ?? "Notification preferences could not be saved.",
 					});
 
 					return;
@@ -126,14 +119,10 @@ export function NotificationSettings({
 					});
 				}
 			} catch (error) {
-				console.error(
-					"Failed to save notification preferences:",
-					error,
-				);
+				console.error("Failed to save notification preferences:", error);
 
 				if (version === changeVersionRef.current) {
-					latestPreferencesRef.current =
-						confirmedPreferencesRef.current;
+					latestPreferencesRef.current = confirmedPreferencesRef.current;
 				}
 
 				setFeedback({
@@ -173,69 +162,70 @@ export function NotificationSettings({
 		});
 	}
 
-return (
-	<div className="flex h-full flex-col">
-		<div className="grid flex-1 grid-rows-5 divide-y divide-border">
-			<div className="flex min-h-0 items-center justify-between gap-6">
-				<p className="text-sm font-bold text-foreground">
-					Mute all notifications
-				</p>
+	return (
+		<div className="flex h-full flex-col">
+			<div className="grid flex-1 grid-rows-5 divide-y divide-border">
+				<div className="flex min-h-0 items-center justify-between gap-6">
+					<p className="text-sm font-bold text-foreground">
+						Mute all notifications
+					</p>
 
-				<Switch
-					checked={optimisticPreferences.notificationsMuted}
-					aria-label="Mute all notifications"
-					onCheckedChange={setNotificationsMuted}
-				/>
+					<Switch
+						checked={optimisticPreferences.notificationsMuted}
+						aria-label="Mute all notifications"
+						onCheckedChange={setNotificationsMuted}
+					/>
+				</div>
+
+				{CATEGORY_OPTIONS.map((option) => {
+					const enabled = !optimisticPreferences.mutedCategories.includes(
+						option.value,
+					);
+
+					return (
+						<div
+							key={option.value}
+							className="flex min-h-0 items-center justify-between gap-6"
+						>
+							<p
+								className={cn(
+									"text-sm font-medium transition-colors",
+									optimisticPreferences.notificationsMuted
+										? "text-muted-foreground"
+										: "text-foreground",
+								)}
+							>
+								{option.label}
+							</p>
+
+							<Switch
+								checked={enabled}
+								disabled={optimisticPreferences.notificationsMuted}
+								aria-label={`${option.label} notifications`}
+								onCheckedChange={(checked) =>
+									setCategoryEnabled(option.value, checked)
+								}
+							/>
+						</div>
+					);
+				})}
 			</div>
 
-			{CATEGORY_OPTIONS.map((option) => {
-				const enabled =
-					!optimisticPreferences.mutedCategories.includes(option.value);
-
-				return (
-					<div
-						key={option.value}
-						className="flex min-h-0 items-center justify-between gap-6"
+			<div className="flex min-h-8 items-center border-t border-border pt-3">
+				{feedback && (
+					<p
+						aria-live="polite"
+						className={cn(
+							"truncate text-xs",
+							feedback.type === "success"
+								? "text-emerald-600 dark:text-emerald-400"
+								: "text-destructive",
+						)}
 					>
-						<p
-							className={cn(
-								"text-sm font-medium transition-colors",
-								optimisticPreferences.notificationsMuted
-									? "text-muted-foreground"
-									: "text-foreground",
-							)}
-						>
-							{option.label}
-						</p>
-
-						<Switch
-							checked={enabled}
-							disabled={optimisticPreferences.notificationsMuted}
-							aria-label={`${option.label} notifications`}
-							onCheckedChange={(checked) =>
-								setCategoryEnabled(option.value, checked)
-							}
-						/>
-					</div>
-				);
-			})}
+						{feedback.message}
+					</p>
+				)}
+			</div>
 		</div>
-
-		<div className="flex min-h-8 items-center border-t border-border pt-3">
-			{feedback && (
-				<p
-					aria-live="polite"
-					className={cn(
-						"truncate text-xs",
-						feedback.type === "success"
-							? "text-emerald-600 dark:text-emerald-400"
-							: "text-destructive",
-					)}
-				>
-					{feedback.message}
-				</p>
-			)}
-		</div>
-	</div>
-);
+	);
 }

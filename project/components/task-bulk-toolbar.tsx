@@ -1,8 +1,10 @@
 import {
 	Archive,
 	Check,
+	CircleCheckBig,
 	Flag,
 	MoveRight,
+	RotateCcw,
 	Tag,
 	Trash2,
 	UserPlus,
@@ -36,6 +38,7 @@ import {
 	bulkMoveTasks,
 	bulkRemoveTaskLabel,
 	bulkSetTaskPriority,
+	bulkSetTasksCompletedState,
 	bulkUnassignTasks,
 } from "@/lib/actions/task-bulk";
 import { getColorHex } from "@/lib/constants/colors";
@@ -169,6 +172,53 @@ export function TaskBulkToolbar({
 			</div>
 
 			<div className="flex flex-wrap items-center gap-2">
+				<Popover>
+					<PopoverTrigger asChild>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							disabled={!hasSelection || isPending}
+						>
+							<CircleCheckBig aria-hidden="true" className="size-4" />
+							Completion
+						</Button>
+					</PopoverTrigger>
+
+					<PopoverContent align="end" className="w-48 p-2">
+						<p className="px-2 pb-1 pt-1 text-xs font-semibold text-muted-foreground">
+							Set completion
+						</p>
+
+						<button
+							type="button"
+							disabled={isPending}
+							onClick={() =>
+								runMutation(() =>
+									bulkSetTasksCompletedState(projectId, selectedTaskIds, true),
+								)
+							}
+							className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors hover:bg-muted disabled:opacity-50"
+						>
+							<CircleCheckBig aria-hidden="true" className="size-4" />
+							Mark complete
+						</button>
+
+						<button
+							type="button"
+							disabled={isPending}
+							onClick={() =>
+								runMutation(() =>
+									bulkSetTasksCompletedState(projectId, selectedTaskIds, false),
+								)
+							}
+							className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm transition-colors hover:bg-muted disabled:opacity-50"
+						>
+							<RotateCcw aria-hidden="true" className="size-4" />
+							Reopen
+						</button>
+					</PopoverContent>
+				</Popover>
 				<Popover>
 					<PopoverTrigger asChild>
 						<Button

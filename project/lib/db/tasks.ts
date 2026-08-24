@@ -291,6 +291,55 @@ export async function updateTaskForUser(
 	};
 }
 
+export async function setTaskCompletedForUser(
+	taskId: string,
+	userId: string,
+	completed: boolean,
+): Promise<TaskMutationResult | undefined> {
+	const existingTask = await getEditableTask(taskId, userId);
+
+	if (!existingTask) {
+		return undefined;
+	}
+
+	const isCurrentlyCompleted = existingTask.completedAt !== null;
+
+	if (isCurrentlyCompleted === completed) {
+		return {
+			task: existingTask,
+			projectId: existingTask.stage.projectId,
+		};
+	}
+
+	const changedAt = new Date();
+
+	const [task] = await db
+		.update(tasks)
+		.set({
+			completedAt: completed ? changedAt : null,
+			updatedAt: changedAt,
+		})
+		.where(and(eq(tasks.id, taskId), isNull(tasks.archivedAt)))
+		.returning();
+
+	if (!task) {
+		return undefined;
+	}
+
+	await recordTaskActivity({
+		projectId: existingTask.stage.projectId,
+		taskId: task.id,
+		actorId: userId,
+		action: completed ? "task_completed" : "task_reopened",
+		taskTitle: task.title,
+	});
+
+	return {
+		task,
+		projectId: existingTask.stage.projectId,
+	};
+}
+
 export async function deleteTaskForUser(
 	taskId: string,
 	ownerId: string,

@@ -27,9 +27,11 @@ import { createComment } from "@/lib/actions/comments";
 import type { ProjectPermissions } from "@/lib/auth/project-permissions";
 import { COMMENT_FIELD_LIMITS } from "@/lib/constants/form-limits";
 import type { ProjectLabel, Task } from "@/lib/db/schema";
+import { cn } from "@/lib/utils";
 import type { CommentActionState } from "@/types/comment";
 import type { AssignmentCandidate } from "@/types/member";
 import type { EditableTask, TaskWithDetails } from "@/types/task";
+import { TaskCompletionToggle } from "./task-completion-toggle";
 
 type TaskDetailsViewProps = {
 	task: TaskWithDetails;
@@ -135,9 +137,23 @@ export function TaskDetailsView({
 							<span>{stageName}</span>
 						</div>
 
-						<h1 className="break-words text-2xl font-semibold tracking-tight text-foreground">
-							{task.title}
-						</h1>
+						<div className="flex items-start gap-2.5">
+							<TaskCompletionToggle
+								taskId={task.id}
+								completed={task.completedAt !== null}
+								canManage={permissions.canManageTasks}
+							/>
+
+							<h1
+								className={cn(
+									"min-w-0 flex-1 break-words text-2xl font-semibold tracking-tight text-foreground",
+									task.completedAt &&
+										"text-muted-foreground line-through decoration-muted-foreground/60",
+								)}
+							>
+								{task.title}
+							</h1>
+						</div>
 					</div>
 
 					{permissions.canManageTasks ? (

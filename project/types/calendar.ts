@@ -4,6 +4,7 @@ import type { UserSummary } from "@/types/user";
 
 export type CalendarProjectTask = Pick<Task, "id" | "title" | "priority"> & {
 	dueDate: string | null;
+	completedAt: string | null;
 	stageName: string;
 };
 

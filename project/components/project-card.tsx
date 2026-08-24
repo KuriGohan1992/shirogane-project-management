@@ -119,7 +119,7 @@ export function ProjectCard(props: ProjectCardProps) {
 				"group relative flex h-[14rem] overflow-hidden rounded-xl border border-border bg-card",
 
 				!isPreview &&
-					"transition-all hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-md",
+					"transition-all hover:-translate-y-1  hover:border-foreground/25 hover:shadow-md",
 			)}
 			style={
 				{

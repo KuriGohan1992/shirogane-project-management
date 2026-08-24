@@ -10,16 +10,10 @@ const NOTIFICATION_ROWS = [
 
 const APPEARANCE_OPTIONS = ["light", "dark", "system"];
 
-function SettingsHeaderSkeleton({
-	width = "w-28",
-}: {
-	width?: string;
-}) {
+function SettingsHeaderSkeleton({ width = "w-28" }: { width?: string }) {
 	return (
 		<div className="shrink-0 border-b border-primary bg-primary px-5 py-3">
-			<Skeleton
-				className={`h-6 ${width} bg-primary-foreground/25`}
-			/>
+			<Skeleton className={`h-6 ${width} bg-primary-foreground/25`} />
 		</div>
 	);
 }
@@ -83,11 +77,7 @@ function NotificationsSkeleton() {
 							key={id}
 							className="flex min-h-14 items-center justify-between gap-6 py-2"
 						>
-							<Skeleton
-								className={
-									index === 0 ? "h-4 w-36" : "h-4 w-24"
-								}
-							/>
+							<Skeleton className={index === 0 ? "h-4 w-36" : "h-4 w-24"} />
 
 							<Skeleton className="h-5 w-9 shrink-0 rounded-full" />
 						</div>

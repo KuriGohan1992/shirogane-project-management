@@ -19,6 +19,8 @@ export const TASK_ACTIVITY_ACTION_VALUES = [
 	"task_created",
 	"task_updated",
 	"task_moved",
+	"task_completed",
+	"task_reopened",
 	"task_archived",
 	"task_restored",
 	"task_deleted",

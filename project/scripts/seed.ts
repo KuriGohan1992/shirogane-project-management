@@ -987,15 +987,55 @@ async function main() {
 							17,
 						)
 					: null;
-			const updatedAt =
-				archivedAt ??
-				dateFromNow(
-					Math.max(
-						taskCreatedOffset,
-						scenario.lastActivityOffset - (taskIndex % 12),
-					),
-					17,
+			let completedAt: Date | null = null;
+
+			if (
+				typeof scenario.completedOffset === "number" &&
+				taskCreatedOffset <= scenario.completedOffset
+			) {
+				const completionStartOffset = taskCreatedOffset;
+
+				const completionSpan = Math.max(
+					0,
+					scenario.completedOffset - completionStartOffset,
 				);
+
+				completedAt = dateFromNow(
+					completionStartOffset + Math.floor(random() * (completionSpan + 1)),
+					16,
+				);
+			} else if (!archivedAt && taskCreatedOffset < -1 && taskIndex % 4 === 0) {
+				const completionStartOffset = taskCreatedOffset + 1;
+
+				const completionEndOffset = Math.max(
+					completionStartOffset,
+					Math.min(-1, scenario.lastActivityOffset),
+				);
+
+				completedAt = dateFromNow(
+					completionStartOffset +
+						Math.floor(
+							random() * (completionEndOffset - completionStartOffset + 1),
+						),
+					16,
+				);
+			}
+
+			const activityUpdatedAt = dateFromNow(
+				Math.max(
+					taskCreatedOffset,
+					scenario.lastActivityOffset - (taskIndex % 12),
+				),
+				17,
+			);
+
+			const updatedAt = new Date(
+				Math.max(
+					activityUpdatedAt.getTime(),
+					archivedAt?.getTime() ?? 0,
+					completedAt?.getTime() ?? 0,
+				),
+			);
 
 			taskRows.push({
 				id: taskId,
@@ -1009,6 +1049,7 @@ async function main() {
 				archivedAt,
 				createdAt: taskCreatedAt,
 				updatedAt,
+				completedAt,
 			});
 
 			const actorId = pick(accessUserIds, random);
@@ -1052,6 +1093,21 @@ async function main() {
 						action: "task_archived",
 						metadata: { taskTitle: title },
 						createdAt: archivedAt,
+					}),
+				);
+			}
+
+			if (completedAt) {
+				activityRows.push(
+					makeActivity(`${scenario.key}:task-completed:${taskIndex}`, {
+						projectId,
+						taskId,
+						actorId,
+						action: "task_completed",
+						metadata: {
+							taskTitle: title,
+						},
+						createdAt: completedAt,
 					}),
 				);
 			}
@@ -1256,6 +1312,7 @@ async function main() {
 		"Task-label links": taskLabelRows.length,
 		Comments: commentRows.length,
 		"Activity logs": activityRows.length,
+		"Completed tasks": taskRows.filter((task) => task.completedAt).length,
 	});
 
 	console.log(

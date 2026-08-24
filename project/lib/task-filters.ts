@@ -8,6 +8,7 @@ export const TASK_FILTER_PARAMS = {
 	label: "label",
 	assignee: "assignee",
 	due: "due",
+	completion: "completion",
 } as const;
 
 export const NO_PRIORITY_TASK_FILTER_VALUE = "no-priority";
@@ -58,6 +59,20 @@ export const TASK_DUE_FILTER_OPTIONS = [
 	},
 ] as const;
 
+export const TASK_COMPLETION_FILTER_OPTIONS = [
+	{
+		value: "open",
+		label: "Open",
+	},
+	{
+		value: "completed",
+		label: "Completed",
+	},
+] as const;
+
+export type TaskCompletionFilter =
+	(typeof TASK_COMPLETION_FILTER_OPTIONS)[number]["value"];
+
 export const UNASSIGNED_TASK_FILTER_VALUE = "unassigned";
 
 type TaskPriority = NonNullable<Task["priority"]>;
@@ -74,6 +89,7 @@ export type TaskFilters = {
 	labelIds: string[];
 	assigneeIds: string[];
 	dueDates: TaskDueFilter[];
+	completion: TaskCompletionFilter | null;
 };
 
 type SearchParamsReader = {
@@ -90,6 +106,10 @@ const TASK_DUE_FILTER_VALUES = TASK_DUE_FILTER_OPTIONS.map(
 	(option) => option.value,
 );
 
+const TASK_COMPLETION_FILTER_VALUES = TASK_COMPLETION_FILTER_OPTIONS.map(
+	(option) => option.value,
+);
+
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 function isTaskPriorityFilter(value: string): value is TaskPriorityFilter {
@@ -98,6 +118,10 @@ function isTaskPriorityFilter(value: string): value is TaskPriorityFilter {
 
 function isTaskDueFilter(value: string): value is TaskDueFilter {
 	return TASK_DUE_FILTER_VALUES.some((filter) => filter === value);
+}
+
+function isTaskCompletionFilter(value: string): value is TaskCompletionFilter {
+	return TASK_COMPLETION_FILTER_VALUES.some((filter) => filter === value);
 }
 
 function getUniqueValues(values: string[]) {
@@ -131,7 +155,7 @@ function matchesDueDateFilter(
 
 	switch (filter) {
 		case "overdue":
-			return dueDate < today;
+			return task.completedAt === null && dueDate < today;
 
 		case "due-today":
 			return dueDate === today;
@@ -184,6 +208,13 @@ export function parseTaskFilters(
 		searchParams.getAll(TASK_FILTER_PARAMS.due),
 	).filter(isTaskDueFilter);
 
+	const completionValue = searchParams.get(TASK_FILTER_PARAMS.completion);
+
+	const completion =
+		completionValue && isTaskCompletionFilter(completionValue)
+			? completionValue
+			: null;
+
 	return {
 		query:
 			searchParams
@@ -194,6 +225,7 @@ export function parseTaskFilters(
 		labelIds,
 		assigneeIds,
 		dueDates,
+		completion,
 	};
 }
 
@@ -203,7 +235,8 @@ export function hasTaskFilters(filters: TaskFilters) {
 		filters.priorities.length > 0 ||
 		filters.labelIds.length > 0 ||
 		filters.assigneeIds.length > 0 ||
-		filters.dueDates.length > 0
+		filters.dueDates.length > 0 ||
+		filters.completion !== null
 	);
 }
 
@@ -213,7 +246,8 @@ export function getActiveTaskFilterCount(filters: TaskFilters) {
 		filters.priorities.length +
 		filters.labelIds.length +
 		filters.assigneeIds.length +
-		filters.dueDates.length
+		filters.dueDates.length +
+		(filters.completion ? 1 : 0)
 	);
 }
 
@@ -261,11 +295,18 @@ export function matchesTaskFilters(
 			matchesDueDateFilter(task, filter, today),
 		);
 
+	const matchesCompletion =
+		filters.completion === null ||
+		(filters.completion === "completed"
+			? task.completedAt !== null
+			: task.completedAt === null);
+
 	return (
 		matchesQuery &&
 		matchesPriority &&
 		matchesLabel &&
 		matchesAssignee &&
-		matchesDueDate
+		matchesDueDate &&
+		matchesCompletion
 	);
 }
