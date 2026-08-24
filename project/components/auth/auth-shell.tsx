@@ -19,10 +19,7 @@ type AuthShellProps = {
 export function AuthShell({ children }: AuthShellProps) {
 	return (
 		<main className="relative min-h-screen overflow-hidden bg-background">
-			<div
-				aria-hidden="true"
-				className="pointer-events-none absolute inset-0"
-			>
+			<div aria-hidden="true" className="pointer-events-none absolute inset-0">
 				<div className="absolute -left-48 top-1/4 size-[30rem] rounded-full bg-primary/[0.06] blur-3xl" />
 				<div className="absolute -right-48 bottom-1/4 size-[30rem] rounded-full bg-primary/[0.05] blur-3xl" />
 			</div>
@@ -103,9 +100,7 @@ export function AuthShell({ children }: AuthShellProps) {
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-2">
 							<CalendarDays className="size-4 text-primary" />
-							<span className="text-xs font-bold text-foreground">
-								August
-							</span>
+							<span className="text-xs font-bold text-foreground">August</span>
 						</div>
 
 						<span className="text-[9px] font-semibold text-muted-foreground">
