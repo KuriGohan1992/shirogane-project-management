@@ -167,12 +167,22 @@
 
 	html {
 		background: var(--background);
+		scroll-behavior: smooth;
+		scrollbar-width: none;
+		-ms-overflow-style: none;
 	}
 
 	body {
 		@apply bg-background font-sans text-foreground antialiased;
 		min-height: 100vh;
 		text-rendering: optimizeLegibility;
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+	}
+
+	html::-webkit-scrollbar,
+	body::-webkit-scrollbar {
+		display: none;
 	}
 
 	::selection {
@@ -202,3 +212,4 @@
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
 	background-color: var(--muted-foreground);
 }
+
