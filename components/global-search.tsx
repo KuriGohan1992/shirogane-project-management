@@ -207,7 +207,7 @@ export function GlobalSearch() {
 	return (
 		<Popover open={isOpen && hasQuery} onOpenChange={setIsOpen}>
 			<PopoverAnchor asChild>
-				<div className="relative w-full max-w-md">
+				<div className="relative min-w-0 w-full max-w-md">
 					<Search
 						aria-hidden="true"
 						className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
@@ -226,7 +226,7 @@ export function GlobalSearch() {
 						}}
 						onKeyDown={handleKeyDown}
 						aria-label="Search projects and tasks"
-						placeholder="Search projects and tasks..."
+						placeholder="Search..."
 						className="w-full rounded-lg border border-input bg-background py-2 pl-10 pr-10 text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-ring"
 					/>
 

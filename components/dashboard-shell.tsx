@@ -282,17 +282,17 @@ export function DashboardShell({
 			{/* Page area */}
 			<div
 				className={cn(
-					"transition-[padding] duration-200 ease-out",
+					"min-w-0 transition-[padding] duration-200 ease-out",
 					sidebarCollapsed ? "lg:pl-20" : "lg:pl-64",
 				)}
 			>
 				<header className="sticky top-0 z-30 h-16 border-b border-border bg-card/95 backdrop-blur-md">
-					<div className="mx-auto flex h-full w-full max-w-[1600px] items-center gap-x-4 px-4 sm:gap-x-6 sm:px-6 lg:px-8">
+					<div className="mx-auto flex h-full w-full max-w-[1600px] items-center gap-x-2 px-3 sm:gap-x-4 sm:px-6 lg:px-8">
 						{/* Mobile menu only */}
 						<button
 							type="button"
 							aria-label="Open navigation menu"
-							className="group inline-flex size-9 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
+							className="group inline-flex size-9 shrink-0 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
 							onClick={() => setSidebarOpen(true)}
 						>
 							<Menu
@@ -302,12 +302,12 @@ export function DashboardShell({
 							/>
 						</button>
 
-						<div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-							<div className="flex flex-1 items-center">
+						<div className="flex min-w-0 flex-1 gap-x-2 self-stretch sm:gap-x-4 lg:gap-x-6">
+							<div className="flex min-w-0 flex-1 items-center">
 								<GlobalSearch />
 							</div>
 
-							<div className="flex items-center gap-3">
+							<div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
 								<div className="flex items-center gap-1">
 									<NotificationCenter initialData={initialNotifications} />
 
@@ -320,7 +320,7 @@ export function DashboardShell({
 					</div>
 				</header>
 
-				<main className="mx-auto w-full max-w-[1600px] px-4 pb-8 pt-5 sm:px-6 lg:px-8">
+				<main className="mx-auto w-full min-w-0 max-w-[1600px] overflow-x-clip px-4 pb-8 pt-5 sm:px-6 lg:px-8">
 					{children}
 				</main>
 			</div>

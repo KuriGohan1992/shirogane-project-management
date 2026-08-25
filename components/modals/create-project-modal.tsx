@@ -38,16 +38,19 @@ export function CreateProjectModal({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-lg">
-				<DialogHeader>
+			<DialogContent
+				headerVariant="primary"
+				className="gap-0 overflow-hidden bg-background p-0 sm:max-w-lg"
+			>
+				<DialogHeader variant="primary">
 					<DialogTitle>Create project</DialogTitle>
 
-					<DialogDescription>
+					<DialogDescription className="sr-only">
 						Create a workspace for your tasks, stages, and collaborators.
 					</DialogDescription>
 				</DialogHeader>
 
-				<form action={formAction} className="space-y-6" noValidate>
+				<form action={formAction} className="space-y-6 px-6 py-5" noValidate>
 					<ProjectFormFields
 						state={state}
 						pending={pending}

@@ -50,7 +50,6 @@ export function ArchivedTasksButton({
 	canManage,
 }: ArchivedTasksButtonProps) {
 	const restoreAllAction = restoreAllArchivedTasks.bind(null, projectId);
-
 	const deleteAllAction = deleteAllArchivedTasks.bind(null, projectId);
 
 	return (
@@ -60,30 +59,32 @@ export function ArchivedTasksButton({
 					type="button"
 					variant="outline"
 					size="sm"
-					className="h-9 gap-2 bg-card"
+					aria-label={`Archived tasks (${tasks.length})`}
+					className="h-9 gap-2 bg-card px-2.5 sm:px-3"
 				>
 					<Archive aria-hidden="true" className="size-4" />
-
-					<span>Archived</span>
-
+					<span className="hidden sm:inline">Archived</span>
 					<span className="inline-flex min-w-5 items-center justify-center rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
 						{tasks.length}
 					</span>
 				</Button>
 			</DialogTrigger>
 
-			<DialogContent className="sm:max-w-2xl">
-				<DialogHeader>
+			<DialogContent
+				headerVariant="primary"
+				className="max-h-[min(90dvh,46rem)] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden bg-background p-0 sm:max-w-xl"
+			>
+				<DialogHeader variant="primary" className="shrink-0">
 					<DialogTitle>Archived tasks</DialogTitle>
 
-					<DialogDescription>
+					<DialogDescription className="sr-only">
 						Archived tasks are hidden from the board. Restoring a task returns
 						it to its previous stage.
 					</DialogDescription>
 				</DialogHeader>
 
 				{tasks.length === 0 ? (
-					<div className="flex min-h-48 flex-col items-center justify-center text-center">
+					<div className="flex min-h-48 flex-col items-center justify-center px-6 text-center">
 						<Archive
 							aria-hidden="true"
 							size={24}
@@ -97,19 +98,18 @@ export function ArchivedTasksButton({
 						</p>
 					</div>
 				) : (
-					<>
-						<div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
+					<div className="flex min-h-0 flex-1 flex-col">
+						<div className="scrollbar-thin min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-4 sm:px-6">
 							{tasks.map((task) => {
 								const restoreAction = restoreArchivedTask.bind(null, task.id);
-
 								const deleteAction = deleteArchivedTask.bind(null, task.id);
 
 								return (
 									<div
 										key={task.id}
-										className="flex items-center justify-between gap-4 rounded-lg border border-border p-3"
+										className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border bg-card p-3"
 									>
-										<div className="flex min-w-0 flex-1 items-start gap-2">
+										<div className="flex min-w-0 items-start gap-2">
 											<span className="mt-0.5 flex size-4 shrink-0 items-center justify-center">
 												{task.completedAt && (
 													<CircleCheckBig
@@ -132,16 +132,14 @@ export function ArchivedTasksButton({
 
 												<div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
 													<span>{task.stageName}</span>
-
 													<span aria-hidden="true">•</span>
-
 													<span className="capitalize">
 														{task.priority ?? "No priority"}
 													</span>
-
-													<span aria-hidden="true">•</span>
-
-													<span>
+													<span aria-hidden="true" className="hidden sm:inline">
+														•
+													</span>
+													<span className="w-full sm:w-auto">
 														Archived {formatArchivedDate(task.archivedAt)}
 													</span>
 												</div>
@@ -151,8 +149,23 @@ export function ArchivedTasksButton({
 										{canManage && (
 											<div className="flex shrink-0 items-center gap-1">
 												<form action={restoreAction}>
-													<Button type="submit" variant="outline" size="sm">
+													<Button
+														type="submit"
+														variant="ghost"
+														size="icon-sm"
+														className="sm:hidden"
+														aria-label={`Restore ${task.title}`}
+													>
 														<RotateCcw aria-hidden="true" size={14} />
+													</Button>
+
+													<Button
+														type="submit"
+														variant="outline"
+														size="sm"
+														className="hidden sm:inline-flex"
+													>
+														<RotateCcw aria-hidden="true" className="size-4" />
 														Restore
 													</Button>
 												</form>
@@ -203,8 +216,9 @@ export function ArchivedTasksButton({
 								);
 							})}
 						</div>
+
 						{canManage && (
-							<div className="flex items-center justify-end gap-2">
+							<div className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-border px-4 py-4 sm:px-6">
 								<form action={restoreAllAction}>
 									<Button type="submit" variant="outline" size="sm">
 										<RotateCcw aria-hidden="true" className="size-4" />
@@ -255,7 +269,7 @@ export function ArchivedTasksButton({
 								</AlertDialog>
 							</div>
 						)}
-					</>
+					</div>
 				)}
 			</DialogContent>
 		</Dialog>

@@ -47,16 +47,19 @@ export function CreateStageModal({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-md">
-				<DialogHeader>
+			<DialogContent
+				headerVariant="primary"
+				className="gap-0 overflow-hidden bg-background p-0 sm:max-w-md"
+			>
+				<DialogHeader variant="primary">
 					<DialogTitle>Create stage</DialogTitle>
 
-					<DialogDescription>
+					<DialogDescription className="sr-only">
 						Add another stage to this project.
 					</DialogDescription>
 				</DialogHeader>
 
-				<form action={formAction} className="space-y-6" noValidate>
+				<form action={formAction} className="space-y-6 px-6 py-5" noValidate>
 					<StageFormFields
 						state={state}
 						pending={pending}

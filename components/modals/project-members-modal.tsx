@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import {
 	useActionState,
 	useEffect,
@@ -217,11 +218,14 @@ export function ProjectMembersModal({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="max-h-[min(90dvh,46rem)] gap-0 overflow-hidden bg-background p-0 sm:max-w-xl">
-				<DialogHeader className="shrink-0 border-b border-border bg-card px-6 py-5 pr-12">
+			<DialogContent
+				headerVariant="primary"
+				className="max-h-[min(90dvh,46rem)] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden bg-background p-0 sm:max-w-xl"
+			>
+				<DialogHeader variant="primary" className="shrink-0">
 					<DialogTitle>Project collaborators</DialogTitle>
 
-					<DialogDescription>
+					<DialogDescription className="sr-only">
 						{canManageMembers
 							? "Add existing Shiro users and manage their roles in this project."
 							: "View the people collaborating on this project."}
@@ -301,7 +305,7 @@ export function ProjectMembersModal({
 							<p className="text-sm font-medium">Current collaborators</p>
 
 							<div className="max-h-64 min-w-0 space-y-2 overflow-y-auto pr-1">
-								<div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border p-3">
+								<div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border bg-card p-3">
 									<CollaboratorIdentity user={owner} />
 
 									<span className="shrink-0 text-sm text-muted-foreground">
@@ -321,12 +325,12 @@ export function ProjectMembersModal({
 									return (
 										<div
 											key={member.userId}
-											className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border p-3"
+											className="relative grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 rounded-lg border border-border bg-card p-3"
 										>
 											<CollaboratorIdentity user={member.user} />
 
 											{canManageMembers ? (
-												<div className="flex shrink-0 items-center gap-2">
+												<div className="flex shrink-0 flex-col items-end gap-1 pt-6 sm:flex-row sm:items-center sm:gap-2 sm:pt-0">
 													<Select
 														value={selectedRole}
 														onValueChange={(value) =>
@@ -337,7 +341,7 @@ export function ProjectMembersModal({
 														}
 													>
 														<SelectTrigger
-															className="h-8 w-28"
+															className="h-8 w-24 sm:w-28"
 															aria-label={`Role for ${
 																member.user.name ?? member.user.email
 															}`}
@@ -360,9 +364,14 @@ export function ProjectMembersModal({
 																type="button"
 																variant="ghost"
 																size="sm"
-																className="h-8 px-3 text-destructive hover:bg-destructive/10 hover:text-destructive"
+																className="absolute right-2 top-2 size-7 p-0 text-destructive hover:bg-destructive/10 hover:text-destructive sm:static sm:h-8 sm:w-auto sm:px-3"
+																aria-label={`Remove ${member.user.name ?? member.user.email}`}
 															>
-																Remove
+																<X
+																	aria-hidden="true"
+																	className="size-4 sm:hidden"
+																/>
+																<span className="hidden sm:inline">Remove</span>
 															</Button>
 														</AlertDialogTrigger>
 

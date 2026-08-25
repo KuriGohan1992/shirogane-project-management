@@ -59,7 +59,7 @@ export function CalendarProjectSidebar({
 		<Sheet open={project !== null} onOpenChange={onOpenChange}>
 			{project && (
 				<SheetContent className="border-l-0 sm:max-w-lg">
-					<SheetHeader className="relative overflow-hidden bg-card pl-5 pr-6 pt-8 pb-6">
+					<SheetHeader className="relative overflow-hidden bg-card pb-6 pl-5 pr-14 pt-8">
 						<div
 							aria-hidden="true"
 							className="absolute inset-x-0 top-0 h-4"
@@ -199,8 +199,8 @@ export function CalendarProjectSidebar({
 									</SelectTrigger>
 
 									<SelectContent position="popper" align="end">
-										<SelectItem value="open">Open</SelectItem>
 										<SelectItem value="all">All</SelectItem>
+										<SelectItem value="open">Open</SelectItem>
 										<SelectItem value="completed">Completed</SelectItem>
 									</SelectContent>
 								</Select>

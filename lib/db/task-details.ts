@@ -11,82 +11,54 @@ export async function getTaskDetailsForUser(
 	taskId: string,
 	userId: string,
 ) {
-	const taskContext = await db.query.tasks.findFirst({
-		columns: {
-			id: true,
-		},
+	const [accessRole, result] = await Promise.all([
+		getProjectAccess(projectId, userId),
+		db.query.tasks.findFirst({
+			where: (task, { and, eq, isNull }) =>
+				and(eq(task.id, taskId), isNull(task.archivedAt)),
 
-		where: (task, { and, eq, isNull }) =>
-			and(eq(task.id, taskId), isNull(task.archivedAt)),
+			with: {
+				stage: {
+					columns: {
+						id: true,
+						name: true,
+						projectId: true,
+					},
 
-		with: {
-			stage: {
-				columns: {
-					projectId: true,
-				},
-			},
-		},
-	});
-
-	if (!taskContext || taskContext.stage.projectId !== projectId) {
-		return {
-			status: "not_found",
-		} as const;
-	}
-
-	const accessRole = await getProjectAccess(projectId, userId);
-
-	if (!accessRole) {
-		return {
-			status: "forbidden",
-		} as const;
-	}
-
-	const result = await db.query.tasks.findFirst({
-		where: (task, { and, eq, isNull }) =>
-			and(eq(task.id, taskId), isNull(task.archivedAt)),
-
-		with: {
-			stage: {
-				columns: {
-					id: true,
-					name: true,
-					projectId: true,
-				},
-
-				with: {
-					project: {
-						columns: {
-							id: true,
-							name: true,
-						},
-
-						with: {
-							labels: {
-								orderBy: (label, { asc }) => [asc(label.name)],
+					with: {
+						project: {
+							columns: {
+								id: true,
+								name: true,
 							},
 
-							owner: {
-								columns: {
-									id: true,
-									name: true,
-									email: true,
-									imageUrl: true,
-									jobTitle: true,
+							with: {
+								labels: {
+									orderBy: (label, { asc }) => [asc(label.name)],
 								},
-							},
 
-							members: {
-								orderBy: (member, { asc }) => [asc(member.joinedAt)],
+								owner: {
+									columns: {
+										id: true,
+										name: true,
+										email: true,
+										imageUrl: true,
+										jobTitle: true,
+									},
+								},
 
-								with: {
-									user: {
-										columns: {
-											id: true,
-											name: true,
-											email: true,
-											imageUrl: true,
-											jobTitle: true,
+								members: {
+									orderBy: (member, { asc }) => [asc(member.joinedAt)],
+
+									with: {
+										user: {
+											columns: {
+												id: true,
+												name: true,
+												email: true,
+												imageUrl: true,
+												jobTitle: true,
+											},
 										},
 									},
 								},
@@ -94,61 +66,61 @@ export async function getTaskDetailsForUser(
 						},
 					},
 				},
-			},
 
-			assignees: {
-				orderBy: (assignee, { asc }) => [asc(assignee.assignedAt)],
+				assignees: {
+					orderBy: (assignee, { asc }) => [asc(assignee.assignedAt)],
 
-				with: {
-					user: {
-						columns: {
-							id: true,
-							name: true,
-							email: true,
-							imageUrl: true,
-							jobTitle: true,
+					with: {
+						user: {
+							columns: {
+								id: true,
+								name: true,
+								email: true,
+								imageUrl: true,
+								jobTitle: true,
+							},
+						},
+					},
+				},
+
+				labels: {
+					with: {
+						label: true,
+					},
+				},
+
+				comments: {
+					orderBy: (comment, { asc }) => [asc(comment.createdAt)],
+
+					with: {
+						author: {
+							columns: {
+								id: true,
+								name: true,
+								email: true,
+								imageUrl: true,
+							},
+						},
+					},
+				},
+
+				activities: {
+					orderBy: (activity, { desc }) => [desc(activity.createdAt)],
+
+					with: {
+						actor: {
+							columns: {
+								id: true,
+								name: true,
+								email: true,
+								imageUrl: true,
+							},
 						},
 					},
 				},
 			},
-
-			labels: {
-				with: {
-					label: true,
-				},
-			},
-
-			comments: {
-				orderBy: (comment, { asc }) => [asc(comment.createdAt)],
-
-				with: {
-					author: {
-						columns: {
-							id: true,
-							name: true,
-							email: true,
-							imageUrl: true,
-						},
-					},
-				},
-			},
-
-			activities: {
-				orderBy: (activity, { desc }) => [desc(activity.createdAt)],
-
-				with: {
-					actor: {
-						columns: {
-							id: true,
-							name: true,
-							email: true,
-							imageUrl: true,
-						},
-					},
-				},
-			},
-		},
-	});
+		}),
+	]);
 
 	if (!result || result.stage.projectId !== projectId) {
 		return {
@@ -156,18 +128,16 @@ export async function getTaskDetailsForUser(
 		} as const;
 	}
 
+	if (!accessRole) {
+		return {
+			status: "forbidden",
+		} as const;
+	}
+
 	const { stage, ...task } = result;
 
 	const permissions = getProjectPermissions(accessRole);
 
-	/*
-	 * Only project owners can pull somebody from their broader
-	 * Team into this project.
-	 *
-	 * Regular project Members can still assign the owner and
-	 * existing project Members, so there's no reason to perform
-	 * the additional Team lookup for them.
-	 */
 	const teamCollaborators = permissions.canManageMembers
 		? await getTeamCollaboratorProfilesForUser(userId)
 		: [];

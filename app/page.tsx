@@ -252,7 +252,7 @@ export default function HomePage() {
 							</div>
 						</div>
 
-						<div className="lg:pl-4">
+						<div className="hidden lg:block lg:pl-4">
 							<LandingBoardArt />
 						</div>
 					</div>
@@ -291,10 +291,10 @@ export default function HomePage() {
 					</div>
 				</section>
 
-<section
-	id="product"
-	className="scroll-mt-36 mx-auto w-full max-w-[1500px] px-5 py-24 sm:px-8 lg:px-10"
->
+				<section
+					id="product"
+					className="scroll-mt-16 mx-auto w-full max-w-[1500px] px-5 py-24 sm:px-8 lg:px-10"
+				>
 					<div className="grid gap-12 lg:grid-cols-[0.72fr_1.28fr] lg:gap-20">
 						<div className="flex max-w-md flex-col lg:min-h-full">
 							<div>
@@ -323,7 +323,7 @@ export default function HomePage() {
 								</div>
 							</div>
 
-							<div className="flex min-h-[280px] items-end justify-center lg:min-h-[360px] lg:justify-start">
+							<div className="hidden min-h-[280px] items-end justify-center lg:flex lg:min-h-[360px] lg:justify-start">
 								<div className="flex w-full max-w-[320px] items-center justify-center sm:max-w-[380px] lg:max-w-[440px] xl:max-w-[500px]">
 									<Image
 										src="/illustrations/organizing-projects-cuate.svg"
@@ -499,10 +499,10 @@ export default function HomePage() {
 					</div>
 				</section>
 
-<section
-	id="why-shiro"
-	className="scroll-mt-16 border-y border-border bg-card"
->
+				<section
+					id="why-shiro"
+					className="scroll-mt-16 border-y border-border bg-card"
+				>
 					<div className="mx-auto w-full max-w-[1500px] px-5 py-24 sm:px-8 lg:px-10">
 						<div className="grid gap-12 lg:grid-cols-[0.78fr_1.22fr] lg:gap-20">
 							<div className="max-w-lg">
@@ -549,10 +549,7 @@ export default function HomePage() {
 					</div>
 				</section>
 
-<section
-	id="demo"
-	className="scroll-mt-16 px-5 py-24 sm:px-8 lg:px-10"
->
+				<section id="demo" className="scroll-mt-16 px-5 py-24 sm:px-8 lg:px-10">
 					<div className="mx-auto w-full max-w-[1280px]">
 						<div className="mx-auto max-w-2xl text-center">
 							<div className="flex items-center justify-center gap-2 text-primary">

@@ -27,7 +27,7 @@ export function TeamMemberSidebar({
 		<Sheet open={collaborator !== null} onOpenChange={onOpenChange}>
 			{collaborator && (
 				<SheetContent className="border-l-0 sm:max-w-lg">
-					<SheetHeader className="bg-card px-5 pb-4 pt-6">
+					<SheetHeader className="bg-card pb-4 pl-5 pr-14 pt-6">
 						<div className="flex min-w-0 items-start gap-3">
 							<UserAvatar user={collaborator} className="size-11 shrink-0" />
 

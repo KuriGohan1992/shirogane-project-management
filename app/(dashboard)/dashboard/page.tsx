@@ -31,8 +31,10 @@ function getFirstName(name: string | null) {
 
 function DashboardMetric({ label, value }: { label: string; value: number }) {
 	return (
-		<div className="min-w-32">
-			<dt className="text-sm font-semibold text-muted-foreground">{label}</dt>
+		<div className="min-w-0">
+			<dt className="truncate text-xs font-semibold text-muted-foreground sm:text-sm">
+				{label}
+			</dt>
 
 			<dd className="mt-0.5 text-2xl font-bold tracking-tight text-foreground">
 				{value}
@@ -73,7 +75,7 @@ function DashboardTaskList({ tasks }: { tasks: DashboardTaskSummary[] }) {
 				<Link
 					key={task.id}
 					href={getTaskHref(task.projectId, task.id, task.title)}
-					className="flex items-center gap-4 px-5 py-3 transition-colors hover:bg-muted"
+					className="flex min-w-0 items-start gap-3 px-4 py-3 transition-colors hover:bg-muted sm:items-center sm:gap-4 sm:px-5"
 				>
 					<div
 						aria-hidden="true"
@@ -97,8 +99,8 @@ function DashboardTaskList({ tasks }: { tasks: DashboardTaskSummary[] }) {
 							)}
 						</div>
 
-						<div className="mt-1 flex min-w-0 items-center gap-2 text-xs font-medium text-muted-foreground">
-							<span className="truncate">{task.projectName}</span>
+						<div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-muted-foreground">
+							<span className="max-w-full truncate">{task.projectName}</span>
 
 							<span
 								aria-hidden="true"
@@ -106,10 +108,16 @@ function DashboardTaskList({ tasks }: { tasks: DashboardTaskSummary[] }) {
 							/>
 
 							<span className="truncate">{task.stageName}</span>
+
+							<span className="sm:hidden">
+								{task.dueDate
+									? `Due ${formatDate(task.dueDate)}`
+									: "No due date"}
+							</span>
 						</div>
 					</div>
 
-					<p className="shrink-0 text-xs font-medium text-muted-foreground">
+					<p className="hidden shrink-0 text-xs font-medium text-muted-foreground sm:block">
 						{task.dueDate ? `Due ${formatDate(task.dueDate)}` : "No due date"}
 					</p>
 				</Link>
@@ -142,7 +150,7 @@ function DashboardActivityList({
 					"Former Collaborator";
 
 				return (
-					<div key={activity.id} className="flex gap-3 px-4 py-3">
+					<div key={activity.id} className="flex min-w-0 gap-3 px-4 py-3">
 						{activity.actor ? (
 							<UserAvatar user={activity.actor} className="size-8 shrink-0" />
 						) : (
@@ -152,12 +160,12 @@ function DashboardActivityList({
 						)}
 
 						<div className="min-w-0 flex-1">
-							<p className="text-sm leading-5 text-foreground/90">
+							<p className="break-words text-sm leading-5 text-foreground/90">
 								<span className="font-bold text-foreground">{actorName}</span>{" "}
 								{getActivityMessage(activity)}
 							</p>
 
-							<div className="mt-1 flex min-w-0 items-center gap-4 text-xs">
+							<div className="mt-1 flex min-w-0 flex-col gap-0.5 text-xs sm:flex-row sm:items-center sm:gap-4">
 								<Link
 									href={`/projects/${activity.project.id}`}
 									title={activity.project.name}
@@ -168,7 +176,7 @@ function DashboardActivityList({
 
 								<time
 									dateTime={activity.createdAt.toISOString()}
-									className="ml-auto shrink-0 text-right text-muted-foreground"
+									className="text-muted-foreground sm:ml-auto sm:shrink-0 sm:text-right"
 								>
 									{formatActivityDate(activity.createdAt)}
 								</time>
@@ -216,11 +224,11 @@ export default async function DashboardPage() {
 	}
 
 	return (
-		<div className="flex min-h-[calc(100vh-8rem)] flex-col gap-5 xl:h-[calc(100vh-8rem)] xl:min-h-0 xl:overflow-hidden">
-			<div className="grid min-h-0 flex-1 gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(25rem,0.88fr)]">
-				<div className="flex min-h-0 flex-col">
-					<div className="flex shrink-0 items-start justify-between gap-6">
-						<div>
+		<div className="flex min-w-0 min-h-[calc(100vh-8rem)] flex-col gap-5 xl:h-[calc(100vh-8rem)] xl:min-h-0 xl:overflow-hidden">
+			<div className="grid min-w-0 min-h-0 flex-1 gap-5 xl:grid-cols-[minmax(0,1.12fr)_minmax(25rem,0.88fr)]">
+				<div className="flex min-w-0 min-h-0 flex-col">
+					<div className="flex min-w-0 shrink-0 items-start justify-between gap-4 sm:gap-6">
+						<div className="min-w-0">
 							<h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
 
 							<p className="mt-1 text-base font-medium text-muted-foreground">
@@ -228,10 +236,12 @@ export default async function DashboardPage() {
 							</p>
 						</div>
 
-						<CreateProjectButton />
+						<div className="shrink-0">
+							<CreateProjectButton />
+						</div>
 					</div>
 
-					<dl className="mt-4 flex shrink-0 flex-wrap items-start gap-x-8 gap-y-3">
+					<dl className="mt-4 grid shrink-0 grid-cols-3 gap-4 sm:gap-6">
 						<DashboardMetric
 							label="Active projects"
 							value={dashboard.stats.activeProjectCount}
@@ -250,7 +260,7 @@ export default async function DashboardPage() {
 
 					<section
 						aria-labelledby="dashboard-my-tasks-heading"
-						className="mt-4 flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card"
+						className="mt-4 flex h-[32rem] min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card xl:h-auto xl:flex-1"
 					>
 						<DashboardPanelHeader
 							id="dashboard-my-tasks-heading"
@@ -265,7 +275,7 @@ export default async function DashboardPage() {
 
 				<section
 					aria-labelledby="dashboard-recent-activity-heading"
-					className="flex min-h-[28rem] flex-col overflow-hidden rounded-xl border border-border bg-card xl:min-h-0"
+					className="flex h-[30rem] min-w-0 min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card xl:h-auto"
 				>
 					<DashboardPanelHeader
 						id="dashboard-recent-activity-heading"
@@ -280,7 +290,7 @@ export default async function DashboardPage() {
 
 			<section
 				aria-labelledby="dashboard-recent-projects-heading"
-				className="flex h-64 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card"
+				className="flex h-64 min-w-0 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card"
 			>
 				<div className="flex shrink-0 items-center justify-between gap-4 border-b border-primary bg-primary px-5 py-3 text-primary-foreground">
 					<h2
@@ -298,7 +308,7 @@ export default async function DashboardPage() {
 					</Link>
 				</div>
 
-				<div className="min-h-0 flex-1">
+				<div className="min-h-0 min-w-0 flex-1">
 					<RecentProjects projects={dashboard.recentProjects} />
 				</div>
 			</section>

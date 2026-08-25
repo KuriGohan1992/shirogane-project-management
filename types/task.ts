@@ -1,4 +1,4 @@
-import type { Task, TaskAssignee } from "@/lib/db/schema";
+import type { Task, TaskAssignee, TaskComment } from "@/lib/db/schema";
 import type { TaskFormData } from "@/lib/validations/task";
 import type { TaskActivityWithActor } from "@/types/activity";
 import type { TaskCommentWithAuthor } from "@/types/comment";
@@ -39,9 +39,11 @@ export type TaskWithAssignees = Task & {
 
 export type TaskWithBoardDetails = TaskWithAssignees & {
 	labels: TaskLabelWithLabel[];
-	comments: TaskCommentWithAuthor[];
+	comments: Pick<TaskComment, "id">[];
 };
 
-export type TaskWithDetails = TaskWithBoardDetails & {
+export type TaskWithDetails = TaskWithAssignees & {
+	labels: TaskLabelWithLabel[];
+	comments: TaskCommentWithAuthor[];
 	activities: TaskActivityWithActor[];
 };

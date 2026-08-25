@@ -71,7 +71,7 @@ export function ProjectHeader({
 	const showOwner = accessRole !== "owner";
 
 	return (
-		<div className="relative overflow-hidden rounded-xl border border-border bg-card">
+		<div className="relative min-w-0 overflow-hidden rounded-xl border border-border bg-card">
 			<div
 				aria-hidden="true"
 				className="absolute inset-x-0 top-0 h-4"
@@ -80,12 +80,19 @@ export function ProjectHeader({
 				}}
 			/>
 
-			<div className="p-6 pt-7">
-				<div className="flex min-w-0 items-start gap-4">
-					<div className="flex min-w-0 flex-1 items-center gap-3">
+			<div className="p-5 pt-7 sm:p-6 sm:pt-7">
+				<div
+					className={cn(
+						"grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-3",
+						headerActions && hasProjectAdminActions
+							? "sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center"
+							: "sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center",
+					)}
+				>
+					<div className="flex min-w-0 items-center gap-2.5">
 						<h1
 							title={project.name}
-							className="min-w-0 truncate text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
+							className="min-w-0 flex-1 truncate text-2xl font-bold tracking-tight text-foreground sm:text-3xl"
 						>
 							{project.name}
 						</h1>
@@ -97,42 +104,48 @@ export function ProjectHeader({
 						)}
 					</div>
 
-					{(headerActions || hasProjectAdminActions) && (
-						<div className="flex shrink-0 items-center gap-2">
+					{headerActions && (
+						<div
+							className={cn(
+								"col-span-2 row-start-2 flex min-w-0 justify-start sm:justify-end",
+								"sm:col-span-1 sm:col-start-2 sm:row-start-1",
+							)}
+						>
 							{headerActions}
+						</div>
+					)}
 
-							{headerActions && hasProjectAdminActions && (
-								<div
-									aria-hidden="true"
-									className="h-6 w-px shrink-0 bg-border ml-2"
-								/>
+					{hasProjectAdminActions && (
+						<div
+							className={cn(
+								"col-start-2 row-start-1 flex justify-end",
+								headerActions && "sm:col-start-3",
 							)}
-
-							{hasProjectAdminActions && (
-								<ProjectActions
-									project={toEditableProject(project)}
-									canEdit={permissions.canEditProject}
-									canDelete={permissions.canDeleteProject}
-									canComplete={permissions.canCompleteProject}
-									isCompleted={project.completedAt !== null}
-									compact
-								/>
-							)}
+						>
+							<ProjectActions
+								project={toEditableProject(project)}
+								canEdit={permissions.canEditProject}
+								canDelete={permissions.canDeleteProject}
+								canComplete={permissions.canCompleteProject}
+								isCompleted={project.completedAt !== null}
+								compact
+								menuSize="header"
+							/>
 						</div>
 					)}
 				</div>
 
-				<p className="mt-3 max-w-5xl line-clamp-3 text-sm leading-6 text-muted-foreground">
+				<p className="mt-3 max-w-5xl text-sm leading-6 text-muted-foreground sm:line-clamp-3">
 					{project.description || "No project description yet."}
 				</p>
 
 				<div
 					className={cn(
-						"mt-5 grid divide-x divide-border border-t border-border pt-4",
-						showOwner ? "grid-cols-4" : "grid-cols-3",
+						"mt-5 divide-y divide-border border-t border-border sm:grid sm:divide-x sm:divide-y-0 sm:pt-4",
+						showOwner ? "sm:grid-cols-4" : "sm:grid-cols-3",
 					)}
 				>
-					<div className="flex min-w-0 items-center gap-3 pr-4">
+					<div className="flex min-w-0 items-center gap-3 py-3 sm:py-0 sm:pr-4">
 						<CalendarRange
 							aria-hidden="true"
 							className="size-[18px] shrink-0 text-muted-foreground"
@@ -143,13 +156,13 @@ export function ProjectHeader({
 								Schedule
 							</p>
 
-							<p className="truncate text-sm font-medium text-foreground">
+							<p className="break-words text-sm font-medium text-foreground sm:truncate">
 								{formatProjectSchedule(project)}
 							</p>
 						</div>
 					</div>
 
-					<div className="flex min-w-0 items-center gap-3 px-4">
+					<div className="flex min-w-0 items-center gap-3 py-3 sm:px-4 sm:py-0">
 						<Clock3
 							aria-hidden="true"
 							className="size-[18px] shrink-0 text-muted-foreground"
@@ -160,13 +173,13 @@ export function ProjectHeader({
 								Last activity
 							</p>
 
-							<p className="truncate text-sm font-medium text-foreground">
+							<p className="text-sm font-medium text-foreground sm:truncate">
 								{formatDate(lastActivityAt)}
 							</p>
 						</div>
 					</div>
 
-					<div className="flex min-w-0 items-center gap-3 px-4">
+					<div className="flex min-w-0 items-center gap-3 py-3 sm:px-4 sm:py-0">
 						<ShieldCheck
 							aria-hidden="true"
 							className="size-[18px] shrink-0 text-muted-foreground"
@@ -177,14 +190,14 @@ export function ProjectHeader({
 								Your role
 							</p>
 
-							<p className="truncate text-sm font-medium capitalize text-foreground">
+							<p className="text-sm font-medium capitalize text-foreground sm:truncate">
 								{accessRole}
 							</p>
 						</div>
 					</div>
 
 					{showOwner && (
-						<div className="flex min-w-0 items-center gap-3 pl-4">
+						<div className="flex min-w-0 items-center gap-3 py-3 sm:py-0 sm:pl-4">
 							<UserAvatar user={owner} className="size-7 shrink-0" />
 
 							<div className="min-w-0">
@@ -192,7 +205,7 @@ export function ProjectHeader({
 									Owner
 								</p>
 
-								<p className="truncate text-sm font-medium text-foreground">
+								<p className="break-words text-sm font-medium text-foreground sm:truncate">
 									{owner.name ?? owner.email}
 								</p>
 							</div>

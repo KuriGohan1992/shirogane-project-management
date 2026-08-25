@@ -43,7 +43,7 @@ export function TaskRouteModal({
 		<Dialog open onOpenChange={handleOpenChange}>
 			<DialogContent
 				showCloseButton={false}
-				className="max-h-[90vh] w-[min(1180px,calc(100vw-2rem))] max-w-none gap-0 overflow-hidden border-0 bg-background p-0 shadow-2xl sm:max-w-none"
+				className="max-h-[90dvh] w-[min(1180px,calc(100vw-1rem))] sm:w-[min(1180px,calc(100vw-2rem))] max-w-none gap-0 overflow-hidden border-0 bg-background p-0 shadow-2xl sm:max-w-none"
 			>
 				<DialogHeader className="sr-only">
 					<DialogTitle>{taskTitle}</DialogTitle>

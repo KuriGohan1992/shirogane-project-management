@@ -43,16 +43,19 @@ export function EditProjectModal({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="sm:max-w-lg">
-				<DialogHeader>
+			<DialogContent
+				headerVariant="primary"
+				className="gap-0 overflow-hidden bg-background p-0 sm:max-w-lg"
+			>
+				<DialogHeader variant="primary">
 					<DialogTitle>Edit project</DialogTitle>
 
-					<DialogDescription>
+					<DialogDescription className="sr-only">
 						Update the project's details and schedule.
 					</DialogDescription>
 				</DialogHeader>
 
-				<form action={formAction} className="space-y-6" noValidate>
+				<form action={formAction} className="space-y-6 px-6 py-5" noValidate>
 					<ProjectFormFields
 						state={state}
 						pending={pending}

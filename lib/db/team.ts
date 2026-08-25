@@ -132,15 +132,96 @@ async function getTeamBaseForUser(userId: string) {
 export async function getTeamCollaboratorProfilesForUser(
 	userId: string,
 ): Promise<UserProfileSummary[]> {
-	const { collaboratorsByUserId } = await getTeamBaseForUser(userId);
+	const [ownedProjects, memberships] = await Promise.all([
+		db.query.projects.findMany({
+			columns: {
+				id: true,
+			},
 
-	return Array.from(collaboratorsByUserId.values())
-		.map(({ projects: _projects, ...collaborator }) => collaborator)
-		.sort((a, b) =>
-			getDisplayName(a).localeCompare(getDisplayName(b), "en-US", {
-				sensitivity: "base",
-			}),
-		);
+			where: (project, { eq }) => eq(project.ownerId, userId),
+		}),
+
+		db.query.projectMembers.findMany({
+			columns: {
+				projectId: true,
+			},
+
+			where: (member, { eq }) => eq(member.userId, userId),
+		}),
+	]);
+
+	const projectIds = [
+		...ownedProjects.map((project) => project.id),
+		...memberships.map((membership) => membership.projectId),
+	];
+
+	const uniqueProjectIds = [...new Set(projectIds)];
+
+	if (uniqueProjectIds.length === 0) {
+		return [];
+	}
+
+	const [projectOwners, projectMemberships] = await Promise.all([
+		db.query.projects.findMany({
+			columns: {
+				id: true,
+			},
+
+			where: (project) => inArray(project.id, uniqueProjectIds),
+
+			with: {
+				owner: {
+					columns: {
+						id: true,
+						name: true,
+						email: true,
+						imageUrl: true,
+						jobTitle: true,
+					},
+				},
+			},
+		}),
+
+		db.query.projectMembers.findMany({
+			columns: {
+				userId: true,
+			},
+
+			where: (member) => inArray(member.projectId, uniqueProjectIds),
+
+			with: {
+				user: {
+					columns: {
+						id: true,
+						name: true,
+						email: true,
+						imageUrl: true,
+						jobTitle: true,
+					},
+				},
+			},
+		}),
+	]);
+
+	const collaboratorsByUserId = new Map<string, UserProfileSummary>();
+
+	for (const project of projectOwners) {
+		if (project.owner.id !== userId) {
+			collaboratorsByUserId.set(project.owner.id, project.owner);
+		}
+	}
+
+	for (const membership of projectMemberships) {
+		if (membership.user.id !== userId) {
+			collaboratorsByUserId.set(membership.user.id, membership.user);
+		}
+	}
+
+	return Array.from(collaboratorsByUserId.values()).sort((a, b) =>
+		getDisplayName(a).localeCompare(getDisplayName(b), "en-US", {
+			sensitivity: "base",
+		}),
+	);
 }
 
 export async function getTeamDirectoryForUser(

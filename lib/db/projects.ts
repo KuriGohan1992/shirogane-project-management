@@ -205,88 +205,76 @@ export async function getProjectsForUser(
 }
 
 export async function getProjectForUser(projectId: string, userId: string) {
-	const accessRole = await getProjectAccess(projectId, userId);
+	const [accessRole, project] = await Promise.all([
+		getProjectAccess(projectId, userId),
+		db.query.projects.findFirst({
+			where: (project, { eq }) => eq(project.id, projectId),
 
-	if (!accessRole) {
-		return undefined;
-	}
-
-	const project = await db.query.projects.findFirst({
-		where: (project, { eq }) => eq(project.id, projectId),
-
-		with: {
-			owner: {
-				columns: {
-					id: true,
-					name: true,
-					email: true,
-					imageUrl: true,
-					jobTitle: true,
+			with: {
+				owner: {
+					columns: {
+						id: true,
+						name: true,
+						email: true,
+						imageUrl: true,
+						jobTitle: true,
+					},
 				},
-			},
 
-			members: {
-				orderBy: (member, { asc }) => [asc(member.joinedAt)],
+				members: {
+					orderBy: (member, { asc }) => [asc(member.joinedAt)],
 
-				with: {
-					user: {
-						columns: {
-							id: true,
-							name: true,
-							email: true,
-							imageUrl: true,
-							jobTitle: true,
+					with: {
+						user: {
+							columns: {
+								id: true,
+								name: true,
+								email: true,
+								imageUrl: true,
+								jobTitle: true,
+							},
 						},
 					},
 				},
-			},
 
-			labels: {
-				orderBy: (label, { asc }) => [asc(label.name)],
-			},
+				labels: {
+					orderBy: (label, { asc }) => [asc(label.name)],
+				},
 
-			stages: {
-				orderBy: (stage, { asc }) => [asc(stage.position)],
+				stages: {
+					orderBy: (stage, { asc }) => [asc(stage.position)],
 
-				with: {
-					tasks: {
-						where: (task, { isNull }) => isNull(task.archivedAt),
+					with: {
+						tasks: {
+							where: (task, { isNull }) => isNull(task.archivedAt),
 
-						orderBy: (task, { asc }) => [asc(task.position)],
+							orderBy: (task, { asc }) => [asc(task.position)],
 
-						with: {
-							assignees: {
-								orderBy: (assignee, { asc }) => [asc(assignee.assignedAt)],
+							with: {
+								assignees: {
+									orderBy: (assignee, { asc }) => [asc(assignee.assignedAt)],
 
-								with: {
-									user: {
-										columns: {
-											id: true,
-											name: true,
-											email: true,
-											imageUrl: true,
+									with: {
+										user: {
+											columns: {
+												id: true,
+												name: true,
+												email: true,
+												imageUrl: true,
+											},
 										},
 									},
 								},
-							},
 
-							labels: {
-								with: {
-									label: true,
+								labels: {
+									with: {
+										label: true,
+									},
 								},
-							},
 
-							comments: {
-								orderBy: (comment, { asc }) => [asc(comment.createdAt)],
-
-								with: {
-									author: {
-										columns: {
-											id: true,
-											name: true,
-											email: true,
-											imageUrl: true,
-										},
+								comments: {
+									columns: {
+										id: true,
 									},
 								},
 							},
@@ -294,10 +282,10 @@ export async function getProjectForUser(projectId: string, userId: string) {
 					},
 				},
 			},
-		},
-	});
+		}),
+	]);
 
-	if (!project) {
+	if (!accessRole || !project) {
 		return undefined;
 	}
 

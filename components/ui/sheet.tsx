@@ -1,5 +1,6 @@
 "use client";
 
+import { XIcon } from "lucide-react";
 import { Dialog as SheetPrimitive } from "radix-ui";
 import type * as React from "react";
 
@@ -55,12 +56,20 @@ function SheetContent({
 			<SheetPrimitive.Content
 				data-slot="sheet-content"
 				className={cn(
-					"fixed inset-y-0 right-0 z-50 flex h-full w-full max-w-md flex-col border-l border-border bg-card text-card-foreground shadow-xl outline-none duration-300 data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:animate-in data-[state=open]:slide-in-from-right",
+					"fixed inset-y-0 right-0 z-50 flex h-full w-[calc(100%-2rem)] max-w-md flex-col border-l border-border bg-card text-card-foreground shadow-xl outline-none duration-300 data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:animate-in data-[state=open]:slide-in-from-right sm:w-full",
 					className,
 				)}
 				{...props}
 			>
 				{children}
+
+				<SheetPrimitive.Close
+					data-slot="sheet-close"
+					className="absolute right-4 top-4 z-20 inline-flex size-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+				>
+					<XIcon aria-hidden="true" className="size-4" />
+					<span className="sr-only">Close</span>
+				</SheetPrimitive.Close>
 			</SheetPrimitive.Content>
 		</SheetPortal>
 	);

@@ -62,11 +62,16 @@ export function EditTaskModal({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="gap-0 overflow-hidden bg-background p-0 sm:max-w-lg">
-				<DialogHeader className="border-b border-border bg-card px-6 py-5 pr-12">
+			<DialogContent
+				headerVariant="primary"
+				className="gap-0 overflow-hidden bg-background p-0 sm:max-w-lg"
+			>
+				<DialogHeader variant="primary">
 					<DialogTitle>Edit task</DialogTitle>
 
-					<DialogDescription>Update the task details.</DialogDescription>
+					<DialogDescription className="sr-only">
+						Update the task details.
+					</DialogDescription>
 				</DialogHeader>
 
 				<form id={formId} action={formAction} noValidate />

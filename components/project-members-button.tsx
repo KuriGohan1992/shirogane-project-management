@@ -31,12 +31,13 @@ export function ProjectMembersButton({
 				type="button"
 				variant="outline"
 				size="sm"
-				className="h-9 gap-2 bg-card"
+				aria-label={`Project collaborators (${collaboratorCount})`}
+				className="h-9 gap-2 bg-card px-2.5 sm:px-3"
 				onClick={() => setIsOpen(true)}
 			>
 				<Users aria-hidden="true" className="size-4" />
 
-				<span>Collaborators</span>
+				<span className="hidden sm:inline">Collaborators</span>
 
 				<span className="inline-flex min-w-5 items-center justify-center rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
 					{collaboratorCount}

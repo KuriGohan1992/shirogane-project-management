@@ -226,7 +226,7 @@ function Contributors({ data }: { data: AnalyticsData }) {
 	);
 
 	return (
-		<div className="h-full overflow-y-auto">
+		<div className="scrollbar-thin max-h-[12rem] overflow-y-auto xl:h-full xl:max-h-none">
 			{data.contributors.map((contributor, index) => {
 				const name = contributor.user.name ?? contributor.user.email;
 

@@ -6,20 +6,20 @@ const TASKS = ["task-1", "task-2"];
 
 function ProjectHeaderSkeleton() {
 	return (
-		<div className="relative overflow-hidden rounded-xl border border-border bg-card">
+		<div className="relative min-w-0 overflow-hidden rounded-xl border border-border bg-card">
 			<Skeleton className="absolute inset-x-0 top-0 h-4 rounded-none" />
 
-			<div className="p-6 pt-7">
-				<div className="flex items-start justify-between gap-4">
-					<Skeleton className="h-9 w-[min(28rem,55%)]" />
+			<div className="p-5 pt-7 sm:p-6 sm:pt-7">
+				<div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto] items-start gap-x-3 gap-y-3 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center">
+					<Skeleton className="h-8 w-4/5 max-w-72 sm:h-9 sm:max-w-md" />
 
-					<div className="flex shrink-0 items-center gap-2">
-						<Skeleton className="h-8 w-24" />
-						<Skeleton className="h-8 w-24" />
-						<Skeleton className="h-8 w-24" />
-						<Skeleton className="h-6 w-px rounded-none" />
-						<Skeleton className="h-5 w-2" />
+					<div className="col-span-2 row-start-2 flex justify-end gap-2 sm:col-span-1 sm:col-start-2 sm:row-start-1">
+						<Skeleton className="size-9 sm:w-24" />
+						<Skeleton className="size-9 sm:w-24" />
+						<Skeleton className="size-9 sm:w-28" />
 					</div>
+
+					<Skeleton className="col-start-2 row-start-1 size-8 sm:col-start-3" />
 				</div>
 
 				<div className="mt-4 max-w-5xl space-y-2">
@@ -27,21 +27,21 @@ function ProjectHeaderSkeleton() {
 					<Skeleton className="h-3.5 w-4/5" />
 				</div>
 
-				<div className="mt-5 grid grid-cols-3 divide-x divide-border border-t border-border pt-4">
+				<div className="mt-5 divide-y divide-border border-t border-border sm:grid sm:grid-cols-3 sm:divide-x sm:divide-y-0 sm:pt-4">
 					{["schedule", "activity", "role"].map((id, index) => (
 						<div
 							key={id}
 							className={
 								index === 0
-									? "flex items-center gap-3 pr-4"
-									: "flex items-center gap-3 px-4"
+									? "flex items-center gap-3 py-3 sm:py-0 sm:pr-4"
+									: "flex items-center gap-3 py-3 sm:px-4 sm:py-0"
 							}
 						>
 							<Skeleton className="size-[18px] shrink-0" />
 
-							<div>
+							<div className="min-w-0">
 								<Skeleton className="h-3 w-20" />
-								<Skeleton className="mt-1.5 h-4 w-32" />
+								<Skeleton className="mt-1.5 h-4 w-32 max-w-full" />
 							</div>
 						</div>
 					))}

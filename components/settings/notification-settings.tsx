@@ -164,8 +164,8 @@ export function NotificationSettings({
 
 	return (
 		<div className="flex h-full flex-col">
-			<div className="grid flex-1 grid-rows-5 divide-y divide-border">
-				<div className="flex min-h-0 items-center justify-between gap-6">
+			<div className="flex-1 divide-y divide-border sm:grid sm:grid-rows-5">
+				<div className="flex min-h-12 items-center justify-between gap-4 py-3 sm:min-h-0 sm:gap-6 sm:py-0">
 					<p className="text-sm font-bold text-foreground">
 						Mute all notifications
 					</p>
@@ -185,7 +185,7 @@ export function NotificationSettings({
 					return (
 						<div
 							key={option.value}
-							className="flex min-h-0 items-center justify-between gap-6"
+							className="flex min-h-12 items-center justify-between gap-4 py-3 sm:min-h-0 sm:gap-6 sm:py-0"
 						>
 							<p
 								className={cn(
@@ -211,7 +211,7 @@ export function NotificationSettings({
 				})}
 			</div>
 
-			<div className="flex min-h-8 items-center border-t border-border pt-3">
+			<div className="flex min-h-9 items-center border-t border-border pt-3 sm:min-h-8">
 				{feedback && (
 					<p
 						aria-live="polite"

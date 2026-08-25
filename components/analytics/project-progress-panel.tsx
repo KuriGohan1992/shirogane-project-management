@@ -75,7 +75,7 @@ export function ProjectProgressPanel({ projects }: ProjectProgressPanelProps) {
 				</div>
 			</div>
 
-			<div className="min-h-0 flex-1 overflow-y-auto px-4">
+			<div className="scrollbar-thin min-h-0 max-h-[25rem] flex-1 overflow-y-auto px-4 xl:max-h-none">
 				{visibleProjects.length === 0 ? (
 					<div className="flex h-full items-center justify-center text-sm text-muted-foreground">
 						{showCompleted

@@ -419,7 +419,7 @@ export function ProjectCalendar({
 					</div>
 				</div>
 
-				<div className="overflow-x-auto">
+				<div className="scrollbar-thin overflow-x-auto">
 					<div className="min-w-[900px]">
 						<div className="grid grid-cols-7 border-b border-border bg-muted/35">
 							{WEEKDAYS.map((weekday) => (

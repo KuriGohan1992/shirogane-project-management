@@ -47,6 +47,7 @@ type MetadataItemProps = {
 	icon: ReactNode;
 	label: string;
 	children: ReactNode;
+	className?: string;
 };
 
 type SectionHeaderProps = {
@@ -78,9 +79,9 @@ function toEditableTask(task: Task): EditableTask {
 	};
 }
 
-function MetadataItem({ icon, label, children }: MetadataItemProps) {
+function MetadataItem({ icon, label, children, className }: MetadataItemProps) {
 	return (
-		<div className="min-w-0">
+		<div className={cn("min-w-0", className)}>
 			<div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
 				{icon}
 				<span>{label}</span>
@@ -144,7 +145,7 @@ export function TaskDetailsView({
 	}
 
 	return (
-		<div className="flex h-[min(52rem,90vh)] min-h-0 flex-col bg-background">
+		<div className="flex h-[min(52rem,90dvh)] min-h-0 flex-col bg-background">
 			<header className="shrink-0 bg-primary px-6 py-5 text-primary-foreground lg:px-8">
 				<div className="flex items-start justify-between gap-5 pr-8">
 					<div className="min-w-0 flex-1">
@@ -212,7 +213,7 @@ export function TaskDetailsView({
 							<SectionHeader title="Task details" first />
 
 							<div className="pt-5">
-								<div className="grid gap-x-10 gap-y-6 sm:grid-cols-2 xl:grid-cols-3">
+								<div className="grid grid-cols-2 gap-x-5 gap-y-6 sm:gap-x-10 xl:grid-cols-3">
 									<MetadataItem
 										icon={<Columns3 aria-hidden="true" size={14} />}
 										label="Stage"
@@ -236,6 +237,7 @@ export function TaskDetailsView({
 									<MetadataItem
 										icon={<Users aria-hidden="true" size={14} />}
 										label="Assignees"
+										className="col-span-2 xl:col-span-1"
 									>
 										{assignedUsers.length === 0 &&
 										!permissions.canAssignTasks ? (

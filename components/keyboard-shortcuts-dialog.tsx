@@ -177,17 +177,20 @@ export function KeyboardShortcutsDialog({
 }: KeyboardShortcutsDialogProps) {
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-2xl">
-				<DialogHeader>
+			<DialogContent
+				headerVariant="primary"
+				className="max-h-[85dvh] grid-rows-[auto_minmax(0,1fr)] gap-0 overflow-hidden bg-background p-0 sm:max-w-2xl"
+			>
+				<DialogHeader variant="primary">
 					<DialogTitle>Keyboard shortcuts</DialogTitle>
 
-					<DialogDescription>
+					<DialogDescription className="sr-only">
 						Navigate Shiro and work with the current board without reaching for
 						the mouse.
 					</DialogDescription>
 				</DialogHeader>
 
-				<div className="space-y-6">
+				<div className="scrollbar-thin min-h-0 space-y-6 overflow-y-auto px-6 py-5">
 					{SHORTCUT_SECTIONS.map((section) => (
 						<section key={section.title}>
 							<h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">

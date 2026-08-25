@@ -29,7 +29,7 @@ export function ProjectActivityList({
 	}
 
 	return (
-		<div className="space-y-5">
+		<div className="divide-y divide-border">
 			{activities.map((activity) => {
 				const actorName =
 					activity.actor?.name ??
@@ -37,7 +37,7 @@ export function ProjectActivityList({
 					"Former collaborator";
 
 				return (
-					<div key={activity.id} className="flex gap-3">
+					<div key={activity.id} className="flex gap-3 py-4">
 						{activity.actor ? (
 							<UserAvatar user={activity.actor} className="size-8 shrink-0" />
 						) : (
