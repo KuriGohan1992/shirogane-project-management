@@ -13,6 +13,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
+import { useAssignmentCandidatesContext } from "@/components/assignment-candidates-provider";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -109,6 +110,11 @@ export function TaskBulkToolbar({
 	onSetCompletion,
 }: TaskBulkToolbarProps) {
 	const router = useRouter();
+
+	const assignmentCandidates = useAssignmentCandidatesContext();
+
+	const effectiveAssigneeCandidates =
+		assignmentCandidates?.candidates ?? assigneeCandidates;
 
 	const [isPending, startTransition] = useTransition();
 
@@ -306,7 +312,13 @@ export function TaskBulkToolbar({
 					</PopoverContent>
 				</Popover>
 
-				<Popover>
+				<Popover
+					onOpenChange={(open) => {
+						if (open) {
+							void assignmentCandidates?.ensureTeamCandidates();
+						}
+					}}
+				>
 					<PopoverTrigger asChild>
 						<Button
 							type="button"
@@ -323,7 +335,7 @@ export function TaskBulkToolbar({
 
 					<PopoverContent align="end" className="w-80 p-2">
 						<AssigneeCandidateList
-							candidates={assigneeCandidates}
+							candidates={effectiveAssigneeCandidates}
 							renderCandidate={(assignee) => (
 								<div className="flex items-center gap-2 rounded-md px-2 py-2 hover:bg-muted">
 									<AssigneeCandidateIdentity

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { AssignmentCandidatesProvider } from "@/components/assignment-candidates-provider";
 import { TaskRouteModal } from "@/components/modals/task-route-modal";
 import { ProjectBoardContent } from "@/components/project-board-content";
 import { TaskAccessDenied } from "@/components/task-access-denied";
@@ -59,16 +60,22 @@ export default async function TaskPage({ params }: TaskPageProps) {
 				taskTitle={details.task.title}
 				closeHref={`/projects/${projectIdResult.data}`}
 			>
-				<TaskDetailsView
-					task={details.task}
-					projectName={details.projectName}
-					stageName={details.stageName}
-					labelCandidates={details.labelCandidates}
-					assigneeCandidates={details.assigneeCandidates}
-					permissions={permissions}
-					currentUserId={user.id}
-					isProjectOwner={details.accessRole === "owner"}
-				/>
+				<AssignmentCandidatesProvider
+					projectId={projectIdResult.data}
+					initialCandidates={details.assigneeCandidates}
+					canLoadTeamCandidates={permissions.canManageMembers}
+				>
+					<TaskDetailsView
+						task={details.task}
+						projectName={details.projectName}
+						stageName={details.stageName}
+						labelCandidates={details.labelCandidates}
+						assigneeCandidates={details.assigneeCandidates}
+						permissions={permissions}
+						currentUserId={user.id}
+						isProjectOwner={details.accessRole === "owner"}
+					/>
+				</AssignmentCandidatesProvider>
 			</TaskRouteModal>
 		</>
 	);

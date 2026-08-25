@@ -23,7 +23,6 @@ import { GlobalSearch } from "@/components/global-search";
 import { ShiroBrand } from "@/components/shiro-brand";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { cn } from "@/lib/utils";
-import type { NotificationCenterData } from "@/types/notification";
 import { NotificationCenter } from "./notification-center";
 
 const navigation = [
@@ -62,7 +61,7 @@ const navigation = [
 type DashboardShellProps = {
 	children: ReactNode;
 	serverTime: string;
-	initialNotifications: NotificationCenterData;
+	initialNotificationCount: number;
 };
 function formatServerTime(date: Date) {
 	return new Intl.DateTimeFormat("en-US", {
@@ -89,7 +88,7 @@ function isEditableTarget(target: EventTarget | null) {
 export function DashboardShell({
 	children,
 	serverTime,
-	initialNotifications,
+	initialNotificationCount,
 }: DashboardShellProps) {
 	const pathname = usePathname();
 
@@ -309,7 +308,9 @@ export function DashboardShell({
 
 							<div className="flex shrink-0 items-center gap-1.5 sm:gap-3">
 								<div className="flex items-center gap-1">
-									<NotificationCenter initialData={initialNotifications} />
+									<NotificationCenter
+										initialUnreadCount={initialNotificationCount}
+									/>
 
 									<ThemeToggle />
 								</div>

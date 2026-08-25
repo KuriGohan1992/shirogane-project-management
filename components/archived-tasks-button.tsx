@@ -1,6 +1,7 @@
 "use client";
 
 import { Archive, CircleCheckBig, RotateCcw, Trash2 } from "lucide-react";
+import { useCallback, useRef, useState, useTransition } from "react";
 
 import {
 	AlertDialog,
@@ -21,6 +22,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
+import { loadArchivedTasksAction } from "@/lib/actions/project-panel-data";
 import {
 	deleteAllArchivedTasks,
 	deleteArchivedTask,
@@ -32,7 +34,7 @@ import type { ArchivedTaskSummary } from "@/types/task";
 
 type ArchivedTasksButtonProps = {
 	projectId: string;
-	tasks: ArchivedTaskSummary[];
+	taskCount: number;
 	canManage: boolean;
 };
 
@@ -46,26 +48,59 @@ function formatArchivedDate(date: Date) {
 
 export function ArchivedTasksButton({
 	projectId,
-	tasks,
+	taskCount,
 	canManage,
 }: ArchivedTasksButtonProps) {
+	const [tasks, setTasks] = useState<ArchivedTaskSummary[] | null>(null);
+	const [loadError, setLoadError] = useState<string | null>(null);
+	const [isLoading, startLoadingTransition] = useTransition();
+	const loadingRef = useRef(false);
+
+	const ensureArchivedTasks = useCallback(() => {
+		if (tasks !== null || loadingRef.current) {
+			return;
+		}
+
+		loadingRef.current = true;
+
+		startLoadingTransition(async () => {
+			try {
+				const nextTasks = await loadArchivedTasksAction(projectId);
+
+				setTasks(nextTasks);
+				setLoadError(null);
+			} catch (error) {
+				console.error("Failed to load archived tasks:", error);
+				setLoadError("Archived tasks could not be loaded.");
+			} finally {
+				loadingRef.current = false;
+			}
+		});
+	}, [projectId, tasks]);
+
 	const restoreAllAction = restoreAllArchivedTasks.bind(null, projectId);
 	const deleteAllAction = deleteAllArchivedTasks.bind(null, projectId);
 
 	return (
-		<Dialog>
+		<Dialog
+			onOpenChange={(open) => {
+				if (open) {
+					ensureArchivedTasks();
+				}
+			}}
+		>
 			<DialogTrigger asChild>
 				<Button
 					type="button"
 					variant="outline"
 					size="sm"
-					aria-label={`Archived tasks (${tasks.length})`}
+					aria-label={`Archived tasks (${taskCount})`}
 					className="h-9 gap-2 bg-card px-2.5 sm:px-3"
 				>
 					<Archive aria-hidden="true" className="size-4" />
 					<span className="hidden sm:inline">Archived</span>
 					<span className="inline-flex min-w-5 items-center justify-center rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold tabular-nums text-muted-foreground">
-						{tasks.length}
+						{taskCount}
 					</span>
 				</Button>
 			</DialogTrigger>
@@ -83,7 +118,15 @@ export function ArchivedTasksButton({
 					</DialogDescription>
 				</DialogHeader>
 
-				{tasks.length === 0 ? (
+				{loadError ? (
+					<div className="flex min-h-48 items-center justify-center px-6 text-center text-sm text-destructive">
+						{loadError}
+					</div>
+				) : tasks === null || isLoading ? (
+					<div className="flex min-h-48 items-center justify-center px-6 text-center text-sm text-muted-foreground">
+						Loading archived tasks...
+					</div>
+				) : tasks.length === 0 ? (
 					<div className="flex min-h-48 flex-col items-center justify-center px-6 text-center">
 						<Archive
 							aria-hidden="true"

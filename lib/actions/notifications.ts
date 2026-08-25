@@ -3,6 +3,7 @@
 import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import {
 	getNotificationCenterDataForUser,
+	getUnreadNotificationCount,
 	markAllNotificationsReadForUser,
 	markNotificationReadForUser,
 } from "@/lib/db/notifications";
@@ -15,6 +16,12 @@ export async function loadNotificationsAction(): Promise<NotificationCenterData>
 	const user = await getCurrentDatabaseUser();
 
 	return getNotificationCenterDataForUser(user.id, NOTIFICATION_LIMIT);
+}
+
+export async function loadUnreadNotificationCountAction(): Promise<number> {
+	const user = await getCurrentDatabaseUser();
+
+	return getUnreadNotificationCount(user.id);
 }
 
 export async function markNotificationReadAction(

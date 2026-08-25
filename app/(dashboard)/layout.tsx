@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 import { DashboardShell } from "@/components/dashboard-shell";
 import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
-import { getNotificationCenterDataForUser } from "@/lib/db/notifications";
+import { getUnreadNotificationCount } from "@/lib/db/notifications";
 
 type DashboardLayoutProps = Readonly<{
 	children: ReactNode;
@@ -13,12 +13,12 @@ export default async function DashboardLayout({
 }: DashboardLayoutProps) {
 	const user = await getCurrentDatabaseUser();
 
-	const initialNotifications = await getNotificationCenterDataForUser(user.id);
+	const initialNotificationCount = await getUnreadNotificationCount(user.id);
 
 	return (
 		<DashboardShell
 			serverTime={new Date().toISOString()}
-			initialNotifications={initialNotifications}
+			initialNotificationCount={initialNotificationCount}
 		>
 			{children}
 		</DashboardShell>

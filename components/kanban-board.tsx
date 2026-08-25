@@ -15,6 +15,10 @@ import {
 } from "react";
 import { toast } from "sonner";
 import {
+	AssignmentCandidatesProvider,
+	useAssignmentCandidatesContext,
+} from "@/components/assignment-candidates-provider";
+import {
 	BoardStoreProvider,
 	useBoardStore,
 } from "@/components/board-store-provider";
@@ -61,7 +65,6 @@ type KanbanBoardProps = {
 type KanbanBoardContentProps = {
 	projectId: string;
 	labelCandidates: ProjectLabel[];
-	assigneeCandidates: AssignmentCandidate[];
 	permissions: ProjectPermissions;
 	currentUserId: string;
 	isProjectOwner: boolean;
@@ -184,12 +187,21 @@ function getHorizontalKeyboardTarget(
 function KanbanBoardContent({
 	projectId,
 	labelCandidates,
-	assigneeCandidates,
 	permissions,
 	currentUserId,
 	isProjectOwner,
 }: KanbanBoardContentProps) {
 	const router = useRouter();
+
+	const assignmentCandidates = useAssignmentCandidatesContext();
+
+	if (!assignmentCandidates) {
+		throw new Error(
+			"KanbanBoardContent requires AssignmentCandidatesProvider.",
+		);
+	}
+
+	const assigneeCandidates = assignmentCandidates.candidates;
 
 	const searchParams = useSearchParams();
 
@@ -1068,15 +1080,20 @@ export function KanbanBoard({
 	isProjectOwner,
 }: KanbanBoardProps) {
 	return (
-		<BoardStoreProvider key={projectId} serverStages={stages}>
-			<KanbanBoardContent
-				projectId={projectId}
-				labelCandidates={labelCandidates}
-				assigneeCandidates={assigneeCandidates}
-				permissions={permissions}
-				currentUserId={currentUserId}
-				isProjectOwner={isProjectOwner}
-			/>
-		</BoardStoreProvider>
+		<AssignmentCandidatesProvider
+			projectId={projectId}
+			initialCandidates={assigneeCandidates}
+			canLoadTeamCandidates={permissions.canManageMembers}
+		>
+			<BoardStoreProvider key={projectId} serverStages={stages}>
+				<KanbanBoardContent
+					projectId={projectId}
+					labelCandidates={labelCandidates}
+					permissions={permissions}
+					currentUserId={currentUserId}
+					isProjectOwner={isProjectOwner}
+				/>
+			</BoardStoreProvider>
+		</AssignmentCandidatesProvider>
 	);
 }

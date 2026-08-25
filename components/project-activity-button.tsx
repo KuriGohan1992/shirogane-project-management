@@ -1,6 +1,7 @@
 "use client";
 
 import { History } from "lucide-react";
+import { useCallback, useRef, useState, useTransition } from "react";
 
 import { ProjectActivityList } from "@/components/project-activity-list";
 import { Button } from "@/components/ui/button";
@@ -20,18 +21,66 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "@/components/ui/sheet";
+import { loadProjectActivityAction } from "@/lib/actions/project-panel-data";
 import type { ActivityWithActor } from "@/types/activity";
 
 type ProjectActivityButtonProps = {
-	activities: ActivityWithActor[];
+	projectId: string;
 };
 
 export function ProjectActivityButton({
-	activities,
+	projectId,
 }: ProjectActivityButtonProps) {
+	const [activities, setActivities] = useState<ActivityWithActor[] | null>(
+		null,
+	);
+	const [error, setError] = useState<string | null>(null);
+	const [isPending, startTransition] = useTransition();
+	const loadingRef = useRef(false);
+
+	const ensureActivities = useCallback(() => {
+		if (activities !== null || loadingRef.current) {
+			return;
+		}
+
+		loadingRef.current = true;
+
+		startTransition(async () => {
+			try {
+				const nextActivities = await loadProjectActivityAction(projectId);
+
+				setActivities(nextActivities);
+				setError(null);
+			} catch (loadError) {
+				console.error("Failed to load project activity:", loadError);
+				setError("Project activity could not be loaded.");
+			} finally {
+				loadingRef.current = false;
+			}
+		});
+	}, [activities, projectId]);
+
+	const activityContent = error ? (
+		<div className="px-6 py-10 text-center text-sm text-destructive">
+			{error}
+		</div>
+	) : activities === null || isPending ? (
+		<div className="px-6 py-10 text-center text-sm text-muted-foreground">
+			Loading activity...
+		</div>
+	) : (
+		<ProjectActivityList activities={activities} />
+	);
+
 	return (
 		<>
-			<Dialog>
+			<Dialog
+				onOpenChange={(open) => {
+					if (open) {
+						ensureActivities();
+					}
+				}}
+			>
 				<DialogTrigger asChild>
 					<Button
 						type="button"
@@ -57,12 +106,18 @@ export function ProjectActivityButton({
 					</DialogHeader>
 
 					<div className="scrollbar-thin min-h-0 overflow-y-auto bg-card px-5">
-						<ProjectActivityList activities={activities} />
+						{activityContent}
 					</div>
 				</DialogContent>
 			</Dialog>
 
-			<Sheet>
+			<Sheet
+				onOpenChange={(open) => {
+					if (open) {
+						ensureActivities();
+					}
+				}}
+			>
 				<SheetTrigger asChild>
 					<Button
 						type="button"
@@ -88,7 +143,7 @@ export function ProjectActivityButton({
 					</SheetHeader>
 
 					<div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto bg-card px-6">
-						<ProjectActivityList activities={activities} />
+						{activityContent}
 					</div>
 				</SheetContent>
 			</Sheet>

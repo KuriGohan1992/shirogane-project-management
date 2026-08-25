@@ -6,6 +6,7 @@ import {
 	AssigneeCandidateIdentity,
 	AssigneeCandidateList,
 } from "@/components/assignee-candidate-list";
+import { useAssignmentCandidatesContext } from "@/components/assignment-candidates-provider";
 import { TaskAssigneeStack } from "@/components/task-assignee-stack";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +36,10 @@ export function TaskAssigneePicker({
 	fieldStyle = false,
 	modal = false,
 }: TaskAssigneePickerProps) {
+	const assignmentCandidates = useAssignmentCandidatesContext();
+
+	const effectiveCandidates = assignmentCandidates?.candidates ?? candidates;
+
 	const assignedUserIds = new Set(assignedUsers.map((user) => user.id));
 
 	if (!canManage) {
@@ -59,7 +64,14 @@ export function TaskAssigneePicker({
 				size={fieldStyle ? "large" : "small"}
 			/>
 
-			<Popover modal={modal}>
+			<Popover
+				modal={modal}
+				onOpenChange={(open) => {
+					if (open) {
+						void assignmentCandidates?.ensureTeamCandidates();
+					}
+				}}
+			>
 				<PopoverTrigger asChild>
 					{assignedUsers.length === 0 ? (
 						<Button
@@ -96,7 +108,7 @@ export function TaskAssigneePicker({
 					className="w-80 p-2"
 				>
 					<AssigneeCandidateList
-						candidates={candidates}
+						candidates={effectiveCandidates}
 						renderCandidate={(candidate) => {
 							const isAssigned = assignedUserIds.has(candidate.id);
 

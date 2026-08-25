@@ -1,6 +1,6 @@
 import "server-only";
 
-import { and, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
+import { and, count, desc, eq, inArray, isNotNull, isNull } from "drizzle-orm";
 
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { db } from "@/lib/db";
@@ -41,6 +41,18 @@ async function getManageableTaskArchiveContext(taskId: string, userId: string) {
 	}
 
 	return task;
+}
+
+export async function getArchivedTaskCountForProject(projectId: string) {
+	const [row] = await db
+		.select({
+			total: count(),
+		})
+		.from(tasks)
+		.innerJoin(stages, eq(tasks.stageId, stages.id))
+		.where(and(eq(stages.projectId, projectId), isNotNull(tasks.archivedAt)));
+
+	return row?.total ?? 0;
 }
 
 export async function getArchivedTasksForProject(

@@ -7,10 +7,9 @@ import { ProjectHeader } from "@/components/project-header";
 import { ProjectMembersButton } from "@/components/project-members-button";
 import { buildAssignmentCandidates } from "@/lib/assignment-candidates";
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
-import { getProjectActivityForUser } from "@/lib/db/activity";
+import { getLatestProjectActivityDate } from "@/lib/db/activity";
 import { getProjectForUser } from "@/lib/db/projects";
-import { getArchivedTasksForProject } from "@/lib/db/task-archive";
-import { getTeamCollaboratorProfilesForUser } from "@/lib/db/team";
+import { getArchivedTaskCountForProject } from "@/lib/db/task-archive";
 
 type ProjectBoardContentProps = {
 	projectId: string;
@@ -21,7 +20,11 @@ export async function ProjectBoardContent({
 	projectId,
 	currentUserId,
 }: ProjectBoardContentProps) {
-	const project = await getProjectForUser(projectId, currentUserId);
+	const [project, archivedTaskCount, latestActivityAt] = await Promise.all([
+		getProjectForUser(projectId, currentUserId),
+		getArchivedTaskCountForProject(projectId),
+		getLatestProjectActivityDate(projectId),
+	]);
 
 	if (!project) {
 		notFound();
@@ -29,24 +32,12 @@ export async function ProjectBoardContent({
 
 	const permissions = getProjectPermissions(project.accessRole);
 
-	const [archivedTasks, activities, teamCollaborators] = await Promise.all([
-		getArchivedTasksForProject(projectId, currentUserId),
-
-		getProjectActivityForUser(projectId, currentUserId),
-
-		permissions.canManageMembers
-			? getTeamCollaboratorProfilesForUser(currentUserId)
-			: Promise.resolve([]),
-	]);
-
-	const projectActivities = activities ?? [];
-
-	const lastActivityAt = projectActivities[0]?.createdAt ?? project.updatedAt;
+	const lastActivityAt = latestActivityAt ?? project.updatedAt;
 
 	const assigneeCandidates = buildAssignmentCandidates({
 		owner: project.owner,
 		members: project.members,
-		teamCollaborators,
+		teamCollaborators: [],
 		canManageMembers: permissions.canManageMembers,
 	});
 
@@ -60,11 +51,15 @@ export async function ProjectBoardContent({
 				lastActivityAt={lastActivityAt}
 				headerActions={
 					<div className="flex items-center gap-2">
-						<ProjectActivityButton activities={projectActivities} />
+						<ProjectActivityButton
+							key={lastActivityAt.toISOString()}
+							projectId={project.id}
+						/>
 
 						<ArchivedTasksButton
+							key={archivedTaskCount}
 							projectId={project.id}
-							tasks={archivedTasks}
+							taskCount={archivedTaskCount}
 							canManage={permissions.canManageTasks}
 						/>
 

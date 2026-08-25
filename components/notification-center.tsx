@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/popover";
 import {
 	loadNotificationsAction,
+	loadUnreadNotificationCountAction,
 	markAllNotificationsReadAction,
 	markNotificationReadAction,
 } from "@/lib/actions/notifications";
@@ -57,73 +58,110 @@ const NOTIFICATION_ICONS: Record<NotificationType, LucideIcon> = {
 };
 
 type NotificationCenterProps = {
-	initialData: NotificationCenterData;
+	initialUnreadCount: number;
 };
 
-export function NotificationCenter({ initialData }: NotificationCenterProps) {
+export function NotificationCenter({
+	initialUnreadCount,
+}: NotificationCenterProps) {
 	const router = useRouter();
 
 	const [open, setOpen] = useState(false);
 
-	const [data, setData] = useState(initialData);
+	const [data, setData] = useState<NotificationCenterData>({
+		items: [],
+		unreadCount: initialUnreadCount,
+	});
 
+	const [hasLoadedItems, setHasLoadedItems] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-
 	const [isPending, startTransition] = useTransition();
 
-	const refreshingRef = useRef(false);
+	const itemsRefreshingRef = useRef(false);
+	const countRefreshingRef = useRef(false);
 
-	const refresh = useCallback(() => {
-		if (refreshingRef.current) {
+	const refreshItems = useCallback(() => {
+		if (itemsRefreshingRef.current) {
 			return;
 		}
 
-		refreshingRef.current = true;
+		itemsRefreshingRef.current = true;
 
 		startTransition(async () => {
 			try {
 				const nextData = await loadNotificationsAction();
 
 				setData(nextData);
-
+				setHasLoadedItems(true);
 				setError(null);
 			} catch (refreshError) {
 				console.error("Failed to refresh notifications:", refreshError);
 
 				setError("Notifications could not be refreshed.");
 			} finally {
-				refreshingRef.current = false;
+				itemsRefreshingRef.current = false;
+			}
+		});
+	}, []);
+
+	const refreshCount = useCallback(() => {
+		if (countRefreshingRef.current) {
+			return;
+		}
+
+		countRefreshingRef.current = true;
+
+		startTransition(async () => {
+			try {
+				const unreadCount = await loadUnreadNotificationCountAction();
+
+				setData((current) => ({
+					...current,
+					unreadCount,
+				}));
+			} catch (refreshError) {
+				console.error("Failed to refresh notification count:", refreshError);
+			} finally {
+				countRefreshingRef.current = false;
 			}
 		});
 	}, []);
 
 	useEffect(() => {
-		const interval = window.setInterval(() => {
-			if (document.visibilityState === "visible") {
-				refresh();
+		const refreshVisibleNotifications = () => {
+			if (document.visibilityState !== "visible") {
+				return;
 			}
-		}, POLL_INTERVAL_MS);
 
-		const handleVisibilityChange = () => {
-			if (document.visibilityState === "visible") {
-				refresh();
+			if (open) {
+				refreshItems();
+			} else {
+				refreshCount();
 			}
 		};
 
-		document.addEventListener("visibilitychange", handleVisibilityChange);
+		const interval = window.setInterval(
+			refreshVisibleNotifications,
+			POLL_INTERVAL_MS,
+		);
+
+		document.addEventListener("visibilitychange", refreshVisibleNotifications);
 
 		return () => {
 			window.clearInterval(interval);
 
-			document.removeEventListener("visibilitychange", handleVisibilityChange);
+			document.removeEventListener(
+				"visibilitychange",
+				refreshVisibleNotifications,
+			);
 		};
-	}, [refresh]);
+	}, [open, refreshCount, refreshItems]);
 
 	function handleOpenChange(nextOpen: boolean) {
 		setOpen(nextOpen);
 
 		if (nextOpen) {
-			refresh();
+			refreshItems();
 		}
 	}
 
@@ -163,11 +201,12 @@ export function NotificationCenter({ initialData }: NotificationCenterProps) {
 					const nextData = await markNotificationReadAction(notification.id);
 
 					setData(nextData);
+					setHasLoadedItems(true);
 					setError(null);
 				} catch (readError) {
 					console.error("Failed to mark notification as read:", readError);
 
-					refresh();
+					refreshItems();
 				}
 			});
 		}
@@ -200,13 +239,14 @@ export function NotificationCenter({ initialData }: NotificationCenterProps) {
 				const nextData = await markAllNotificationsReadAction();
 
 				setData(nextData);
+				setHasLoadedItems(true);
 				setError(null);
 			} catch (markError) {
 				console.error("Failed to mark all notifications as read:", markError);
 
 				setError("Notifications could not be marked as read.");
 
-				refresh();
+				refreshItems();
 			}
 		});
 	}
@@ -254,7 +294,7 @@ export function NotificationCenter({ initialData }: NotificationCenterProps) {
 						)}
 					</div>
 
-					{data.unreadCount > 0 && (
+					{data.unreadCount > 0 && hasLoadedItems && (
 						<button
 							type="button"
 							disabled={isPending}
@@ -272,7 +312,11 @@ export function NotificationCenter({ initialData }: NotificationCenterProps) {
 					</p>
 				)}
 
-				{data.items.length === 0 ? (
+				{!hasLoadedItems ? (
+					<div className="px-6 py-10 text-center text-sm text-muted-foreground">
+						Loading notifications...
+					</div>
+				) : data.items.length === 0 ? (
 					<div className="px-6 py-10 text-center">
 						<BellRing
 							aria-hidden="true"

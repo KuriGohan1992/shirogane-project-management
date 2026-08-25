@@ -3,7 +3,7 @@ import "server-only";
 import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { getProjectsForUser } from "@/lib/db/projects";
+import { getLatestProjectActivityDates } from "@/lib/db/activity";
 import { stages, taskAssignees, tasks } from "@/lib/db/schema";
 import type {
 	TeamCollaborator,
@@ -17,50 +17,130 @@ function getDisplayName(user: UserProfileSummary) {
 }
 
 async function getTeamBaseForUser(userId: string) {
-	const accessibleProjects = await getProjectsForUser(userId);
+	const [ownedProjects, memberships] = await Promise.all([
+		db.query.projects.findMany({
+			columns: {
+				id: true,
+				ownerId: true,
+				name: true,
+				color: true,
+				completedAt: true,
+				updatedAt: true,
+			},
+
+			where: (project, { eq }) => eq(project.ownerId, userId),
+
+			with: {
+				owner: {
+					columns: {
+						id: true,
+						name: true,
+						email: true,
+						imageUrl: true,
+						jobTitle: true,
+					},
+				},
+			},
+		}),
+
+		db.query.projectMembers.findMany({
+			columns: {
+				role: true,
+			},
+
+			where: (member, { eq }) => eq(member.userId, userId),
+
+			with: {
+				project: {
+					columns: {
+						id: true,
+						ownerId: true,
+						name: true,
+						color: true,
+						completedAt: true,
+						updatedAt: true,
+					},
+
+					with: {
+						owner: {
+							columns: {
+								id: true,
+								name: true,
+								email: true,
+								imageUrl: true,
+								jobTitle: true,
+							},
+						},
+					},
+				},
+			},
+		}),
+	]);
+
+	const accessibleProjects = [
+		...ownedProjects.map((project) => ({
+			...project,
+			accessRole: "owner" as const,
+		})),
+		...memberships.map((membership) => ({
+			...membership.project,
+			accessRole: membership.role,
+		})),
+	];
 
 	if (accessibleProjects.length === 0) {
 		return {
-			accessibleProjects,
+			accessibleProjects: [],
 			collaboratorsByUserId: new Map<string, TeamCollaborator>(),
 		};
 	}
 
 	const projectIds = accessibleProjects.map((project) => project.id);
 
-	const memberships = await db.query.projectMembers.findMany({
-		columns: {
-			projectId: true,
-			userId: true,
-			role: true,
-		},
+	const [latestActivities, projectMemberships] = await Promise.all([
+		getLatestProjectActivityDates(projectIds),
 
-		where: (member) => inArray(member.projectId, projectIds),
+		db.query.projectMembers.findMany({
+			columns: {
+				projectId: true,
+				userId: true,
+				role: true,
+			},
 
-		with: {
-			user: {
-				columns: {
-					id: true,
-					name: true,
-					email: true,
-					imageUrl: true,
-					jobTitle: true,
+			where: (member) => inArray(member.projectId, projectIds),
+
+			with: {
+				user: {
+					columns: {
+						id: true,
+						name: true,
+						email: true,
+						imageUrl: true,
+						jobTitle: true,
+					},
 				},
 			},
-		},
-	});
+		}),
+	]);
 
-	type ProjectMembership = (typeof memberships)[number];
+	const latestActivityByProjectId = new Map(
+		latestActivities.map((activity) => [
+			activity.projectId,
+			activity.createdAt,
+		]),
+	);
 
-	const membershipsByProjectId = new Map<string, ProjectMembership[]>();
+	const membershipsByProjectId = new Map<
+		string,
+		(typeof projectMemberships)[number][]
+	>();
 
-	for (const membership of memberships) {
-		const projectMemberships =
+	for (const membership of projectMemberships) {
+		const projectMembers =
 			membershipsByProjectId.get(membership.projectId) ?? [];
 
-		projectMemberships.push(membership);
-
-		membershipsByProjectId.set(membership.projectId, projectMemberships);
+		projectMembers.push(membership);
+		membershipsByProjectId.set(membership.projectId, projectMembers);
 	}
 
 	const collaboratorsByUserId = new Map<string, TeamCollaborator>();
@@ -93,7 +173,13 @@ async function getTeamBaseForUser(userId: string) {
 		});
 	}
 
-	for (const project of accessibleProjects) {
+	const projectsWithActivity = accessibleProjects.map((project) => ({
+		...project,
+		lastActivityAt:
+			latestActivityByProjectId.get(project.id) ?? project.updatedAt,
+	}));
+
+	for (const project of projectsWithActivity) {
 		if (project.ownerId !== userId) {
 			addCollaboratorProject(project.owner, {
 				id: project.id,
@@ -124,7 +210,7 @@ async function getTeamBaseForUser(userId: string) {
 	}
 
 	return {
-		accessibleProjects,
+		accessibleProjects: projectsWithActivity,
 		collaboratorsByUserId,
 	};
 }

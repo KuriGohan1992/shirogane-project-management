@@ -7,6 +7,7 @@ import {
 	AssigneeCandidateIdentity,
 	AssigneeCandidateList,
 } from "@/components/assignee-candidate-list";
+import { useAssignmentCandidatesContext } from "@/components/assignment-candidates-provider";
 import { TaskAssigneeStack } from "@/components/task-assignee-stack";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,14 +30,21 @@ export function CreateTaskAssigneesField({
 }: CreateTaskAssigneesFieldProps) {
 	const [selectedAssigneeIds, setSelectedAssigneeIds] = useState<string[]>([]);
 
+	const assignmentCandidates = useAssignmentCandidatesContext();
+
+	const effectiveCandidates = assignmentCandidates?.candidates ?? candidates;
+
 	const selectedAssigneeIdSet = useMemo(
 		() => new Set(selectedAssigneeIds),
 		[selectedAssigneeIds],
 	);
 
 	const candidateById = useMemo(
-		() => new Map(candidates.map((candidate) => [candidate.id, candidate])),
-		[candidates],
+		() =>
+			new Map(
+				effectiveCandidates.map((candidate) => [candidate.id, candidate]),
+			),
+		[effectiveCandidates],
 	);
 
 	const selectedAssignees = selectedAssigneeIds
@@ -70,7 +78,14 @@ export function CreateTaskAssigneesField({
 				<TaskAssigneeStack users={selectedAssignees} size="large" />
 			)}
 
-			<Popover modal>
+			<Popover
+				modal
+				onOpenChange={(open) => {
+					if (open) {
+						void assignmentCandidates?.ensureTeamCandidates();
+					}
+				}}
+			>
 				<PopoverTrigger asChild>
 					{selectedAssignees.length === 0 ? (
 						<Button
@@ -97,7 +112,7 @@ export function CreateTaskAssigneesField({
 
 				<PopoverContent align="end" className="w-80 p-2">
 					<AssigneeCandidateList
-						candidates={candidates}
+						candidates={effectiveCandidates}
 						renderCandidate={(candidate) => {
 							const isSelected = selectedAssigneeIdSet.has(candidate.id);
 

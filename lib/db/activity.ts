@@ -101,6 +101,20 @@ export async function getProjectActivityForUser(
 	});
 }
 
+export async function getLatestProjectActivityDate(projectId: string) {
+	const activity = await db.query.activityLogs.findFirst({
+		columns: {
+			createdAt: true,
+		},
+
+		where: (activity, { eq }) => eq(activity.projectId, projectId),
+
+		orderBy: (activity, { desc }) => [desc(activity.createdAt)],
+	});
+
+	return activity?.createdAt;
+}
+
 export async function getLatestProjectActivityDates(projectIds: string[]) {
 	if (projectIds.length === 0) {
 		return [];

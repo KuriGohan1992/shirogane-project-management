@@ -3,62 +3,57 @@ import "server-only";
 import { buildAssignmentCandidates } from "@/lib/assignment-candidates";
 import { getProjectPermissions } from "@/lib/auth/project-permissions";
 import { db } from "@/lib/db";
-import { getProjectAccess } from "@/lib/db/project-access";
-import { getTeamCollaboratorProfilesForUser } from "@/lib/db/team";
 
 export async function getTaskDetailsForUser(
 	projectId: string,
 	taskId: string,
 	userId: string,
 ) {
-	const [accessRole, result] = await Promise.all([
-		getProjectAccess(projectId, userId),
-		db.query.tasks.findFirst({
-			where: (task, { and, eq, isNull }) =>
-				and(eq(task.id, taskId), isNull(task.archivedAt)),
+	const result = await db.query.tasks.findFirst({
+		where: (task, { and, eq, isNull }) =>
+			and(eq(task.id, taskId), isNull(task.archivedAt)),
 
-			with: {
-				stage: {
-					columns: {
-						id: true,
-						name: true,
-						projectId: true,
-					},
+		with: {
+			stage: {
+				columns: {
+					id: true,
+					name: true,
+					projectId: true,
+				},
 
-					with: {
-						project: {
-							columns: {
-								id: true,
-								name: true,
+				with: {
+					project: {
+						columns: {
+							id: true,
+							name: true,
+						},
+
+						with: {
+							labels: {
+								orderBy: (label, { asc }) => [asc(label.name)],
 							},
 
-							with: {
-								labels: {
-									orderBy: (label, { asc }) => [asc(label.name)],
+							owner: {
+								columns: {
+									id: true,
+									name: true,
+									email: true,
+									imageUrl: true,
+									jobTitle: true,
 								},
+							},
 
-								owner: {
-									columns: {
-										id: true,
-										name: true,
-										email: true,
-										imageUrl: true,
-										jobTitle: true,
-									},
-								},
+							members: {
+								orderBy: (member, { asc }) => [asc(member.joinedAt)],
 
-								members: {
-									orderBy: (member, { asc }) => [asc(member.joinedAt)],
-
-									with: {
-										user: {
-											columns: {
-												id: true,
-												name: true,
-												email: true,
-												imageUrl: true,
-												jobTitle: true,
-											},
+								with: {
+									user: {
+										columns: {
+											id: true,
+											name: true,
+											email: true,
+											imageUrl: true,
+											jobTitle: true,
 										},
 									},
 								},
@@ -66,67 +61,73 @@ export async function getTaskDetailsForUser(
 						},
 					},
 				},
+			},
 
-				assignees: {
-					orderBy: (assignee, { asc }) => [asc(assignee.assignedAt)],
+			assignees: {
+				orderBy: (assignee, { asc }) => [asc(assignee.assignedAt)],
 
-					with: {
-						user: {
-							columns: {
-								id: true,
-								name: true,
-								email: true,
-								imageUrl: true,
-								jobTitle: true,
-							},
-						},
-					},
-				},
-
-				labels: {
-					with: {
-						label: true,
-					},
-				},
-
-				comments: {
-					orderBy: (comment, { asc }) => [asc(comment.createdAt)],
-
-					with: {
-						author: {
-							columns: {
-								id: true,
-								name: true,
-								email: true,
-								imageUrl: true,
-							},
-						},
-					},
-				},
-
-				activities: {
-					orderBy: (activity, { desc }) => [desc(activity.createdAt)],
-
-					with: {
-						actor: {
-							columns: {
-								id: true,
-								name: true,
-								email: true,
-								imageUrl: true,
-							},
+				with: {
+					user: {
+						columns: {
+							id: true,
+							name: true,
+							email: true,
+							imageUrl: true,
+							jobTitle: true,
 						},
 					},
 				},
 			},
-		}),
-	]);
+
+			labels: {
+				with: {
+					label: true,
+				},
+			},
+
+			comments: {
+				orderBy: (comment, { asc }) => [asc(comment.createdAt)],
+
+				with: {
+					author: {
+						columns: {
+							id: true,
+							name: true,
+							email: true,
+							imageUrl: true,
+						},
+					},
+				},
+			},
+
+			activities: {
+				orderBy: (activity, { desc }) => [desc(activity.createdAt)],
+
+				with: {
+					actor: {
+						columns: {
+							id: true,
+							name: true,
+							email: true,
+							imageUrl: true,
+						},
+					},
+				},
+			},
+		},
+	});
 
 	if (!result || result.stage.projectId !== projectId) {
 		return {
 			status: "not_found",
 		} as const;
 	}
+
+	const accessRole =
+		result.stage.project.owner.id === userId
+			? ("owner" as const)
+			: result.stage.project.members.find((member) => member.userId === userId)
+					?.role;
 
 	if (!accessRole) {
 		return {
@@ -138,14 +139,10 @@ export async function getTaskDetailsForUser(
 
 	const permissions = getProjectPermissions(accessRole);
 
-	const teamCollaborators = permissions.canManageMembers
-		? await getTeamCollaboratorProfilesForUser(userId)
-		: [];
-
 	const assigneeCandidates = buildAssignmentCandidates({
 		owner: stage.project.owner,
 		members: stage.project.members,
-		teamCollaborators,
+		teamCollaborators: [],
 		canManageMembers: permissions.canManageMembers,
 	});
 
