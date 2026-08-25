@@ -1,7 +1,8 @@
-import { Clock3, FolderOpen, UserCheck } from "lucide-react";
+import { Clock3, UserCheck } from "lucide-react";
 import Link from "next/link";
 
 import { CreateProjectButton } from "@/components/create-project-button";
+import { EmptyState } from "@/components/empty-state";
 import { RecentProjects } from "@/components/recent-projects";
 import { TaskPriorityBadge } from "@/components/task-priority-badge";
 import { UserAvatar } from "@/components/user-avatar";
@@ -198,23 +199,18 @@ export default async function DashboardPage() {
 					</p>
 				</div>
 
-				<div className="flex flex-1 flex-col items-center justify-center text-center">
-					<FolderOpen
-						aria-hidden="true"
-						className="size-9 text-muted-foreground"
-					/>
-
-					<h2 className="mt-4 text-xl font-bold">Create your first project</h2>
-
-					<p className="mt-2 max-w-md text-sm leading-6 text-muted-foreground">
-						Projects organize your stages, tasks, collaborators, labels, and
-						activity.
-					</p>
-
-					<div className="mt-5">
-						<CreateProjectButton />
-					</div>
-				</div>
+<EmptyState
+	className="flex-1"
+	illustrationSrc="/empty-states/blank-canvas-rafiki.svg"
+	title="Create your first project"
+	description="Projects organize your stages, tasks, collaborators, labels, and activity."
+	action={
+		<CreateProjectButton
+			label="Create your first project"
+			showIcon={false}
+		/>
+	}
+/>
 			</div>
 		);
 	}

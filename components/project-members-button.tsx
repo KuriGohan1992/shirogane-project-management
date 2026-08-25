@@ -6,11 +6,11 @@ import { useState } from "react";
 import { ProjectMembersModal } from "@/components/modals/project-members-modal";
 import { Button } from "@/components/ui/button";
 import type { ProjectMemberWithUser } from "@/types/member";
-import type { UserSummary } from "@/types/user";
+import type { UserProfileSummary } from "@/types/user";
 
 type ProjectMembersButtonProps = {
 	projectId: string;
-	owner: UserSummary;
+	owner: UserProfileSummary;
 	members: ProjectMemberWithUser[];
 	canManageMembers: boolean;
 };

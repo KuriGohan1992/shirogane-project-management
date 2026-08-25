@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button";
 type CreateProjectButtonProps = {
 	label?: string;
 	keyboardShortcutTarget?: boolean;
+	showIcon?: boolean;
 };
 
 export function CreateProjectButton({
 	label = "New Project",
 	keyboardShortcutTarget = false,
+	showIcon = true,
 }: CreateProjectButtonProps) {
 	const [isOpen, setIsOpen] = useState(false);
 
@@ -27,7 +29,7 @@ export function CreateProjectButton({
 				onClick={() => setIsOpen(true)}
 			>
 				{label}
-				<Plus aria-hidden="true" />
+				{showIcon && <Plus aria-hidden="true" />}
 			</Button>
 
 			{isOpen && <CreateProjectModal open={isOpen} onOpenChange={setIsOpen} />}
