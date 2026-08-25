@@ -6,7 +6,6 @@ import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import { getProjectsForUser } from "@/lib/db/projects";
 
 export default async function ProjectsPage() {
-	throw new Error("Testing the Projects error boundary");
 	const user = await getCurrentDatabaseUser();
 	const projects = await getProjectsForUser(user.id);
 

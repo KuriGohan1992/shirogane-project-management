@@ -1,10 +1,12 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.5.6/schema.json",
+
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
 		"useIgnoreFile": true
 	},
+
 	"files": {
 		"includes": [
 			"**",
@@ -16,6 +18,20 @@
 			"!!**/.vercel"
 		]
 	},
+
+	"overrides": [
+		{
+			"includes": ["public/illustrations/**/*.svg"],
+			"linter": {
+				"rules": {
+					"a11y": {
+						"noSvgWithoutTitle": "off"
+					}
+				}
+			}
+		}
+	],
+
 	"css": {
 		"parser": {
 			"tailwindDirectives": true
