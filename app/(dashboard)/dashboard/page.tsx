@@ -201,7 +201,7 @@ export default async function DashboardPage() {
 
 				<EmptyState
 					className="flex-1"
-					illustrationSrc="/empty-states/blank-canvas-rafiki.svg"
+					illustrationSrc="/illustrations/blank-canvas-rafiki.svg"
 					title="Create your first project"
 					description="Projects organize your stages, tasks, collaborators, labels, and activity."
 					action={

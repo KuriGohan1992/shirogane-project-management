@@ -6,6 +6,7 @@ import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import { getProjectsForUser } from "@/lib/db/projects";
 
 export default async function ProjectsPage() {
+	throw new Error("Testing the Projects error boundary");
 	const user = await getCurrentDatabaseUser();
 	const projects = await getProjectsForUser(user.id);
 
@@ -20,7 +21,7 @@ export default async function ProjectsPage() {
 
 				<EmptyState
 					className="flex-1"
-					illustrationSrc="/empty-states/empty-cuate.svg"
+					illustrationSrc="/illustrations/empty-cuate.svg"
 					title="No projects yet"
 					description="Create your first project to start organizing stages and tasks."
 					action={

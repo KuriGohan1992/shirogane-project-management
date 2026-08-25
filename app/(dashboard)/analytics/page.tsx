@@ -51,7 +51,7 @@ export default async function AnalyticsPage({
 
 				<EmptyState
 					className="flex-1"
-					illustrationSrc="/empty-states/team-goals-rafiki.svg"
+					illustrationSrc="/illustrations/team-goals-rafiki.svg"
 					title="No projects to analyze"
 					description="Analytics will populate as projects, tasks, and activity are recorded."
 					action={

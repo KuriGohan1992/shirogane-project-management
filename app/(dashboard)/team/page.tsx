@@ -25,7 +25,7 @@ export default async function TeamPage() {
 
 				<EmptyState
 					className="flex-1"
-					illustrationSrc="/empty-states/team-work-rafiki.svg"
+					illustrationSrc="/illustrations/team-work-rafiki.svg"
 					title="No collaborators yet"
 					description="People added to projects you can access will appear here."
 				/>

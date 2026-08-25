@@ -11,6 +11,7 @@ import {
 	Sparkles,
 	UsersRound,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 import { LandingBoardArt } from "@/components/landing/landing-board-art";
@@ -295,29 +296,45 @@ export default function HomePage() {
 					className="scroll-mt-24 mx-auto w-full max-w-[1500px] px-5 py-24 sm:px-8 lg:px-10"
 				>
 					<div className="grid gap-12 lg:grid-cols-[0.72fr_1.28fr] lg:gap-20">
-						<div className="max-w-md">
-							<p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">
-								Product
-							</p>
+						<div className="flex max-w-md flex-col lg:min-h-full">
+							<div>
+								<p className="text-sm font-bold uppercase tracking-[0.16em] text-primary">
+									Product
+								</p>
 
-							<h2 className="mt-4 text-4xl font-bold tracking-tight text-foreground">
-								Everything around the work, in one place.
-							</h2>
+								<h2 className="mt-4 text-4xl font-bold tracking-tight text-foreground">
+									Everything around the work, in one place.
+								</h2>
 
-							<p className="mt-5 text-base leading-7 text-muted-foreground">
-								Shiro connects the board, deadlines, collaborators, and progress
-								instead of making each one feel like a separate tool.
-							</p>
+								<p className="mt-5 text-base leading-7 text-muted-foreground">
+									Shiro connects the board, deadlines, collaborators, and
+									progress instead of making each one feel like a separate tool.
+								</p>
 
-							<div className="mt-8 flex flex-wrap gap-2">
-								{capabilities.map((capability) => (
-									<span
-										key={capability}
-										className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground"
-									>
-										{capability}
-									</span>
-								))}
+								<div className="mt-8 flex flex-wrap gap-2">
+									{capabilities.map((capability) => (
+										<span
+											key={capability}
+											className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted-foreground"
+										>
+											{capability}
+										</span>
+									))}
+								</div>
+							</div>
+
+							<div
+								aria-hidden="true"
+								className="mt-10 hidden flex-1 items-end lg:flex"
+							>
+								<Image
+									src="/illustrations/organizing-projects-cuate.svg"
+									alt=""
+									width={320}
+									height={320}
+									unoptimized
+									className="h-auto w-64 object-contain xl:w-72"
+								/>
 							</div>
 						</div>
 
