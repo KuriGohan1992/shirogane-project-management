@@ -29,13 +29,13 @@ export function EmptyState({
 		>
 			<div
 				aria-hidden="true"
-				className={cn("mb-4 w-48 sm:w-56", illustrationClassName)}
+				className={cn("mb-4 w-70 sm:w-56", illustrationClassName)}
 			>
 				<Image
 					src={illustrationSrc}
 					alt=""
-					width={224}
-					height={224}
+					width={300}
+					height={300}
 					unoptimized
 					className="h-auto w-full object-contain"
 				/>

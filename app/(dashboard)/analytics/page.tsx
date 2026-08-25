@@ -52,15 +52,13 @@ export default async function AnalyticsPage({
 
 <EmptyState
 	className="flex-1"
-	illustrationSrc="/empty-states/empty-cuate.svg"
-	title="No projects yet"
-	description="Create your first project to start organizing stages and tasks."
+	illustrationSrc="/empty-states/team-goals-rafiki.svg"
+	title="No projects to analyze"
+	description="Analytics will populate as projects, tasks, and activity are recorded."
 	action={
-		<CreateProjectButton
-			label="Create your first project"
-			keyboardShortcutTarget
-			showIcon={false}
-		/>
+		<Button asChild size="sm">
+			<Link href="/projects">Go to projects</Link>
+		</Button>
 	}
 />
 			</div>

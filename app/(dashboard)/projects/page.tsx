@@ -1,10 +1,10 @@
 import { CreateProjectButton } from "@/components/create-project-button";
 import { EmptyState } from "@/components/empty-state";
 import { ProjectGrid } from "@/components/project-grid";
-import { Button } from "@/components/ui/button";
+
 import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import { getProjectsForUser } from "@/lib/db/projects";
-import { Link } from "lucide-react";
+
 
 export default async function ProjectsPage() {
 	const user = await getCurrentDatabaseUser();
@@ -21,13 +21,15 @@ export default async function ProjectsPage() {
 
 <EmptyState
 	className="flex-1"
-	illustrationSrc="/empty-states/team-goals-rafiki.svg"
-	title="No projects to analyze"
-	description="Analytics will populate as projects, tasks, and activity are recorded."
+	illustrationSrc="/empty-states/empty-cuate.svg"
+	title="No projects yet"
+	description="Create your first project to start organizing stages and tasks."
 	action={
-		<Button asChild size="sm">
-			<Link href="/projects">Go to projects</Link>
-		</Button>
+		<CreateProjectButton
+			label="Create your first project"
+			keyboardShortcutTarget
+			showIcon={false}
+		/>
 	}
 />
 			</div>
