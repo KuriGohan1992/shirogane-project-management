@@ -323,19 +323,18 @@ export default function HomePage() {
 								</div>
 							</div>
 
-							<div
-								aria-hidden="true"
-								className="mt-10 hidden flex-1 items-end lg:flex"
-							>
-								<Image
-									src="/illustrations/organizing-projects-cuate.svg"
-									alt=""
-									width={320}
-									height={320}
-									unoptimized
-									className="h-auto w-64 object-contain xl:w-72"
-								/>
-							</div>
+<div className="flex min-h-[280px] items-end justify-center lg:min-h-[360px] lg:justify-start">
+	<div className="flex w-full max-w-[320px] items-center justify-center sm:max-w-[380px] lg:max-w-[440px] xl:max-w-[500px]">
+		<Image
+			src="/illustrations/organizing-projects-cuate.svg"
+			alt=""
+			aria-hidden="true"
+			width={750}
+			height={500}
+			className="h-auto w-full object-contain select-none"
+		/>
+	</div>
+</div>
 						</div>
 
 						<div className="grid gap-4 sm:grid-cols-2">
