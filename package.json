@@ -15,14 +15,19 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:studio": "drizzle-kit studio",
 		"db:check": "drizzle-kit check",
-		"db:seed": "tsx scripts/seed.ts",
+		"db:seed:base": "tsx scripts/seed.ts",
+"db:seed:shiro": "tsx scripts/seed-shiro-project.ts",
+"db:seed": "pnpm db:seed:base && pnpm db:seed:shiro",
+"db:production:seed": "tsx scripts/seed-production.ts",
+"db:production:demo:clear": "tsx scripts/clear-production-demo-data.ts",
 		"test": "vitest run --config vitest.config.mts",
 		"test:watch": "vitest --config vitest.config.mts",
 		"test:db": "vitest run --config vitest.db.config.mts",
 		"db:test:migrate": "drizzle-kit migrate --config drizzle.test.config.ts",
 		"test:e2e": "playwright test",
 		"test:e2e:ui": "playwright test --ui",
-		"test:all": "pnpm test && pnpm test:db && pnpm test:e2e"
+		"test:all": "pnpm test && pnpm test:db && pnpm test:e2e",
+		"db:production:migrate": "drizzle-kit migrate --config drizzle.production.config.ts"
 	},
 	"dependencies": {
 		"@clerk/nextjs": "^7.6.3",
