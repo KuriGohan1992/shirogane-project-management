@@ -293,7 +293,7 @@ export default function HomePage() {
 
 <section
 	id="product"
-	className="scroll-mt-16 mx-auto w-full max-w-[1500px] px-5 py-24 sm:px-8 lg:px-10"
+	className="scroll-mt-36 mx-auto w-full max-w-[1500px] px-5 py-24 sm:px-8 lg:px-10"
 >
 					<div className="grid gap-12 lg:grid-cols-[0.72fr_1.28fr] lg:gap-20">
 						<div className="flex max-w-md flex-col lg:min-h-full">
