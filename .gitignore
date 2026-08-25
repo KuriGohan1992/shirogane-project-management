@@ -39,3 +39,6 @@ next-env.d.ts
 playwright/.clerk/
 playwright-report/
 test-results/
+
+# Performance benchmark output
+/benchmark-results/
