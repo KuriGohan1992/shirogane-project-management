@@ -199,18 +199,18 @@ export default async function DashboardPage() {
 					</p>
 				</div>
 
-<EmptyState
-	className="flex-1"
-	illustrationSrc="/empty-states/blank-canvas-rafiki.svg"
-	title="Create your first project"
-	description="Projects organize your stages, tasks, collaborators, labels, and activity."
-	action={
-		<CreateProjectButton
-			label="Create your first project"
-			showIcon={false}
-		/>
-	}
-/>
+				<EmptyState
+					className="flex-1"
+					illustrationSrc="/empty-states/blank-canvas-rafiki.svg"
+					title="Create your first project"
+					description="Projects organize your stages, tasks, collaborators, labels, and activity."
+					action={
+						<CreateProjectButton
+							label="Create your first project"
+							showIcon={false}
+						/>
+					}
+				/>
 			</div>
 		);
 	}

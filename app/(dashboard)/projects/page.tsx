@@ -5,7 +5,6 @@ import { ProjectGrid } from "@/components/project-grid";
 import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import { getProjectsForUser } from "@/lib/db/projects";
 
-
 export default async function ProjectsPage() {
 	const user = await getCurrentDatabaseUser();
 	const projects = await getProjectsForUser(user.id);
@@ -19,19 +18,19 @@ export default async function ProjectsPage() {
 					<p className="mt-0.5 text-muted-foreground">0 projects</p>
 				</div>
 
-<EmptyState
-	className="flex-1"
-	illustrationSrc="/empty-states/empty-cuate.svg"
-	title="No projects yet"
-	description="Create your first project to start organizing stages and tasks."
-	action={
-		<CreateProjectButton
-			label="Create your first project"
-			keyboardShortcutTarget
-			showIcon={false}
-		/>
-	}
-/>
+				<EmptyState
+					className="flex-1"
+					illustrationSrc="/empty-states/empty-cuate.svg"
+					title="No projects yet"
+					description="Create your first project to start organizing stages and tasks."
+					action={
+						<CreateProjectButton
+							label="Create your first project"
+							keyboardShortcutTarget
+							showIcon={false}
+						/>
+					}
+				/>
 			</div>
 		);
 	}

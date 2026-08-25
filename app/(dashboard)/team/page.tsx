@@ -23,12 +23,12 @@ export default async function TeamPage() {
 					</p>
 				</div>
 
-<EmptyState
-	className="flex-1"
-	illustrationSrc="/empty-states/team-work-rafiki.svg"
-	title="No collaborators yet"
-	description="People added to projects you can access will appear here. Project membership is managed from the individual project."
-/>
+				<EmptyState
+					className="flex-1"
+					illustrationSrc="/empty-states/team-work-rafiki.svg"
+					title="No collaborators yet"
+					description="People added to projects you can access will appear here."
+				/>
 			</div>
 		);
 	}

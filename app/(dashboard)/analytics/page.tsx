@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { parseAnalyticsPeriod } from "@/lib/analytics";
 import { getCurrentDatabaseUser } from "@/lib/auth/current-user";
 import { getAnalyticsForUser } from "@/lib/db/analytics";
-import { CreateProjectButton } from "@/components/create-project-button";
 
 export const dynamic = "force-dynamic";
 
@@ -50,17 +49,17 @@ export default async function AnalyticsPage({
 					</p>
 				</div>
 
-<EmptyState
-	className="flex-1"
-	illustrationSrc="/empty-states/team-goals-rafiki.svg"
-	title="No projects to analyze"
-	description="Analytics will populate as projects, tasks, and activity are recorded."
-	action={
-		<Button asChild size="sm">
-			<Link href="/projects">Go to projects</Link>
-		</Button>
-	}
-/>
+				<EmptyState
+					className="flex-1"
+					illustrationSrc="/empty-states/team-goals-rafiki.svg"
+					title="No projects to analyze"
+					description="Analytics will populate as projects, tasks, and activity are recorded."
+					action={
+						<Button asChild size="sm">
+							<Link href="/projects">Go to projects</Link>
+						</Button>
+					}
+				/>
 			</div>
 		);
 	}
